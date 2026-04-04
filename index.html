@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ayush Chudasama — Video Editor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0a0a0a; color: #e8e0d0; font-family: 'DM Sans', sans-serif; }
+    .portfolio { max-width: 900px; margin: 0 auto; padding: 3rem 1.5rem 4rem; }
+    .hero { display: flex; flex-direction: column; align-items: flex-start; margin-bottom: 3.5rem; border-left: 3px solid #c8a96e; padding-left: 1.5rem; }
+    .hero-tag { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #c8a96e; margin-bottom: 0.5rem; }
+    .hero-name { font-family: 'Bebas Neue', sans-serif; font-size: clamp(3rem, 10vw, 6rem); line-height: 0.95; color: #f0e8d8; letter-spacing: 2px; margin-bottom: 0.75rem; }
+    .hero-name span { color: #c8a96e; }
+    .hero-sub { font-size: 14px; color: #888; font-weight: 300; letter-spacing: 1px; }
+    .section-label { font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #c8a96e; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 12px; }
+    .section-label::after { content: ''; flex: 1; height: 0.5px; background: #2a2a2a; }
+    .skills-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 3rem; }
+    .skill-pill { padding: 5px 14px; border: 0.5px solid #333; border-radius: 2px; font-size: 12px; color: #aaa; letter-spacing: 1px; }
+    .work-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: #1a1a1a; margin-bottom: 3rem; border: 1px solid #1a1a1a; }
+    .work-card { background: #0d0d0d; padding: 1.25rem; position: relative; overflow: hidden; }
+    .work-card::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 0; background: #c8a96e; transition: height 0.3s; }
+    .work-card:hover::before { height: 100%; }
+    .card-type { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #555; margin-bottom: 0.5rem; }
+    .card-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; color: #e0d8c8; letter-spacing: 1px; margin-bottom: 0.4rem; line-height: 1.1; }
+    .card-desc { font-size: 12px; color: #666; font-weight: 300; line-height: 1.6; margin-bottom: 0.75rem; }
+    .card-meta { display: flex; gap: 8px; flex-wrap: wrap; }
+    .meta-badge { font-size: 11px; color: #c8a96e; background: rgba(200,169,110,0.08); padding: 3px 10px; border-radius: 2px; }
+    .yt-embed { width: 100%; aspect-ratio: 16/9; border: 0.5px solid #1a1a1a; margin-bottom: 0.85rem; background: #111; }
+    .yt-embed iframe { width: 100%; height: 100%; border: none; display: block; }
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: #1a1a1a; margin-bottom: 3rem; }
+    .stat-box { background: #0d0d0d; padding: 1.25rem 1.5rem; text-align: center; }
+    .stat-num { font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; color: #c8a96e; letter-spacing: 2px; display: block; }
+    .stat-label { font-size: 11px; color: #555; letter-spacing: 2px; text-transform: uppercase; }
+    .tools-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 3rem; }
+    .tool-chip { padding: 8px 16px; background: #111; border: 0.5px solid #222; font-size: 12px; color: #888; letter-spacing: 1px; border-radius: 2px; display: flex; align-items: center; gap: 8px; }
+    .tool-dot { width: 5px; height: 5px; border-radius: 50%; background: #c8a96e; flex-shrink: 0; }
+    .contact-strip { border: 0.5px solid #222; padding: 1.75rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 3rem; }
+    .contact-text { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; color: #e0d8c8; letter-spacing: 2px; }
+    .contact-links { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .cta-btn { padding: 10px 22px; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; background: #c8a96e; color: #0a0a0a; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-weight: 500; transition: opacity 0.2s; text-decoration: none; display: inline-block; }
+    .cta-btn:hover { opacity: 0.85; }
+    .email-link { font-size: 13px; color: #c8a96e; letter-spacing: 1px; text-decoration: none; }
+    .email-link:hover { text-decoration: underline; }
+    .footer-line { font-size: 11px; color: #333; letter-spacing: 2px; text-align: center; text-transform: uppercase; padding-top: 2rem; border-top: 0.5px solid #1a1a1a; }
+    @media (max-width: 560px) { .work-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<div class="portfolio">
+
+  <div class="hero">
+    <span class="hero-tag">YouTube · Documentary · Video Editor</span>
+    <div class="hero-name">Ayush<br><span>Chudasama</span></div>
+    <p class="hero-sub">Crafting cinematic stories — Rajkot, Gujarat, India</p>
+  </div>
+
+  <div class="section-label">What I bring</div>
+  <div class="skills-row">
+    <span class="skill-pill">Documentary style editing</span>
+    <span class="skill-pill">Long-form storytelling</span>
+    <span class="skill-pill">Color grading</span>
+    <span class="skill-pill">Motion graphics</span>
+    <span class="skill-pill">Sound design</span>
+    <span class="skill-pill">Pacing & narrative flow</span>
+    <span class="skill-pill">Visual effects</span>
+  </div>
+
+  <div class="section-label">Sample work</div>
+  <div class="work-grid">
+
+    <div class="work-card">
+      <div class="yt-embed">
+        <iframe src="https://www.youtube.com/embed/y0i2NUKWgH4" allowfullscreen loading="lazy"></iframe>
+      </div>
+      <div class="card-type">YouTube · Personal Project</div>
+      <div class="card-title">Edit 01</div>
+      <div class="card-desc">Cinematic long-form edit with documentary-style storytelling and atmospheric sound design.</div>
+      <div class="card-meta"><span class="meta-badge">Documentary</span><span class="meta-badge">Long-form</span></div>
+    </div>
+
+    <div class="work-card">
+      <div class="yt-embed">
+        <iframe src="https://www.youtube.com/embed/bKQ-VbMVGLo" allowfullscreen loading="lazy"></iframe>
+      </div>
+      <div class="card-type">YouTube · Personal Project</div>
+      <div class="card-title">Edit 02</div>
+      <div class="card-desc">Precise cuts and pacing with strong visual narrative crafted in Premiere Pro.</div>
+      <div class="card-meta"><span class="meta-badge">Premiere Pro</span><span class="meta-badge">Cinematic</span></div>
+    </div>
+
+    <div class="work-card">
+      <div class="yt-embed">
+        <iframe src="https://www.youtube.com/embed/SXmm8WQhuR0" allowfullscreen loading="lazy"></iframe>
+      </div>
+      <div class="card-type">YouTube · Personal Project</div>
+      <div class="card-title">Edit 03</div>
+      <div class="card-desc">Motion graphics and color grading combined for a polished, professional feel.</div>
+      <div class="card-meta"><span class="meta-badge">After Effects</span><span class="meta-badge">Color Grade</span></div>
+    </div>
+
+    <div class="work-card">
+      <div class="yt-embed">
+        <iframe src="https://www.youtube.com/embed/NrjTTIBXqPg" allowfullscreen loading="lazy"></iframe>
+      </div>
+      <div class="card-type">YouTube · Personal Project</div>
+      <div class="card-title">Edit 04</div>
+      <div class="card-desc">Story-driven edit with seamless transitions and immersive audio layering.</div>
+      <div class="card-meta"><span class="meta-badge">Documentary</span><span class="meta-badge">Sound Design</span></div>
+    </div>
+
+    <div class="work-card" style="grid-column: 1 / -1;">
+      <div class="yt-embed" style="max-width: 560px; margin: 0 auto 0.85rem;">
+        <iframe src="https://www.youtube.com/embed/6XfqHK3AZ7M" allowfullscreen loading="lazy"></iframe>
+      </div>
+      <div style="max-width: 560px; margin: 0 auto;">
+        <div class="card-type">YouTube · Personal Project</div>
+        <div class="card-title">Edit 05</div>
+        <div class="card-desc">A showcase of refined editing instincts — clean cuts, strong rhythm, and cinematic atmosphere.</div>
+        <div class="card-meta"><span class="meta-badge">Long-form</span><span class="meta-badge">Premiere Pro</span><span class="meta-badge">Cinematic</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="section-label">By the numbers</div>
+  <div class="stats-row">
+    <div class="stat-box">
+      <span class="stat-num">5+</span>
+      <span class="stat-label">Projects Done</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-num">48hr</span>
+      <span class="stat-label">Avg. Turnaround</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-num">∞</span>
+      <span class="stat-label">Revisions</span>
+    </div>
+  </div>
+
+  <div class="section-label">Tools I use</div>
+  <div class="tools-grid">
+    <div class="tool-chip"><span class="tool-dot"></span> Adobe Premiere Pro</div>
+    <div class="tool-chip"><span class="tool-dot"></span> Adobe After Effects</div>
+    <div class="tool-chip"><span class="tool-dot"></span> Adobe Audition</div>
+    <div class="tool-chip"><span class="tool-dot"></span> Photoshop</div>
+  </div>
+
+  <div class="section-label">Get in touch</div>
+  <div class="contact-strip">
+    <div>
+      <div class="contact-text">Let's work together.</div>
+      <a href="mailto:chudasamaayui0502@gmail.com" class="email-link">chudasamaayui0502@gmail.com</a>
+    </div>
+    <div class="contact-links">
+      <a href="mailto:chudasamaayui0502@gmail.com" class="cta-btn">Email me</a>
+    </div>
+  </div>
+
+  <div class="footer-line">© 2026 · Ayush Chudasama · Video Editor · Rajkot, India</div>
+
+</div>
+</body>
+</html>
