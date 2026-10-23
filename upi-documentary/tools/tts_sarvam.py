@@ -1,7 +1,11 @@
 """Generate the final voiceover with Sarvam AI (Bulbul) — Indian male voice, Hinglish.
 
-Needs the environment variable SARVAM_API_KEY (add it in the cloud environment settings,
-never in chat) and network access to api.sarvam.ai.
+Auth, either way (never paste the key in chat):
+  - a Network secret in the cloud environment settings for api.sarvam.ai — the proxy adds the header
+    (`api-subscription-key: <key>`, or `Authorization: Bearer <key>`) to every request, so the key never
+    enters the session; or
+  - the environment variable SARVAM_API_KEY, which this script sends itself.
+Also needs network access to api.sarvam.ai.
 
 usage:
   python3 tools/tts_sarvam.py --audition           # one test line in every male voice -> assets/vo_audition/
@@ -31,8 +35,6 @@ AUDITION_LINE = "c2_14"  # has Hindi, an English quote and a pause — a good st
 
 def synth(text: str, speaker: str, model: str, pace: float, pitch: float, loudness: float, sr: int, lang_code: str = "hi-IN") -> bytes:
     key = os.environ.get("SARVAM_API_KEY")
-    if not key:
-        sys.exit("SARVAM_API_KEY is not set — add it in the environment settings and start a new session.")
     body = {
         "text": text,
         "target_language_code": lang_code,
@@ -44,7 +46,10 @@ def synth(text: str, speaker: str, model: str, pace: float, pitch: float, loudne
         "speech_sample_rate": sr,
         "enable_preprocessing": True,
     }
-    req = urllib.request.Request(URL, data=json.dumps(body).encode(), headers={"api-subscription-key": key, "Content-Type": "application/json"})
+    headers = {"Content-Type": "application/json"}
+    if key:
+        headers["api-subscription-key"] = key  # otherwise the environment's network secret adds it
+    req = urllib.request.Request(URL, data=json.dumps(body).encode(), headers=headers)
     for attempt in range(5):
         try:
             with urllib.request.urlopen(req, timeout=120) as r:
@@ -55,7 +60,10 @@ def synth(text: str, speaker: str, model: str, pace: float, pitch: float, loudne
             if e.code in (429, 500, 502, 503) and attempt < 4:
                 time.sleep(2 ** (attempt + 1))
                 continue
-            sys.exit(f"Sarvam error {e.code}: {msg}")
+            if e.code == 401 or (e.code == 403 and "sarvam" in msg.lower()):
+                sys.exit(f"Sarvam rejected the credentials ({e.code}). Check the network secret for api.sarvam.ai "
+                         f"(header api-subscription-key, no prefix) or SARVAM_API_KEY. Response: {msg[:300]}")
+            sys.exit(f"Sarvam error {e.code}: {msg[:500]}")
         except urllib.error.URLError as e:
             if attempt < 4:
                 time.sleep(2 ** (attempt + 1))

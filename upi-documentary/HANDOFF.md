@@ -21,7 +21,10 @@ Every tool takes `--lang en` for the English edition (files get an `_en` suffix;
 | Photos | ⏳ stylised fallbacks until real photos are added | `video/public/photos/` |
 | Upload kit | ✅ description with chapters + sources, Hindi & English subtitles (regenerate after re-timing) | `tools/youtube_meta.py` → `publish/` |
 
-## Next session (needs: Network access = Full, secret `SARVAM_API_KEY`)
+## Next session (needs: Network access = Full, and the Sarvam key)
+The key is a **Network secret** in the cloud environment settings: allowed website `api.sarvam.ai`, header
+`api-subscription-key`, no prefix (the proxy adds it to every request; the key never enters the session).
+A plain environment variable `SARVAM_API_KEY` also works. `tools/tts_sarvam.py` handles both.
 
 ```bash
 cd upi-documentary
