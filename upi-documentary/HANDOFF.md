@@ -76,11 +76,14 @@ python3 tools/youtube_meta.py                   # description, chapters, SRTs
 # English edition: the same three commands with --lang en  → score_en.wav, mix_en.wav, publish/en/
 cd video
 node tools/stills.mjs qc seg-S00-ColdOpen:200,700 seg-S32-Rules:300,700 seg-S41-WhoPays:600   # spot-check layouts after re-timing
-npx remotion render Main out/render.mp4                # Hindi, ~25 min on 4 CPUs
-npx remotion render Main-EN out/render_en.mp4         # English
+REMOTION_3D_RES=1 REMOTION_AA=1 npx remotion render Main out/render.mp4        # Hindi, Full HD, ~35 min on 4 CPUs
+REMOTION_3D_RES=1 REMOTION_AA=1 npx remotion render Main-EN out/render_en.mp4 # English
 npx remotion still Thumbnail-EN ../publish/en/thumbnail.png --image-format=png
 cd .. && tools/finish.sh video/out/render.mp4 video/out/upi_documentary_final.mp4         # grain + vignette + YouTube encode
 tools/finish.sh video/out/render_en.mp4 video/out/upi_documentary_final_en.mp4
+# Fixing one stretch later? Re-render just those frames and lay them over the full render:
+#   npx remotion render Main out/patch.mp4 --frames=5040-5505 --muted   (same REMOTION_* flags)
+#   tools/finish.sh video/out/render.mp4 video/out/final.mp4 video/out/patch.mp4@5040
 ```
 Check: no text overlaps after re-timing, the coin cuts to black on the beat, loudness −14 LUFS.
 
