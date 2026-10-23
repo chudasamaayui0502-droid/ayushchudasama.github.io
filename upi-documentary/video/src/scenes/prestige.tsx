@@ -138,6 +138,7 @@ export const S40_Return: React.FC<SceneProps> = ({ seg }) => {
           <Words text="तीसरा हिस्सा — *The Prestige।*|जब ग़ायब हुई चीज़... वापस आती है।" start={L.c4_01.at + 10} size={54} />
         </Sequence>
       </AbsoluteFill>
+      <AbsoluteFill style={{ background: "linear-gradient(rgba(4,6,11,0.9) 0%, rgba(4,6,11,0.55) 16%, rgba(4,6,11,0) 30%)", opacity: toShop }} />
       <AbsoluteFill style={{ justifyContent: "flex-start", alignItems: "center", paddingTop: 100 }}>
         <Sequence from={L.c4_02.at} durationInFrames={L.c4_03.at - L.c4_02.at} layout="none">
           <Words text="वो बिल... *कभी ग़ायब हुआ ही नहीं।*" start={4} size={58} />

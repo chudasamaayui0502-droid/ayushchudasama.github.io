@@ -205,8 +205,8 @@ export const S22_Subsidy: React.FC<SceneProps> = ({ seg }) => {
   const bars = v.map((_, i) => prog(frame, L.c2_07.at + Math.round(L.c2_07.len * (0.22 + i * 0.25)), 34, ease.out));
   const cam = {
     x: keys(frame, [[L.c2_07.at, -200], [seg.frames, 180]]),
-    y: -60 + drift(frame, 2, 6),
-    z: keys(frame, [[L.c2_07.at, -180], [seg.frames, 120]]),
+    y: 20 + drift(frame, 2, 6),
+    z: keys(frame, [[L.c2_07.at, -220], [seg.frames, 40]]),
     rx: -12,
     ry: keys(frame, [[L.c2_07.at, 14], [seg.frames, -10]]),
   };
@@ -244,7 +244,7 @@ export const S22_Subsidy: React.FC<SceneProps> = ({ seg }) => {
               <AbsoluteFill style={{ transformStyle: "preserve-3d" }}>
                 <div style={{ position: "absolute", left: 360, right: 360, top: 850, height: 2, background: C.inkFaint }} />
                 {v.map((val, i) => (
-                  <Bar3D key={i} x={(i - 1) * 380} h={(val / 3631) * 380} color={i === 2 ? C.amber : "#c9842f"} label={["2021-22", "2022-23", "2023-24"][i]} value={`₹${val.toLocaleString("en-IN")}`} on={bars[i]} />
+                  <Bar3D key={i} x={(i - 1) * 380} h={(val / 3631) * 300} color={i === 2 ? C.amber : "#c9842f"} label={["2021-22", "2022-23", "2023-24"][i]} value={`₹${val.toLocaleString("en-IN")}`} on={bars[i]} />
                 ))}
               </AbsoluteFill>
             </Layer>

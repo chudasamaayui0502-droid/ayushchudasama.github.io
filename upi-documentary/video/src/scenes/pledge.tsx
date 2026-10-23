@@ -232,7 +232,7 @@ export const S14_ZeroMDR: React.FC<SceneProps> = ({ seg }) => {
       </AbsoluteFill>
       {isZero && (
         <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", paddingTop: 0, transform: `translateY(${-defIn * 150}px) scale(${1 - defIn * 0.3})` }}>
-          <Stamp text="MDR = 0" at={zeroAt} color={C.teal} size={150} sub="UPI · RUPAY DEBIT" />
+          <Stamp text="MDR = 0" at={zeroAt} color={C.teal} size={150} sub="UPI · RUPAY DEBIT" blend="normal" />
         </AbsoluteFill>
       )}
       <Flash at={zeroAt} peak={0.3} color="46,230,214" />
@@ -256,7 +256,7 @@ export const S14_ZeroMDR: React.FC<SceneProps> = ({ seg }) => {
           <Words text="Digital payment लेने पर *दुकानदार* जो छोटी सी fee देता है।|UPI पर पहले ये *0.30%* तक थी।" start={8} size={46} align="left" weight={500} />
         </div>
       </Sequence>
-      <Source text="Finance Ministry (Dec 2019) · Forbes India" start={L.c1_06.at + 20} y={60} />
+      <Source text="Finance Ministry (Dec 2019) · Forbes India" start={L.c1_06.at + 20} />
       <Letterbox amount={0.45} />
     </AbsoluteFill>
   );

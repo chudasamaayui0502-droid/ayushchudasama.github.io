@@ -63,22 +63,22 @@ export const S31_Notification: React.FC<SceneProps> = ({ seg }) => {
   const second = L.c3_02.at + Math.round(L.c3_02.len * 0.55);
   const a = prog(frame, L.c3_02.at, 26, ease.cam);
   const b = prog(frame, second, 26, ease.cam);
-  const cam = { x: keys(frame, [[0, -280], [second, -200], [seg.frames, 240]]), y: drift(frame, 3, 8), z: keys(frame, [[0, -100], [seg.frames, 260]]), ry: keys(frame, [[0, 8], [seg.frames, -8]]) };
+  const cam = { x: keys(frame, [[0, -220], [second, -150], [seg.frames, 180]]), y: -20 + drift(frame, 3, 8), z: keys(frame, [[0, -180], [seg.frames, 60]]), ry: keys(frame, [[0, 8], [seg.frames, -8]]) };
   return (
     <AbsoluteFill>
       <Backdrop hue="neutral" light={0.8} />
       <ParallaxWorld cam={cam}>
-        <Layer z={-80} x={-270} y={40 + (1 - a) * 400} rotateY={10} opacity={a}>
+        <Layer z={-80} x={-230} y={60 + (1 - a) * 400} rotateY={10} opacity={a}>
           <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
             <div style={{ transform: "rotate(-3deg)" }}>
-              <DocPage name="mof_notification_2026-09-14" title="वित्त मंत्रालय — Notification" date="14 SEP 2026" width={540} highlight={{ top: 38, height: 5, p: prog(frame, L.c3_02.at + 30, 30) }} />
+              <DocPage name="mof_notification_2026-09-14" title="वित्त मंत्रालय — Notification" date="14 SEP 2026" width={440} highlight={{ top: 38, height: 5, p: prog(frame, L.c3_02.at + 30, 30) }} />
             </div>
           </AbsoluteFill>
         </Layer>
-        <Layer z={60} x={360} y={(1 - b) * 400} rotateY={-8} opacity={b}>
+        <Layer z={20} x={330} y={30 + (1 - b) * 400} rotateY={-8} opacity={b}>
           <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
             <div style={{ transform: "rotate(2.5deg)" }}>
-              <DocPage name="npci_circular_2026-09-15" title="NPCI — Operational Circular" date="15 SEP 2026" width={540} highlight={{ top: 44, height: 5, p: prog(frame, second + 24, 30) }} />
+              <DocPage name="npci_circular_2026-09-15" title="NPCI — Operational Circular" date="15 SEP 2026" width={440} highlight={{ top: 44, height: 5, p: prog(frame, second + 24, 30) }} />
             </div>
           </AbsoluteFill>
         </Layer>

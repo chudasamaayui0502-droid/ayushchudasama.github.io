@@ -39,12 +39,16 @@ export const Main: React.FC = () => {
   const mix = getAudioUrl();
   return (
     <AbsoluteFill style={{ background: "#000" }}>
-      {TL.segments.map((seg) => {
+      {TL.segments.map((seg, i) => {
         // Hard cuts (no dissolve) into: title, disclaimer, black, chapter cards.
         const hard = seg.kind !== "scene";
+        // Scene starts snap to the music's 0.5 s grid; hold each segment until the next one begins so no gap shows black.
+        const next = TL.segments[i + 1];
+        const span = next ? Math.max(seg.frames, next.from - seg.from) : seg.frames;
+        const held = { ...seg, frames: span };
         return (
-          <Sequence key={seg.id} from={seg.from} durationInFrames={seg.frames + (seg.kind === "black" ? 0 : OVERLAP)} name={seg.id}>
-            <Transition seg={seg} hardIn={hard}>
+          <Sequence key={seg.id} from={seg.from} durationInFrames={span + (seg.kind === "black" ? 0 : OVERLAP)} name={seg.id}>
+            <Transition seg={held} hardIn={hard}>
               {renderSeg(seg)}
             </Transition>
           </Sequence>
