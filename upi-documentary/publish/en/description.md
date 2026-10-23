@@ -56,8 +56,8 @@ For educational and informational purposes only. This is not financial or legal 
 • Outlook Business — https://www.outlookbusiness.com/news/upi-mdr-charges-wont-kick-in-before-diwali-npci-defers-rollout
 
 🎵 CREDITS
-• Original score composed for this film (no third-party music). Orchestral samples: VS Chamber Orchestra Community Edition (VSCO-2-CE), public domain (CC0).
-• India map: datameet/maps "india-composite" (CC BY 2.5 India), simplified.
+• Original score and sound design made for this film (no third-party music or SFX libraries). Orchestral and percussion samples: VS Chamber Orchestra Community Edition (VSCO-2-CE), public domain (CC0).
+• India maps: datameet/maps "india-composite" (CC BY 2.5 India), simplified; city positions approximate.
 • Fonts: Teko, Mukta, Tiro Devanagari Hindi, Montserrat, Cormorant Garamond, IBM Plex Mono — SIL Open Font License.
 • Photos: see the credits list in this description once added (Wikimedia Commons / Pexels; licences noted per image).
 
