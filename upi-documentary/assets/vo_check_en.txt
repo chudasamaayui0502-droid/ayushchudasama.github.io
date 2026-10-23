@@ -1,0 +1,243 @@
+0.69  c3_04
+  script: Merchant payments above two thousand rupees carry a zero point four percent MDR.
+  heard:  Merchant payments above 2000 rupees carry a 0.4% MDR.
+
+0.72  c2_07
+  script: According to PIB, the government paid banks incentives of thirteen hundred and eighty-nine crore rupees in financial year twenty-two... rising to thirty-six hundred and thirty-one crore by financial year twenty-four.
+  heard:  According to PIB, the government paid banks incentives of 1389 crore rupees in financial year 22, rising to 3631 crore by financial year 24.
+
+0.75  c0_01
+  script: Every day... eight hundred million times.
+  heard:  Every day, 800 million times.
+
+0.76  c1_10
+  script: September, twenty twenty-six. Twenty-four billion transactions in a single month. More than eight hundred million, every day.
+  heard:  September 2026 24 billion transactions in a single month more than 800 million every day
+
+0.78  c3_09
+  script: NPCI estimates it could raise up to twenty thousand six hundred crore rupees a year.
+  heard:  NPCI estimates it could raise up to 20600 crore rupees a year.
+
+0.81  c3_12
+  script: And of more than sixty-seven thousand users, only fourteen percent said they would stick with UPI if the fee were passed on to them.
+  heard:  fan of more than 67000 users, only 14% said they would stick with UPI if the fee were passed on to them.
+
+0.81  c3_11
+  script: In a LocalCircles survey of more than thirty-two thousand merchants, only seventeen percent said they would absorb the fee themselves.
+  heard:  In a local Circle survey of more than 32000 merchants, only 17% said they would absorb the fee themselves.
+
+0.81  c3_01
+  script: August, twenty twenty-six. Parliament amends India's payments law.
+  heard:  August 2026 Parliament amends India's payments law.
+
+0.81  c1_04
+  script: August, twenty sixteen. NPCI's new system, UPI, goes live for the public with twenty-one banks.
+  heard:  August 2016, NPCI's new system, UPI, goes live for the public with 21 banks.
+
+0.86  c2_13
+  script: June, twenty twenty-five. Reports of MDR on UPI? Completely false, baseless and misleading.
+  heard:  June 2025 reports of MDR on UPI completely false, baseless and misleading.
+
+0.86  c3_05
+  script: Even the biggest payment pays no more than three hundred rupees.
+  heard:  Even the biggest payment pays no more than 300 rupees.
+
+0.86  c4_02
+  script: The bill that disappeared in twenty twenty... never really disappeared.
+  heard:  The bill that disappeared in 2020 never really disappeared.
+
+0.90  c2_08
+  script: But the industry kept saying it wasn't enough. The Payments Council of India said running UPI costs about ten thousand crore rupees a year... against government support of just fifteen hundred crore.
+  heard:  But the industry kept saying it was not enough. The Payments Council of India said running UPI costs about 10,000 crore rupees a year, against government support of just 1500 crore.
+
+0.90  c1_07
+  script: MDR, the merchant discount rate, is the small fee a shop pays to accept a digital payment. On UPI, it used to be up to zero point three percent.
+  heard:  MDR, the merchant discount rate, is the small fee a shop pays to accept a digital payment. On UPI, it used to be up to 0.3%.
+
+0.90  c1_01
+  script: Every magic trick has three parts.
+  heard:  Every magic trick has 3 parts.
+
+0.90  c2_15
+  script: And in the latest Union Budget, that support was cut by about ten percent.
+  heard:  And in the latest Union budget, that support was cut by about 10%.
+
+0.92  c2_12
+  script: August, twenty twenty-two. The Finance Ministry: UPI is a digital public good. There is no consideration in Government to levy any charges.
+  heard:  August 2022. The Finance Ministry UPI is a digital public good. There is no consideration in government to levy any charges.
+
+0.92  c1_06
+  script: Then comes the first of January, twenty twenty. The government sets the MDR on UPI and RuPay debit cards to zero.
+  heard:  Then comes the first of January 2020. The government sets the MDR on UPI and RuPay debit cards to zero.
+
+0.92  c3_13
+  script: Petrol pump dealers in Madhya Pradesh announced that from October sixteenth, they would stop taking UPI above two thousand rupees. Dealers in Punjab and Haryana said the same.
+  heard:  Petrol pump dealers in Madhya Pradesh announced that from October 16th, they would stop taking UPI above 2000 rupees. Dealers in Punjab and Haryana said the same.
+
+0.93  c3_02
+  script: September fourteenth: the Finance Ministry's notification. The next day, the full rulebook.
+  heard:  September 14th, the Finance Ministry's notification. The next day, the full rule book.
+
+0.94  c2_16
+  script: The bill hadn't vanished. It just... wasn't visible.
+  heard:  The bill had not vanished, it just was not visible.
+
+0.94  c5_01
+  script: What do you think? Is this fee on payments above two thousand rupees fair, or not? Tell us in the comments. All the sources are in the description.
+  heard:  What do you think? Is this fee on payments above 2000 rupees fair or not? Tell us in the comments. All the sources are in the description.
+
+0.94  c3_16
+  script: Then, just two days before the deadline... NPCI announced:
+  heard:  Then, just 2 days before the deadline, MPCI announced.
+
+0.95  c4_01
+  script: Part three: the Prestige. The moment the vanished thing... comes back.
+  heard:  Part 3, the prestige, the moment, the vanished thing comes back.
+
+0.97  c1_02
+  script: Part one: the Pledge. The magician shows you something ordinary.
+  heard:  Part 1 The Pledge The magician shows you something ordinary.
+
+0.97  c2_01
+  script: Part two: the Turn. The magician makes the ordinary thing... disappear.
+  heard:  Part 2, the turn. The magician makes the ordinary thing disappear.
+
+0.98  c1_05
+  script: In its first full month, it doesn't even reach one million transactions.
+  heard:  In its first full month, it does not even reach one million transactions.
+
+0.98  c2_14
+  script: Then, just six weeks later, the RBI Governor said: costs will have to be paid. Someone will have to bear the cost.
+  heard:  Then, just 6 weeks later, the RBI governor said, costs will have to be paid. Someone will have to bear the cost.
+
+0.98  c2_03
+  script: Behind every scan runs an entire machine. Your app, your bank, NPCI, and the shop's bank.
+  heard:  Behind every scan runs an entire machine. Your app, your bank, MPCI, and the shops bank.
+
+0.98  c3_07
+  script: Person-to-person transfers stay free. And small shops receiving up to one lakh rupees a month through UPI... pay nothing.
+  heard:  Person to person transfers stay free, and small shops receiving up to 1 lakh rupees a month through UPI pay nothing.
+
+0.98  c4_07
+  script: The real question isn't whether UPI should stay free. It's who should pay for this system... and how.
+  heard:  The real question is not whether UPI should stay free, it's who should pay for this system and how.
+
+1.00  c3_14
+  script: The case reached the Supreme Court. It refused to pause the fee... and asked the government, the RBI and NPCI to respond.
+  heard:  The case reached the Supreme Court. It refused to pause the feed and asked the government, the RBI and NPCI to respond.
+
+1.00  c0_02
+  script: Someone buys a cup of tea. Someone fills up on petrol. Someone sends the rent.
+  heard:  Someone buys a cup of tea. Someone fills up on petrol. Someone sends the rent.
+
+1.00  c0_03
+  script: One QR code. One scan. And in two seconds, the money is there.
+  heard:  One QR code, one scan, and in two seconds the money is there.
+
+1.00  c0_04
+  script: No fee. No charge. Completely free.
+  heard:  No fee, no charge, completely free.
+
+1.00  c0_05
+  script: But the world's largest real-time payment system... does not run for free.
+  heard:  But the world's largest real-time payment system does not run for free.
+
+1.00  c0_06
+  script: Someone is paying its bill. Every single day.
+  heard:  Someone is paying its bill every single day.
+
+1.00  c0_07
+  script: The question is... who?
+  heard:  The question is who.
+
+1.00  c1_03
+  script: In our story, that ordinary thing is... this.
+  heard:  In our story, that ordinary thing is this.
+
+1.00  c1_09
+  script: And then... UPI explodes.
+  heard:  And then UPI explodes.
+
+1.00  c1_11
+  script: According to ACI Worldwide, almost half of the world's real-time payments... happen in India.
+  heard:  According to ACI Worldwide, almost half of the world's real-time payments happen in India.
+
+1.00  c1_12
+  script: The pledge was kept. UPI was free. Fast. Everywhere.
+  heard:  The pledge was kept. UPI was free, fast, everywhere.
+
+1.00  c1_13
+  script: But in magic, what you see... is never the whole truth.
+  heard:  But in magic, what you see is never the whole truth.
+
+1.00  c2_02
+  script: In UPI, what disappeared... was the bill.
+  heard:  In UPI, what disappeared was the bill.
+
+1.00  c2_04
+  script: Servers. Security. Fraud checks. Around the clock.
+  heard:  Servers, security, fraud checks, around the clock.
+
+1.00  c2_05
+  script: None of it is free. So when the fee went to zero... where did the cost go?
+  heard:  None of it is free. So when the fee went to zero, where did the cost go?
+
+1.00  c2_06
+  script: Answer number one: the government. In other words, taxpayers.
+  heard:  Answer number one, the government. In other words, taxpayers.
+
+1.00  c2_11
+  script: And all this time, the government's answer... was the same.
+  heard:  And all this time, the government's answer was the same.
+
+1.00  c3_03
+  script: The rule is simple.
+  heard:  The rule is simple.
+
+1.00  c3_06
+  script: Railways, telecom, insurance and fuel: a flat five rupees.
+  heard:  Railways, telecom, insurance and fuel, a flat five rupees.
+
+1.00  c3_08
+  script: And the key point: the fee cannot be charged to the customer. The shop pays it.
+  heard:  And the key point, the fee cannot be charged to the customer. The shop pays it.
+
+1.00  c3_10
+  script: And then... the countdown began.
+  heard:  And then the countdown began.
+
+1.00  c3_15
+  script: And the government's counsel told the court: it is neither a tax, nor a fee.
+  heard:  And the government's counsel told the court, it is neither a tax nor a fee.
+
+1.00  c3_17
+  script: The MDR would wait until after Diwali. The new date? Not yet decided.
+  heard:  The MDR would wait until after Diwali. The new date, not yet decided.
+
+1.00  c4_03
+  script: Part of it was paid with taxpayers' money. In other words, your money. The rest was carried by banks and payment companies.
+  heard:  Part of it was paid with taxpayers' money. In other words, your money. The rest was carried by banks and payment companies.
+
+1.00  c4_04
+  script: And now, the bill has come back... to the shopkeeper's counter.
+  heard:  And now, the bill has come back to the shopkeeper's counter.
+
+1.00  c4_05
+  script: The law says the charge cannot be passed on to you. But every cost a business carries... shows up somewhere, eventually, in prices.
+  heard:  The law says the charge cannot be passed on to you, but every cost a business carries shows up somewhere eventually in prices.
+
+1.00  c4_06
+  script: So, who pays for free UPI? As a taxpayer: you. As a customer: maybe you. And if the system weakens... the loss is yours too.
+  heard:  So, who pays for free UPI? As a taxpayer, you. As a customer, maybe you. And if the system weakens, the loss is yours too.
+
+1.00  c4_08
+  script: On one side, a system that needs money to run. On the other, millions of small shopkeepers... and the risk of a return to cash.
+  heard:  On one side, a system that needs money to run. On the other, millions of small shopkeepers and the risk of a return to cash.
+
+1.00  c4_09
+  script: For now, we wait for the new date. And the case is still pending in the Supreme Court.
+  heard:  For now, we wait for the new date and the case is still pending in the Supreme Court.
+
+1.00  c4_10
+  script: The coin... is still spinning.
+  heard:  The coin is still spinning.

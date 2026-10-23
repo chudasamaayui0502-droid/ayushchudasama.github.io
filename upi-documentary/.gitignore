@@ -1,0 +1,11 @@
+video/node_modules/
+video/out/
+video/public/audio/
+assets/vo_scratch/
+assets/vo/*.wav
+music/render/
+*.miff
+assets/vo_scratch_en/
+assets/vo_en/*.wav
+assets/vo_audition*/
+__pycache__/

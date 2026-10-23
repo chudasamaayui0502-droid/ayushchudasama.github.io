@@ -1,0 +1,694 @@
+{
+  "title_hi": "FREE UPI का बिल कौन भरता है?",
+  "title_en": "WHO REALLY PAYS FOR YOUR 'FREE' UPI?",
+  "facts_as_of": "23 October 2026",
+  "notes": "tts = text sent to Sarvam (numbers spelled out in Hindi words, English terms kept in Latin script). display = on-screen/subtitle text. en = English meaning for review. src = fact-sheet row in research/facts.md.",
+  "chapters": [
+    {
+      "id": "c0",
+      "name_en": "COLD OPEN",
+      "name_hi": "",
+      "lines": [
+        {
+          "id": "c0_01",
+          "scene": "S00_ColdOpen",
+          "tts": "हर दिन... अस्सी करोड़ बार।",
+          "display": "हर दिन... 80 करोड़ बार।",
+          "en": "Every day... 800 million times.",
+          "src": "2.2",
+          "tts_en": "Every day... eight hundred million times.",
+          "display_en": "Every day... 800 million times."
+        },
+        {
+          "id": "c0_02",
+          "scene": "S00_ColdOpen",
+          "tts": "कोई चाय ख़रीदता है... कोई पेट्रोल भरवाता है... कोई किराया भेजता है।",
+          "display": "कोई चाय ख़रीदता है... कोई पेट्रोल भरवाता है... कोई किराया भेजता है।",
+          "en": "Someone buys tea... someone fills petrol... someone sends rent.",
+          "src": "",
+          "tts_en": "Someone buys a cup of tea. Someone fills up on petrol. Someone sends the rent.",
+          "display_en": "Someone buys a cup of tea. Someone fills up on petrol. Someone sends the rent."
+        },
+        {
+          "id": "c0_03",
+          "scene": "S00_ColdOpen",
+          "tts": "एक QR code. एक scan. और दो second में — पैसा पहुँच गया।",
+          "display": "एक QR code. एक scan. और 2 second में — पैसा पहुँच गया।",
+          "en": "One QR code. One scan. And in two seconds, the money arrives.",
+          "src": "",
+          "tts_en": "One QR code. One scan. And in two seconds, the money is there.",
+          "display_en": "One QR code. One scan. And in 2 seconds, the money is there."
+        },
+        {
+          "id": "c0_04",
+          "scene": "S00_ColdOpen",
+          "tts": "न कोई fee... न कोई charge। बिल्कुल फ़्री।",
+          "display": "न कोई fee... न कोई charge। बिल्कुल फ़्री।",
+          "en": "No fee. No charge. Completely free.",
+          "src": "1.4",
+          "tts_en": "No fee. No charge. Completely free.",
+          "display_en": "No fee. No charge. Completely free."
+        },
+        {
+          "id": "c0_05",
+          "scene": "S00_ColdOpen",
+          "tts": "लेकिन दुनिया का सबसे बड़ा real-time payment system... फ़्री में नहीं चलता।",
+          "display": "लेकिन दुनिया का सबसे बड़ा real-time payment system... फ़्री में नहीं चलता।",
+          "en": "But the world's largest real-time payment system doesn't run for free.",
+          "src": "2.4",
+          "tts_en": "But the world's largest real-time payment system... does not run for free.",
+          "display_en": "But the world's largest real-time payment system... does not run for free."
+        },
+        {
+          "id": "c0_06",
+          "scene": "S00_ColdOpen",
+          "tts": "कोई तो है... जो हर दिन इसका बिल भर रहा है।",
+          "display": "कोई तो है... जो हर दिन इसका बिल भर रहा है।",
+          "en": "Someone is paying its bill, every single day.",
+          "src": "3.1",
+          "tts_en": "Someone is paying its bill. Every single day.",
+          "display_en": "Someone is paying its bill. Every single day."
+        },
+        {
+          "id": "c0_07",
+          "scene": "S00_ColdOpen",
+          "tts": "सवाल ये है — कौन?",
+          "display": "सवाल ये है — कौन?",
+          "en": "The question is: who?",
+          "src": "",
+          "tts_en": "The question is... who?",
+          "display_en": "The question is... who?"
+        }
+      ]
+    },
+    {
+      "id": "c1",
+      "name_en": "THE PLEDGE",
+      "name_hi": "वादा",
+      "lines": [
+        {
+          "id": "c1_01",
+          "scene": "S11_ThreeParts",
+          "tts": "हर जादू के तीन हिस्से होते हैं।",
+          "display": "हर जादू के तीन हिस्से होते हैं।",
+          "en": "Every magic trick has three parts.",
+          "src": "",
+          "tts_en": "Every magic trick has three parts.",
+          "display_en": "Every magic trick has three parts."
+        },
+        {
+          "id": "c1_02",
+          "scene": "S11_ThreeParts",
+          "tts": "पहला हिस्सा — वादा। जादूगर आपको एक आम सी चीज़ दिखाता है।",
+          "display": "पहला हिस्सा — वादा। जादूगर आपको एक आम सी चीज़ दिखाता है।",
+          "en": "Part one: the pledge. The magician shows you something perfectly ordinary.",
+          "src": "",
+          "tts_en": "Part one: the Pledge. The magician shows you something ordinary.",
+          "display_en": "Part one: the Pledge. The magician shows you something ordinary."
+        },
+        {
+          "id": "c1_03",
+          "scene": "S12_QR",
+          "tts": "हमारी कहानी में वो आम चीज़ है... ये।",
+          "display": "हमारी कहानी में वो आम चीज़ है... ये।",
+          "en": "In our story, that ordinary thing is... this.",
+          "src": "",
+          "tts_en": "In our story, that ordinary thing is... this.",
+          "display_en": "In our story, that ordinary thing is... this."
+        },
+        {
+          "id": "c1_04",
+          "scene": "S13_Launch",
+          "tts": "अगस्त दो हज़ार सोलह। एन-पी-सी-आई का नया system — UPI — इक्कीस बैंकों के साथ शुरू होता है।",
+          "display": "अगस्त 2016 — NPCI का नया system, Unified Payments Interface (UPI), 21 बैंकों के साथ आम लोगों के लिए शुरू।",
+          "en": "August 2016. NPCI's new system, the Unified Payments Interface, opens to the public with 21 banks.",
+          "src": "1.1, 1.2",
+          "tts_en": "August, twenty sixteen. NPCI's new system, UPI, goes live for the public with twenty-one banks.",
+          "display_en": "August 2016. NPCI's new system, UPI, goes live for the public with 21 banks."
+        },
+        {
+          "id": "c1_05",
+          "scene": "S13_Launch",
+          "tts": "पहले पूरे महीने में... दस लाख transactions भी नहीं होते।",
+          "display": "पहले पूरे महीने में... 10 लाख transactions भी नहीं होते।",
+          "en": "In that first full month, there aren't even a million transactions.",
+          "src": "1.2",
+          "tts_en": "In its first full month, it doesn't even reach one million transactions.",
+          "display_en": "In its first full month, it doesn't even reach 1 million transactions."
+        },
+        {
+          "id": "c1_06",
+          "scene": "S14_ZeroMDR",
+          "tts": "फिर, एक जनवरी दो हज़ार बीस। सरकार UPI और RuPay debit card पर MDR ज़ीरो कर देती है।",
+          "display": "1 जनवरी 2020 — UPI और RuPay debit card पर MDR ज़ीरो।",
+          "en": "Then comes 1 January 2020. The government makes MDR zero on UPI and RuPay debit cards.",
+          "src": "1.4",
+          "tts_en": "Then comes the first of January, twenty twenty. The government sets the MDR on UPI and RuPay debit cards to zero.",
+          "display_en": "Then comes 1 January 2020. The government sets the MDR on UPI and RuPay debit cards to zero."
+        },
+        {
+          "id": "c1_07",
+          "scene": "S14_ZeroMDR",
+          "tts": "MDR — वो छोटी सी fee, जो digital payment लेने पर दुकानदार देता है। UPI पर ये पहले zero point three percent तक थी।",
+          "display": "MDR (Merchant Discount Rate) — digital payment लेने पर दुकानदार की fee। UPI पर पहले 0.30% तक।",
+          "en": "MDR, the Merchant Discount Rate: the small fee a shop pays to accept a digital payment. On UPI it used to be up to 0.30%.",
+          "src": "1.3",
+          "tts_en": "MDR, the merchant discount rate, is the small fee a shop pays to accept a digital payment. On UPI, it used to be up to zero point three percent.",
+          "display_en": "MDR, the merchant discount rate, is the small fee a shop pays to accept a digital payment. On UPI, it used to be up to 0.30%."
+        },
+        {
+          "id": "c1_09",
+          "scene": "S15_Explosion",
+          "tts": "और फिर... UPI फट पड़ता है।",
+          "display": "और फिर... UPI फट पड़ता है।",
+          "en": "And then... UPI explodes.",
+          "src": "",
+          "tts_en": "And then... UPI explodes.",
+          "display_en": "And then... UPI explodes."
+        },
+        {
+          "id": "c1_10",
+          "scene": "S15_Explosion",
+          "tts": "सितंबर दो हज़ार छब्बीस — एक महीने में चौबीस अरब transactions। यानी हर दिन, अस्सी करोड़ से ज़्यादा।",
+          "display": "सितंबर 2026 — 24.07 अरब transactions · हर दिन औसतन 80 करोड़+",
+          "en": "September 2026: 24 billion transactions in a month. On average, more than 800 million a day.",
+          "src": "2.1, 2.2",
+          "tts_en": "September, twenty twenty-six. Twenty-four billion transactions in a single month. More than eight hundred million, every day.",
+          "display_en": "September 2026: 24 billion transactions in a single month. More than 800 million, every day."
+        },
+        {
+          "id": "c1_11",
+          "scene": "S15_Explosion",
+          "tts": "दुनिया के लगभग आधे real-time payments... भारत में होते हैं।",
+          "display": "दुनिया के ~49% real-time payments भारत में (ACI Worldwide, 2023 data)",
+          "en": "According to ACI Worldwide, almost half of the world's real-time payments happen in India.",
+          "src": "2.4",
+          "tts_en": "According to ACI Worldwide, almost half of the world's real-time payments... happen in India.",
+          "display_en": "According to ACI Worldwide, almost half of the world's real-time payments happen in India."
+        },
+        {
+          "id": "c1_12",
+          "scene": "S16_PledgeEnd",
+          "tts": "वादा पूरा हुआ। UPI फ़्री था, तेज़ था... हर जगह था।",
+          "display": "वादा पूरा हुआ। UPI फ़्री था, तेज़ था... हर जगह था।",
+          "en": "The pledge was kept. UPI was free, fast... everywhere.",
+          "src": "",
+          "tts_en": "The pledge was kept. UPI was free. Fast. Everywhere.",
+          "display_en": "The pledge was kept. UPI was free. Fast. Everywhere."
+        },
+        {
+          "id": "c1_13",
+          "scene": "S16_PledgeEnd",
+          "tts": "लेकिन जादू में, जो दिखता है... वो पूरा सच नहीं होता।",
+          "display": "लेकिन जादू में, जो दिखता है... वो पूरा सच नहीं होता।",
+          "en": "But in magic, what you see is never the whole truth.",
+          "src": "",
+          "tts_en": "But in magic, what you see... is never the whole truth.",
+          "display_en": "But in magic, what you see... is never the whole truth."
+        }
+      ],
+      "sub_en": "The Promise"
+    },
+    {
+      "id": "c2",
+      "name_en": "THE TURN",
+      "name_hi": "ग़ायब बिल",
+      "lines": [
+        {
+          "id": "c2_01",
+          "scene": "S20_Vanish",
+          "tts": "दूसरा हिस्सा — The Turn। जादूगर उस चीज़ को... ग़ायब कर देता है।",
+          "display": "दूसरा हिस्सा — The Turn। जादूगर उस चीज़ को ग़ायब कर देता है।",
+          "en": "Part two: the turn. The magician makes the ordinary thing... disappear.",
+          "src": "",
+          "tts_en": "Part two: the Turn. The magician makes the ordinary thing... disappear.",
+          "display_en": "Part two: the Turn. The magician makes the ordinary thing... disappear."
+        },
+        {
+          "id": "c2_02",
+          "scene": "S20_Vanish",
+          "tts": "UPI में जो ग़ायब हुआ, वो था — बिल।",
+          "display": "UPI में जो ग़ायब हुआ, वो था — बिल।",
+          "en": "In UPI, what disappeared was the bill.",
+          "src": "",
+          "tts_en": "In UPI, what disappeared... was the bill.",
+          "display_en": "In UPI, what disappeared... was the bill."
+        },
+        {
+          "id": "c2_03",
+          "scene": "S21_Machine",
+          "tts": "आपके एक scan के पीछे, एक पूरी मशीन चलती है — आपका app, आपका बैंक, एन-पी-सी-आई, और दुकानदार का बैंक।",
+          "display": "एक scan के पीछे पूरी मशीन — app · आपका बैंक · NPCI switch · दुकानदार का बैंक",
+          "en": "Behind your one scan runs an entire machine: your app, your bank, NPCI's switch, and the shop's bank.",
+          "src": "3.3",
+          "tts_en": "Behind every scan runs an entire machine. Your app, your bank, NPCI, and the shop's bank.",
+          "display_en": "Behind every scan runs an entire machine: your app, your bank, NPCI, and the shop's bank."
+        },
+        {
+          "id": "c2_04",
+          "scene": "S21_Machine",
+          "tts": "Servers, security, fraud checks — चौबीसों घंटे।",
+          "display": "Servers · Security · Fraud checks — 24×7",
+          "en": "Servers, security, fraud checks, customer support, around the clock.",
+          "src": "",
+          "tts_en": "Servers. Security. Fraud checks. Around the clock.",
+          "display_en": "Servers. Security. Fraud checks. Around the clock."
+        },
+        {
+          "id": "c2_05",
+          "scene": "S21_Machine",
+          "tts": "ये सब मुफ़्त नहीं है। तो fee ज़ीरो होने के बाद... ये ख़र्च गया कहाँ?",
+          "display": "ये सब मुफ़्त नहीं। तो fee ज़ीरो होने के बाद, ख़र्च गया कहाँ?",
+          "en": "None of it is free. So when the fee went to zero, where did the cost go?",
+          "src": "",
+          "tts_en": "None of it is free. So when the fee went to zero... where did the cost go?",
+          "display_en": "None of it is free. So when the fee went to zero... where did the cost go?"
+        },
+        {
+          "id": "c2_06",
+          "scene": "S22_Subsidy",
+          "tts": "पहला जवाब — सरकार। यानी, taxpayer का पैसा।",
+          "display": "पहला जवाब — सरकार। यानी, taxpayer का पैसा।",
+          "en": "Answer one: the government. In other words, taxpayers' money.",
+          "src": "3.1",
+          "tts_en": "Answer number one: the government. In other words, taxpayers.",
+          "display_en": "Answer number one: the government. In other words, taxpayers."
+        },
+        {
+          "id": "c2_07",
+          "scene": "S22_Subsidy",
+          "tts": "PIB के आँकड़ों के मुताबिक़, सरकार ने बैंकों को incentive दिया — दो हज़ार इक्कीस-बाईस में तेरह सौ नवासी करोड़... और दो हज़ार तेईस-चौबीस तक, छत्तीस सौ इकतीस करोड़ रुपये।",
+          "display": "सरकारी incentive (UPI + RuPay) — 2021-22: ₹1,389 करोड़ · 2022-23: ₹2,210 करोड़ · 2023-24: ₹3,631 करोड़ (PIB)",
+          "en": "Per PIB data, the government paid banks incentives: ₹1,389 crore in 2021-22, rising to ₹3,631 crore by 2023-24.",
+          "src": "3.1",
+          "tts_en": "According to PIB, the government paid banks incentives of thirteen hundred and eighty-nine crore rupees in financial year twenty-two... rising to thirty-six hundred and thirty-one crore by financial year twenty-four.",
+          "display_en": "According to PIB, the government paid banks incentives of ₹1,389 crore in FY22, rising to ₹3,631 crore by FY24."
+        },
+        {
+          "id": "c2_08",
+          "scene": "S23_Gap",
+          "tts": "लेकिन industry कहती रही — ये काफ़ी नहीं। Payments Council of India के मुताबिक़, UPI चलाने का सालाना ख़र्च क़रीब दस हज़ार करोड़ रुपये है... और सरकारी मदद, सिर्फ़ पंद्रह सौ करोड़।",
+          "display": "Payments Council of India (मार्च 2025): सालाना ख़र्च ~₹10,000 करोड़ · सरकारी मदद ₹1,500 करोड़",
+          "en": "But the industry kept saying it isn't enough: per the Payments Council of India, running UPI costs about ₹10,000 crore a year, against only ₹1,500 crore of government support.",
+          "src": "3.4, 3.2",
+          "tts_en": "But the industry kept saying it wasn't enough. The Payments Council of India said running UPI costs about ten thousand crore rupees a year... against government support of just fifteen hundred crore.",
+          "display_en": "But the industry kept saying it wasn't enough. The Payments Council of India said running UPI costs about ₹10,000 crore a year, against government support of just ₹1,500 crore."
+        },
+        {
+          "id": "c2_11",
+          "scene": "S24_Memory",
+          "tts": "और इस पूरे वक़्त, सरकार का जवाब... एक ही था।",
+          "display": "और इस पूरे वक़्त, सरकार का जवाब एक ही था।",
+          "en": "And all this time, the government's answer was the same.",
+          "src": "",
+          "tts_en": "And all this time, the government's answer... was the same.",
+          "display_en": "And all this time, the government's answer was the same."
+        },
+        {
+          "id": "c2_12",
+          "scene": "S24_Memory",
+          "tts": "दो हज़ार बाईस — UPI एक digital public good है। Charge लगाने का, कोई विचार नहीं।",
+          "display": "21 अगस्त 2022 · वित्त मंत्रालय: “UPI is a digital public good… There is no consideration in Government to levy any charges for UPI services.”",
+          "en": "August 2022, Finance Ministry: UPI is a digital public good; there is no plan to levy any charges.",
+          "src": "4.1",
+          "tts_en": "August, twenty twenty-two. The Finance Ministry: UPI is a digital public good. There is no consideration in Government to levy any charges.",
+          "display_en": "August 2022. The Finance Ministry: “UPI is a digital public good… There is no consideration in Government to levy any charges.”"
+        },
+        {
+          "id": "c2_13",
+          "scene": "S24_Memory",
+          "tts": "जून दो हज़ार पच्चीस — MDR की ख़बरें? Completely false।",
+          "display": "11 जून 2025 · वित्त मंत्रालय: MDR की ख़बरें “completely false, baseless and misleading”",
+          "en": "June 2025, Finance Ministry: reports of MDR on UPI are completely false, baseless and misleading.",
+          "src": "4.2",
+          "tts_en": "June, twenty twenty-five. Reports of MDR on UPI? Completely false, baseless and misleading.",
+          "display_en": "June 2025. Reports of MDR on UPI? “Completely false, baseless and misleading.”"
+        },
+        {
+          "id": "c2_14",
+          "scene": "S24_Memory",
+          "tts": "फिर, सिर्फ़ छह हफ़्ते बाद, RBI गवर्नर ने कहा... Someone will have to bear the cost.",
+          "display": "25 जुलाई 2025 · RBI गवर्नर संजय मल्होत्रा: “Costs will have to be paid. Someone will have to bear the cost.”",
+          "en": "Just six weeks later, RBI Governor Sanjay Malhotra said: costs will have to be paid; someone will have to bear the cost.",
+          "src": "4.3",
+          "tts_en": "Then, just six weeks later, the RBI Governor said: costs will have to be paid. Someone will have to bear the cost.",
+          "display_en": "Then, just six weeks later, the RBI Governor said: “Costs will have to be paid. Someone will have to bear the cost.”"
+        },
+        {
+          "id": "c2_15",
+          "scene": "S25_Budget",
+          "tts": "और दो हज़ार छब्बीस-सत्ताईस के बजट में, ये मदद क़रीब दस परसेंट घटा दी गई।",
+          "display": "Budget 2026-27: ₹2,196 करोड़ → ₹2,000 करोड़ (~10% कम)",
+          "en": "And in the 2026-27 budget, this support was cut by about 10% from the previous year.",
+          "src": "3.5",
+          "tts_en": "And in the latest Union Budget, that support was cut by about ten percent.",
+          "display_en": "And in the latest Union Budget, that support was cut by about 10%."
+        },
+        {
+          "id": "c2_16",
+          "scene": "S25_Budget",
+          "tts": "बिल ग़ायब नहीं हुआ था। बस... किसी को दिख नहीं रहा था।",
+          "display": "बिल ग़ायब नहीं हुआ था। बस... किसी को दिख नहीं रहा था।",
+          "en": "The bill hadn't vanished. It just wasn't visible to anyone.",
+          "src": "",
+          "tts_en": "The bill hadn't vanished. It just... wasn't visible.",
+          "display_en": "The bill hadn't vanished. It just wasn't visible."
+        }
+      ],
+      "sub_en": "The Vanishing Bill"
+    },
+    {
+      "id": "c3",
+      "name_en": "THE BILL",
+      "name_hi": "चौदह सितंबर",
+      "lines": [
+        {
+          "id": "c3_01",
+          "scene": "S30_Law",
+          "tts": "अगस्त दो हज़ार छब्बीस। संसद, payments के क़ानून में बदलाव करती है।",
+          "display": "अगस्त 2026 — संसद ने Payment and Settlement Systems Act बदला · 17 अगस्त: राष्ट्रपति की मंज़ूरी",
+          "en": "August 2026. Parliament amends the Payment and Settlement Systems Act, and on 17 August the President gives assent.",
+          "src": "5.1",
+          "tts_en": "August, twenty twenty-six. Parliament amends India's payments law.",
+          "display_en": "August 2026. Parliament amends India's payments law."
+        },
+        {
+          "id": "c3_02",
+          "scene": "S31_Notification",
+          "tts": "चौदह सितंबर — वित्त मंत्रालय का notification। अगले दिन — पूरे नियम।",
+          "display": "14 सितंबर — वित्त मंत्रालय का Gazette notification · 15 सितंबर — पूरे नियम (FAQs)",
+          "en": "14 September: the Finance Ministry's notification. The next day, the full rulebook.",
+          "src": "5.2",
+          "tts_en": "September fourteenth: the Finance Ministry's notification. The next day, the full rulebook.",
+          "display_en": "14 September: the Finance Ministry's notification. The next day, the full rulebook."
+        },
+        {
+          "id": "c3_03",
+          "scene": "S32_Rules",
+          "tts": "नियम सीधा है।",
+          "display": "नियम सीधा है।",
+          "en": "The rule is simple.",
+          "src": "",
+          "tts_en": "The rule is simple.",
+          "display_en": "The rule is simple."
+        },
+        {
+          "id": "c3_04",
+          "scene": "S32_Rules",
+          "tts": "दो हज़ार रुपये से ऊपर के merchant payment पर, zero point four percent MDR।",
+          "display": "₹2,000 से ऊपर के merchant payment पर — 0.4% MDR",
+          "en": "Merchant payments above ₹2,000 carry a 0.4% MDR.",
+          "src": "5.3",
+          "tts_en": "Merchant payments above two thousand rupees carry a zero point four percent MDR.",
+          "display_en": "Merchant payments above ₹2,000 carry a 0.4% MDR."
+        },
+        {
+          "id": "c3_05",
+          "scene": "S32_Rules",
+          "tts": "बड़े से बड़े payment पर भी... ज़्यादा से ज़्यादा, तीन सौ रुपये।",
+          "display": "₹75,000 और उससे ऊपर — maximum ₹300",
+          "en": "Even on payments of ₹75,000 or more, at most ₹300.",
+          "src": "5.3",
+          "tts_en": "Even the biggest payment pays no more than three hundred rupees.",
+          "display_en": "Even the biggest payment pays no more than ₹300."
+        },
+        {
+          "id": "c3_06",
+          "scene": "S32_Rules",
+          "tts": "Railways, telecom, insurance और fuel — flat पाँच रुपये।",
+          "display": "Railways · Telecom · Insurance · Fuel — flat ₹5",
+          "en": "Railways, telecom, insurance and fuel: a flat ₹5.",
+          "src": "5.4",
+          "tts_en": "Railways, telecom, insurance and fuel: a flat five rupees.",
+          "display_en": "Railways, telecom, insurance and fuel: a flat ₹5."
+        },
+        {
+          "id": "c3_07",
+          "scene": "S32_Rules",
+          "tts": "आपस में भेजा पैसा — फ़्री। और जिन छोटे दुकानदारों को UPI से महीने में एक लाख तक मिलते हैं... उन पर कोई fee नहीं।",
+          "display": "Person-to-person — फ़्री · छोटे दुकानदार (UPI से ₹1 लाख/महीना तक) — कोई fee नहीं",
+          "en": "Person-to-person transfers stay free. Small merchants receiving up to ₹1 lakh a month via UPI pay nothing.",
+          "src": "5.5, 5.6",
+          "tts_en": "Person-to-person transfers stay free. And small shops receiving up to one lakh rupees a month through UPI... pay nothing.",
+          "display_en": "Person-to-person transfers stay free. And small shops receiving up to ₹1 lakh a month through UPI pay nothing."
+        },
+        {
+          "id": "c3_08",
+          "scene": "S32_Rules",
+          "tts": "और ये fee, customer से नहीं ली जा सकती — ये दुकानदार देगा।",
+          "display": "Fee customer से नहीं ली जा सकती — दुकानदार देगा",
+          "en": "Most importantly, the fee cannot be taken from the customer. The shop pays it.",
+          "src": "5.6",
+          "tts_en": "And the key point: the fee cannot be charged to the customer. The shop pays it.",
+          "display_en": "And the key point: the fee cannot be charged to the customer. The shop pays it."
+        },
+        {
+          "id": "c3_09",
+          "scene": "S33_Revenue",
+          "tts": "एन-पी-सी-आई का अनुमान — हर साल, बीस हज़ार छह सौ करोड़ रुपये तक।",
+          "display": "NPCI का अनुमान — हर साल ₹20,600 करोड़ तक",
+          "en": "By NPCI's estimate, this could raise up to ₹20,600 crore a year.",
+          "src": "5.7",
+          "tts_en": "NPCI estimates it could raise up to twenty thousand six hundred crore rupees a year.",
+          "display_en": "NPCI estimates it could raise up to ₹20,600 crore a year."
+        },
+        {
+          "id": "c3_10",
+          "scene": "S34_Countdown",
+          "tts": "और फिर... शुरू हुआ countdown।",
+          "display": "और फिर... शुरू हुआ countdown।",
+          "en": "And then the countdown began.",
+          "src": "",
+          "tts_en": "And then... the countdown began.",
+          "display_en": "And then... the countdown began."
+        },
+        {
+          "id": "c3_11",
+          "scene": "S34_Countdown",
+          "tts": "बत्तीस हज़ार से ज़्यादा दुकानदारों के survey में, सिर्फ़ सत्रह परसेंट ये fee ख़ुद उठाने को तैयार थे।",
+          "display": "LocalCircles · 32,000+ दुकानदार: सिर्फ़ 17% fee ख़ुद उठाने को तैयार",
+          "en": "In a LocalCircles survey of over 32,000 merchants, only 17% said they would absorb the fee themselves.",
+          "src": "6.1",
+          "tts_en": "In a LocalCircles survey of more than thirty-two thousand merchants, only seventeen percent said they would absorb the fee themselves.",
+          "display_en": "In a LocalCircles survey of 32,000+ merchants, only 17% said they would absorb the fee themselves."
+        },
+        {
+          "id": "c3_12",
+          "scene": "S34_Countdown",
+          "tts": "और सड़सठ हज़ार से ज़्यादा users में, सिर्फ़ चौदह परसेंट ने कहा — fee उन पर आई, तो भी UPI नहीं छोड़ेंगे।",
+          "display": "LocalCircles · 67,000+ users: fee उन पर आए, तो सिर्फ़ 14% UPI पर टिकेंगे",
+          "en": "And of over 67,000 users, only 14% said they would stick with UPI if the fee were passed on to them.",
+          "src": "6.2",
+          "tts_en": "And of more than sixty-seven thousand users, only fourteen percent said they would stick with UPI if the fee were passed on to them.",
+          "display_en": "And of 67,000+ users, only 14% said they would stick with UPI if the fee were passed on to them."
+        },
+        {
+          "id": "c3_13",
+          "scene": "S35_Map",
+          "tts": "मध्य प्रदेश के petrol pump dealers ने ऐलान किया — सोलह अक्टूबर से, दो हज़ार से ऊपर UPI बंद। पंजाब और हरियाणा से भी, यही ऐलान।",
+          "display": "MP petrol pump dealers: 16 अक्टूबर से ₹2,000+ UPI बंद · पंजाब, हरियाणा से भी यही ऐलान",
+          "en": "Madhya Pradesh's petrol pump dealers announced: from 16 October, no UPI above ₹2,000. Punjab and Haryana said the same.",
+          "src": "6.3",
+          "tts_en": "Petrol pump dealers in Madhya Pradesh announced that from October sixteenth, they would stop taking UPI above two thousand rupees. Dealers in Punjab and Haryana said the same.",
+          "display_en": "Petrol pump dealers in Madhya Pradesh announced that from 16 October, they would stop taking UPI above ₹2,000. Dealers in Punjab and Haryana said the same."
+        },
+        {
+          "id": "c3_14",
+          "scene": "S36_Court",
+          "tts": "मामला Supreme Court पहुँचा। कोर्ट ने रोक से इनकार किया... और सरकार, RBI और एन-पी-सी-आई से जवाब माँगा।",
+          "display": "28 सितंबर · Supreme Court: रोक से इनकार · Centre, RBI, NPCI से 4 हफ़्ते में जवाब",
+          "en": "The case reached the Supreme Court. On 28 September it refused a stay and asked the Centre, RBI and NPCI to reply within four weeks.",
+          "src": "6.4",
+          "tts_en": "The case reached the Supreme Court. It refused to pause the fee... and asked the government, the RBI and NPCI to respond.",
+          "display_en": "The case reached the Supreme Court. It refused to pause the fee, and asked the government, the RBI and NPCI to respond."
+        },
+        {
+          "id": "c3_15",
+          "scene": "S36_Court",
+          "tts": "और सरकार की तरफ़ से कहा गया — It is neither a tax, nor a fee.",
+          "display": "सरकार की ओर से (ASG): “It is neither a tax nor a fee.”",
+          "en": "And the government told the court: it is neither a tax nor a fee.",
+          "src": "6.5",
+          "tts_en": "And the government's counsel told the court: it is neither a tax, nor a fee.",
+          "display_en": "And the government's counsel told the court: “It is neither a tax nor a fee.”"
+        },
+        {
+          "id": "c3_16",
+          "scene": "S37_Deferral",
+          "tts": "और फिर — deadline से सिर्फ़ दो दिन पहले — एन-पी-सी-आई ने ऐलान किया...",
+          "display": "13 अक्टूबर — deadline से सिर्फ़ 2 दिन पहले, NPCI:",
+          "en": "Then, just two days before the deadline, on 13 October, NPCI announced:",
+          "src": "6.6",
+          "tts_en": "Then, just two days before the deadline... NPCI announced:",
+          "display_en": "Then, just two days before the deadline, NPCI announced:"
+        },
+        {
+          "id": "c3_17",
+          "scene": "S37_Deferral",
+          "tts": "MDR... Diwali के बाद। नई तारीख़? अभी तय नहीं।",
+          "display": "MDR — Diwali के बाद। नई तारीख़? अभी तय नहीं।",
+          "en": "MDR: after Diwali. The new date? Not decided yet.",
+          "src": "6.6",
+          "tts_en": "The MDR would wait until after Diwali. The new date? Not yet decided.",
+          "display_en": "The MDR would wait until after Diwali. The new date? Not yet decided."
+        }
+      ],
+      "sub_en": "14 September"
+    },
+    {
+      "id": "c4",
+      "name_en": "THE PRESTIGE",
+      "name_hi": "असली क़ीमत",
+      "lines": [
+        {
+          "id": "c4_01",
+          "scene": "S40_Return",
+          "tts": "तीसरा हिस्सा — The Prestige। वो पल, जब ग़ायब हुई चीज़... वापस आती है।",
+          "display": "तीसरा हिस्सा — The Prestige। जब ग़ायब हुई चीज़ वापस आती है।",
+          "en": "And now, part three: the prestige. The moment the vanished thing comes back.",
+          "src": "",
+          "tts_en": "Part three: the Prestige. The moment the vanished thing... comes back.",
+          "display_en": "Part three: the Prestige. The moment the vanished thing comes back."
+        },
+        {
+          "id": "c4_02",
+          "scene": "S40_Return",
+          "tts": "वो बिल, जो दो हज़ार बीस में ग़ायब हुआ था... कभी ग़ायब हुआ ही नहीं।",
+          "display": "वो बिल, जो 2020 में ग़ायब हुआ था... कभी ग़ायब हुआ ही नहीं।",
+          "en": "The bill that vanished in 2020 never really vanished.",
+          "src": "",
+          "tts_en": "The bill that disappeared in twenty twenty... never really disappeared.",
+          "display_en": "The bill that disappeared in 2020... never really disappeared."
+        },
+        {
+          "id": "c4_03",
+          "scene": "S40_Return",
+          "tts": "उसका एक हिस्सा taxpayer के पैसे से भरा गया — यानी, आपके पैसे से। और बाक़ी, बैंकों और payment companies ने उठाया।",
+          "display": "एक हिस्सा — taxpayer का पैसा, यानी आपका पैसा · बाक़ी — बैंक और payment companies",
+          "en": "For years, part of it was paid with taxpayers' money, which means, in some way, your money. The rest was carried by banks and payment companies.",
+          "src": "3.1, 3.4",
+          "tts_en": "Part of it was paid with taxpayers' money. In other words, your money. The rest was carried by banks and payment companies.",
+          "display_en": "Part of it was paid with taxpayers' money — in other words, your money. The rest was carried by banks and payment companies."
+        },
+        {
+          "id": "c4_04",
+          "scene": "S40_Return",
+          "tts": "और अब, वो बिल... दुकानदार के counter पर लौट आया है।",
+          "display": "अब वो बिल लौट आया है — दुकानदार के counter पर।",
+          "en": "Now the bill is back, on the shopkeeper's counter.",
+          "src": "5.3",
+          "tts_en": "And now, the bill has come back... to the shopkeeper's counter.",
+          "display_en": "And now, the bill has come back — to the shopkeeper's counter."
+        },
+        {
+          "id": "c4_05",
+          "scene": "S41_WhoPays",
+          "tts": "क़ानून कहता है — ये charge आप पर नहीं डाला जा सकता। लेकिन business का हर ख़र्च... आख़िर में कहीं न कहीं, क़ीमत में दिख ही जाता है।",
+          "display": "क़ानून: charge आप पर नहीं · लेकिन business का हर ख़र्च, आख़िर में कहीं न कहीं क़ीमत में दिखता है",
+          "en": "The law says the charge can't be put on you. But economics says every business cost eventually shows up somewhere in prices.",
+          "src": "5.6",
+          "tts_en": "The law says the charge cannot be passed on to you. But every cost a business carries... shows up somewhere, eventually, in prices.",
+          "display_en": "The law says the charge cannot be passed on to you. But every cost a business carries shows up somewhere, eventually, in prices."
+        },
+        {
+          "id": "c4_06",
+          "scene": "S41_WhoPays",
+          "tts": "तो free UPI का बिल कौन भरता है? Taxpayer के रूप में — आप। Customer के रूप में — शायद आप। और system कमज़ोर पड़ा... तो नुक़सान भी, आपका।",
+          "display": "Taxpayer के रूप में — आप · Customer के रूप में — शायद आप · System कमज़ोर पड़ा, तो नुक़सान — आपका",
+          "en": "So who pays for free UPI? As a taxpayer, you. As a customer, perhaps you. And if the system weakens, the loss is yours too.",
+          "src": "",
+          "tts_en": "So, who pays for free UPI? As a taxpayer: you. As a customer: maybe you. And if the system weakens... the loss is yours too.",
+          "display_en": "So, who pays for free UPI? As a taxpayer: you. As a customer: maybe you. And if the system weakens, the loss is yours too."
+        },
+        {
+          "id": "c4_07",
+          "scene": "S42_Question",
+          "tts": "असली सवाल ये नहीं, कि UPI फ़्री रहे या नहीं। सवाल ये है — इस system की क़ीमत, कौन चुकाए... और कैसे।",
+          "display": "असली सवाल: इस system की क़ीमत — कौन चुकाए, और कैसे?",
+          "en": "The real question isn't whether UPI should stay free. It's who should pay for the world's largest digital payment system, how much, and how.",
+          "src": "",
+          "tts_en": "The real question isn't whether UPI should stay free. It's who should pay for this system... and how.",
+          "display_en": "The real question isn't whether UPI should stay free. It's who should pay for this system, and how."
+        },
+        {
+          "id": "c4_08",
+          "scene": "S42_Question",
+          "tts": "एक तरफ़ — इस system को चलाने के लिए पैसा चाहिए। दूसरी तरफ़ — करोड़ों छोटे दुकानदार... और cash की वापसी का ख़तरा।",
+          "display": "System को चलाने के लिए पैसा चाहिए  ⟷  करोड़ों छोटे दुकानदार — और cash की वापसी का ख़तरा",
+          "en": "On one side, the system needs money to run. On the other, millions of small shopkeepers, and the risk of a return to cash.",
+          "src": "6.1, 6.2",
+          "tts_en": "On one side, a system that needs money to run. On the other, millions of small shopkeepers... and the risk of a return to cash.",
+          "display_en": "On one side, a system that needs money to run. On the other, millions of small shopkeepers, and the risk of a return to cash."
+        },
+        {
+          "id": "c4_09",
+          "scene": "S43_Coin",
+          "tts": "फ़िलहाल — नई तारीख़ का इंतज़ार है। और Supreme Court में, मामला अभी बाक़ी है।",
+          "display": "फ़िलहाल — नई तारीख़ का इंतज़ार · Supreme Court में मामला बाक़ी",
+          "en": "For now, we wait for the new date. And the case is still pending in the Supreme Court.",
+          "src": "6.4, 6.6",
+          "tts_en": "For now, we wait for the new date. And the case is still pending in the Supreme Court.",
+          "display_en": "For now, we wait for the new date. And the case is still pending in the Supreme Court."
+        },
+        {
+          "id": "c4_10",
+          "scene": "S43_Coin",
+          "tts": "सिक्का... अभी घूम रहा है।",
+          "display": "सिक्का... अभी घूम रहा है।",
+          "en": "The coin... is still spinning.",
+          "src": "",
+          "tts_en": "The coin... is still spinning.",
+          "display_en": "The coin... is still spinning."
+        }
+      ],
+      "sub_en": "The Real Cost"
+    },
+    {
+      "id": "c5",
+      "name_en": "OUTRO",
+      "name_hi": "",
+      "lines": [
+        {
+          "id": "c5_01",
+          "scene": "S50_Outro",
+          "tts": "आपको क्या लगता है — ये fee सही है, या ग़लत? Comments में बताइए। सारे sources, description में हैं।",
+          "display": "आपको क्या लगता है — ये fee सही है या ग़लत? Comments में बताइए · Sources: description",
+          "en": "What do you think: is this fee on payments above ₹2,000 right or wrong? Tell us in the comments. All sources are in the description.",
+          "src": "",
+          "tts_en": "What do you think? Is this fee on payments above two thousand rupees fair, or not? Tell us in the comments. All the sources are in the description.",
+          "display_en": "What do you think? Is this fee on payments above ₹2,000 fair, or not? Tell us in the comments. All the sources are in the description."
+        }
+      ]
+    }
+  ],
+  "disclaimer": {
+    "hi": "यह वीडियो केवल शैक्षिक और जानकारी के उद्देश्य से है। यह वित्तीय या कानूनी सलाह नहीं है। तथ्य 23 अक्टूबर 2026 तक के सार्वजनिक स्रोतों पर आधारित हैं; नियम बदल सकते हैं। कुछ दृश्य प्रतीकात्मक हैं।",
+    "en": "For educational and informational purposes only. Not financial or legal advice. Facts are based on public sources as of 23 Oct 2026; rules may change. Some visuals are illustrative."
+  },
+  "pronunciation": {
+    "UPI": "यू-पी-आई",
+    "NPCI": "एन-पी-सी-आई",
+    "MDR": "एम-डी-आर",
+    "RBI": "आर-बी-आई",
+    "PIB": "पी-आई-बी",
+    "ACI Worldwide": "ए-सी-आई वर्ल्डवाइड",
+    "RuPay": "रूपे",
+    "LocalCircles": "लोकल सर्कल्स",
+    "QR code": "क्यू-आर कोड",
+    "note": "If Sarvam mispronounces a Latin-script term, replace it in `tts` with the Devanagari spelling above and re-generate only that line."
+  },
+  "title_en_full": "Who Really Pays for Your 'Free' UPI?",
+  "disclaimer_en_card": "For educational and informational purposes only. This is not financial or legal advice. Facts are based on public sources as of 23 October 2026; rules may change. Some visuals are illustrative.",
+  "pronunciation_en": {
+    "NPCI": "N P C I",
+    "UPI": "U P I",
+    "MDR": "M D R",
+    "RBI": "R B I",
+    "PIB": "P I B",
+    "RuPay": "Roo-pay",
+    "LocalCircles": "Local Circles",
+    "crore": "crore",
+    "lakh": "lakh",
+    "note": "Sarvam en-IN reads Indian terms natively; if a term is misread, spell it as above in tts_en and re-run --only <id>."
+  }
+}

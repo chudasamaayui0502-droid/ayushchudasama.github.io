@@ -1,0 +1,810 @@
+{
+ "lang": "en",
+ "seconds": 441.015,
+ "voDir": "vo_en",
+ "segments": [
+  {
+   "kind": "scene",
+   "id": "S00_ColdOpen",
+   "chapter": "c0",
+   "t": 0.0,
+   "dur": 29.278,
+   "trans_in": null,
+   "lines": [
+    {
+     "id": "c0_01",
+     "t": 1.2,
+     "dur": 3.005
+    },
+    {
+     "id": "c0_02",
+     "t": 4.425,
+     "dur": 5.777
+    },
+    {
+     "id": "c0_03",
+     "t": 10.422,
+     "dur": 4.394
+    },
+    {
+     "id": "c0_04",
+     "t": 15.036,
+     "dur": 2.793
+    },
+    {
+     "id": "c0_05",
+     "t": 18.179,
+     "dur": 4.257
+    },
+    {
+     "id": "c0_06",
+     "t": 22.886,
+     "dur": 3.206
+    },
+    {
+     "id": "c0_07",
+     "t": 26.991,
+     "dur": 1.737
+    }
+   ]
+  },
+  {
+   "kind": "title",
+   "id": "S01_Title",
+   "chapter": null,
+   "t": 29.5,
+   "dur": 4.0,
+   "trans_in": null,
+   "lines": []
+  },
+  {
+   "kind": "disclaimer",
+   "id": "S02_Disclaimer",
+   "chapter": null,
+   "t": 33.5,
+   "dur": 3.0,
+   "trans_in": null,
+   "lines": []
+  },
+  {
+   "kind": "chapter",
+   "id": "CH_c1",
+   "chapter": "c1",
+   "t": 36.5,
+   "dur": 3.0,
+   "trans_in": null,
+   "lines": []
+  },
+  {
+   "kind": "scene",
+   "id": "S11_ThreeParts",
+   "chapter": "c1",
+   "t": 39.5,
+   "dur": 7.756,
+   "trans_in": {
+    "type": "dissolve",
+    "frames": 12,
+    "dir": 1,
+    "color": "",
+    "from_scene": false,
+    "t_mid": 39.7
+   },
+   "lines": [
+    {
+     "id": "c1_01",
+     "t": 39.95,
+     "dur": 2.17
+    },
+    {
+     "id": "c1_02",
+     "t": 42.44,
+     "dur": 3.766
+    }
+   ]
+  },
+  {
+   "kind": "scene",
+   "id": "S12_QR",
+   "chapter": "c1",
+   "t": 47.5,
+   "dur": 7.037,
+   "trans_in": {
+    "type": "zoom",
+    "frames": 14,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 47.71
+   },
+   "lines": [
+    {
+     "id": "c1_03",
+     "t": 47.95,
+     "dur": 4.737
+    }
+   ]
+  },
+  {
+   "kind": "scene",
+   "id": "S13_Launch",
+   "chapter": "c1",
+   "t": 55.0,
+   "dur": 14.388,
+   "trans_in": {
+    "type": "whip",
+    "frames": 10,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 55.15
+   },
+   "lines": [
+    {
+     "id": "c1_04",
+     "t": 55.45,
+     "dur": 7.103
+    },
+    {
+     "id": "c1_05",
+     "t": 62.873,
+     "dur": 5.365
+    }
+   ]
+  },
+  {
+   "kind": "scene",
+   "id": "S14_ZeroMDR",
+   "chapter": "c1",
+   "t": 69.5,
+   "dur": 18.724,
+   "trans_in": {
+    "type": "panel",
+    "frames": 16,
+    "dir": 1,
+    "color": "amber",
+    "from_scene": true,
+    "t_mid": 69.767
+   },
+   "lines": [
+    {
+     "id": "c1_06",
+     "t": 69.95,
+     "dur": 8.013
+    },
+    {
+     "id": "c1_07",
+     "t": 78.283,
+     "dur": 9.391
+    }
+   ]
+  },
+  {
+   "kind": "scene",
+   "id": "S15_Explosion",
+   "chapter": "c1",
+   "t": 88.5,
+   "dur": 18.956,
+   "trans_in": {
+    "type": "light",
+    "frames": 16,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 88.767
+   },
+   "lines": [
+    {
+     "id": "c1_09",
+     "t": 88.95,
+     "dur": 2.303
+    },
+    {
+     "id": "c1_10",
+     "t": 92.253,
+     "dur": 8.5
+    },
+    {
+     "id": "c1_11",
+     "t": 101.073,
+     "dur": 5.233
+    }
+   ]
+  },
+  {
+   "kind": "scene",
+   "id": "S16_PledgeEnd",
+   "chapter": "c1",
+   "t": 107.5,
+   "dur": 10.052,
+   "trans_in": {
+    "type": "push3d",
+    "frames": 18,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 107.8
+   },
+   "lines": [
+    {
+     "id": "c1_12",
+     "t": 107.95,
+     "dur": 4.256
+    },
+    {
+     "id": "c1_13",
+     "t": 112.526,
+     "dur": 3.276
+    }
+   ]
+  },
+  {
+   "kind": "chapter",
+   "id": "CH_c2",
+   "chapter": "c2",
+   "t": 118.0,
+   "dur": 3.0,
+   "trans_in": null,
+   "lines": []
+  },
+  {
+   "kind": "scene",
+   "id": "S20_Vanish",
+   "chapter": "c2",
+   "t": 121.0,
+   "dur": 10.93,
+   "trans_in": {
+    "type": "dissolve",
+    "frames": 12,
+    "dir": 1,
+    "color": "",
+    "from_scene": false,
+    "t_mid": 121.2
+   },
+   "lines": [
+    {
+     "id": "c2_01",
+     "t": 121.45,
+     "dur": 5.988
+    },
+    {
+     "id": "c2_02",
+     "t": 127.758,
+     "dur": 2.722
+    }
+   ]
+  },
+  {
+   "kind": "scene",
+   "id": "S21_Machine",
+   "chapter": "c2",
+   "t": 132.0,
+   "dur": 18.664,
+   "trans_in": {
+    "type": "zoom",
+    "frames": 14,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 132.21
+   },
+   "lines": [
+    {
+     "id": "c2_03",
+     "t": 132.45,
+     "dur": 7.86
+    },
+    {
+     "id": "c2_04",
+     "t": 140.63,
+     "dur": 3.91
+    },
+    {
+     "id": "c2_05",
+     "t": 144.86,
+     "dur": 4.453
+    }
+   ]
+  },
+  {
+   "kind": "scene",
+   "id": "S22_Subsidy",
+   "chapter": "c2",
+   "t": 151.0,
+   "dur": 18.988,
+   "trans_in": {
+    "type": "panel",
+    "frames": 16,
+    "dir": -1,
+    "color": "teal",
+    "from_scene": true,
+    "t_mid": 151.267
+   },
+   "lines": [
+    {
+     "id": "c2_06",
+     "t": 151.45,
+     "dur": 4.327
+    },
+    {
+     "id": "c2_07",
+     "t": 156.097,
+     "dur": 12.741
+    }
+   ]
+  },
+  {
+   "kind": "scene",
+   "id": "S23_Gap",
+   "chapter": "c2",
+   "t": 170.0,
+   "dur": 13.878,
+   "trans_in": {
+    "type": "whip",
+    "frames": 10,
+    "dir": -1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 170.15
+   },
+   "lines": [
+    {
+     "id": "c2_08",
+     "t": 170.45,
+     "dur": 12.878
+    }
+   ]
+  },
+  {
+   "kind": "scene",
+   "id": "S24_Memory",
+   "chapter": "c2",
+   "t": 184.0,
+   "dur": 31.642,
+   "trans_in": {
+    "type": "light",
+    "frames": 16,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 184.267
+   },
+   "lines": [
+    {
+     "id": "c2_11",
+     "t": 184.45,
+     "dur": 3.415
+    },
+    {
+     "id": "c2_12",
+     "t": 188.465,
+     "dur": 9.407
+    },
+    {
+     "id": "c2_13",
+     "t": 198.372,
+     "dur": 7.027
+    },
+    {
+     "id": "c2_14",
+     "t": 206.099,
+     "dur": 7.793
+    }
+   ]
+  },
+  {
+   "kind": "scene",
+   "id": "S25_Budget",
+   "chapter": "c2",
+   "t": 216.0,
+   "dur": 10.875,
+   "trans_in": {
+    "type": "push3d",
+    "frames": 18,
+    "dir": -1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 216.3
+   },
+   "lines": [
+    {
+     "id": "c2_15",
+     "t": 216.45,
+     "dur": 4.735
+    },
+    {
+     "id": "c2_16",
+     "t": 221.505,
+     "dur": 3.62
+    }
+   ]
+  },
+  {
+   "kind": "chapter",
+   "id": "CH_c3",
+   "chapter": "c3",
+   "t": 227.0,
+   "dur": 3.0,
+   "trans_in": null,
+   "lines": []
+  },
+  {
+   "kind": "scene",
+   "id": "S30_Law",
+   "chapter": "c3",
+   "t": 230.0,
+   "dur": 5.323,
+   "trans_in": {
+    "type": "dissolve",
+    "frames": 12,
+    "dir": 1,
+    "color": "",
+    "from_scene": false,
+    "t_mid": 230.2
+   },
+   "lines": [
+    {
+     "id": "c3_01",
+     "t": 230.45,
+     "dur": 4.323
+    }
+   ]
+  },
+  {
+   "kind": "scene",
+   "id": "S31_Notification",
+   "chapter": "c3",
+   "t": 235.5,
+   "dur": 7.057,
+   "trans_in": {
+    "type": "zoom",
+    "frames": 14,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 235.71
+   },
+   "lines": [
+    {
+     "id": "c3_02",
+     "t": 235.95,
+     "dur": 6.057
+    }
+   ]
+  },
+  {
+   "kind": "scene",
+   "id": "S32_Rules",
+   "chapter": "c3",
+   "t": 243.0,
+   "dur": 30.066,
+   "trans_in": {
+    "type": "panel",
+    "frames": 16,
+    "dir": 1,
+    "color": "red",
+    "from_scene": true,
+    "t_mid": 243.267
+   },
+   "lines": [
+    {
+     "id": "c3_03",
+     "t": 243.45,
+     "dur": 0.912
+    },
+    {
+     "id": "c3_04",
+     "t": 244.562,
+     "dur": 5.089
+    },
+    {
+     "id": "c3_05",
+     "t": 249.971,
+     "dur": 3.63
+    },
+    {
+     "id": "c3_06",
+     "t": 253.921,
+     "dur": 5.375
+    },
+    {
+     "id": "c3_07",
+     "t": 259.616,
+     "dur": 7.529
+    },
+    {
+     "id": "c3_08",
+     "t": 267.465,
+     "dur": 4.251
+    }
+   ]
+  },
+  {
+   "kind": "scene",
+   "id": "S33_Revenue",
+   "chapter": "c3",
+   "t": 273.5,
+   "dur": 7.803,
+   "trans_in": {
+    "type": "whip",
+    "frames": 10,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 273.65
+   },
+   "lines": [
+    {
+     "id": "c3_09",
+     "t": 273.95,
+     "dur": 6.202
+    }
+   ]
+  },
+  {
+   "kind": "scene",
+   "id": "S34_Countdown",
+   "chapter": "c3",
+   "t": 281.5,
+   "dur": 21.067,
+   "trans_in": {
+    "type": "glitch",
+    "frames": 9,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 281.62
+   },
+   "lines": [
+    {
+     "id": "c3_10",
+     "t": 281.95,
+     "dur": 2.379
+    },
+    {
+     "id": "c3_11",
+     "t": 284.929,
+     "dur": 8.083
+    },
+    {
+     "id": "c3_12",
+     "t": 293.333,
+     "dur": 8.084
+    }
+   ]
+  },
+  {
+   "kind": "scene",
+   "id": "S35_Map",
+   "chapter": "c3",
+   "t": 303.0,
+   "dur": 11.73,
+   "trans_in": {
+    "type": "zoom",
+    "frames": 14,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 303.21
+   },
+   "lines": [
+    {
+     "id": "c3_13",
+     "t": 303.45,
+     "dur": 10.73
+    }
+   ]
+  },
+  {
+   "kind": "scene",
+   "id": "S36_Court",
+   "chapter": "c3",
+   "t": 315.0,
+   "dur": 15.573,
+   "trans_in": {
+    "type": "push3d",
+    "frames": 18,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 315.3
+   },
+   "lines": [
+    {
+     "id": "c3_14",
+     "t": 315.45,
+     "dur": 8.411
+    },
+    {
+     "id": "c3_15",
+     "t": 324.181,
+     "dur": 4.943
+    }
+   ]
+  },
+  {
+   "kind": "scene",
+   "id": "S37_Deferral",
+   "chapter": "c3",
+   "t": 331.0,
+   "dur": 11.186,
+   "trans_in": {
+    "type": "glitch",
+    "frames": 9,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 331.12
+   },
+   "lines": [
+    {
+     "id": "c3_16",
+     "t": 331.45,
+     "dur": 3.417
+    },
+    {
+     "id": "c3_17",
+     "t": 335.367,
+     "dur": 4.669
+    }
+   ]
+  },
+  {
+   "kind": "chapter",
+   "id": "CH_c4",
+   "chapter": "c4",
+   "t": 342.5,
+   "dur": 3.0,
+   "trans_in": null,
+   "lines": []
+  },
+  {
+   "kind": "scene",
+   "id": "S40_Return",
+   "chapter": "c4",
+   "t": 345.5,
+   "dur": 25.736,
+   "trans_in": {
+    "type": "dissolve",
+    "frames": 12,
+    "dir": 1,
+    "color": "",
+    "from_scene": false,
+    "t_mid": 345.7
+   },
+   "lines": [
+    {
+     "id": "c4_01",
+     "t": 345.95,
+     "dur": 5.848
+    },
+    {
+     "id": "c4_02",
+     "t": 352.598,
+     "dur": 3.983
+    },
+    {
+     "id": "c4_03",
+     "t": 357.381,
+     "dur": 8.35
+    },
+    {
+     "id": "c4_04",
+     "t": 366.051,
+     "dur": 3.835
+    }
+   ]
+  },
+  {
+   "kind": "scene",
+   "id": "S41_WhoPays",
+   "chapter": "c4",
+   "t": 371.5,
+   "dur": 20.072,
+   "trans_in": {
+    "type": "whip",
+    "frames": 10,
+    "dir": -1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 371.65
+   },
+   "lines": [
+    {
+     "id": "c4_05",
+     "t": 371.95,
+     "dur": 8.28
+    },
+    {
+     "id": "c4_06",
+     "t": 380.55,
+     "dur": 9.472
+    }
+   ]
+  },
+  {
+   "kind": "scene",
+   "id": "S42_Question",
+   "chapter": "c4",
+   "t": 392.0,
+   "dur": 16.816,
+   "trans_in": {
+    "type": "light",
+    "frames": 16,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 392.267
+   },
+   "lines": [
+    {
+     "id": "c4_07",
+     "t": 392.45,
+     "dur": 5.708
+    },
+    {
+     "id": "c4_08",
+     "t": 398.478,
+     "dur": 8.988
+    }
+   ]
+  },
+  {
+   "kind": "scene",
+   "id": "S43_Coin",
+   "chapter": "c4",
+   "t": 409.0,
+   "dur": 11.088,
+   "trans_in": {
+    "type": "zoom",
+    "frames": 14,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 409.21
+   },
+   "lines": [
+    {
+     "id": "c4_09",
+     "t": 409.45,
+     "dur": 5.075
+    },
+    {
+     "id": "c4_10",
+     "t": 414.845,
+     "dur": 2.093
+    }
+   ]
+  },
+  {
+   "kind": "black",
+   "id": "BLACK",
+   "chapter": null,
+   "t": 420.5,
+   "dur": 1.2,
+   "trans_in": null,
+   "lines": []
+  },
+  {
+   "kind": "scene",
+   "id": "S50_Outro",
+   "chapter": "c5",
+   "t": 422.0,
+   "dur": 19.015,
+   "trans_in": {
+    "type": "dissolve",
+    "frames": 12,
+    "dir": 1,
+    "color": "",
+    "from_scene": false,
+    "t_mid": 422.2
+   },
+   "lines": [
+    {
+     "id": "c5_01",
+     "t": 422.45,
+     "dur": 8.015
+    }
+   ]
+  }
+ ]
+}

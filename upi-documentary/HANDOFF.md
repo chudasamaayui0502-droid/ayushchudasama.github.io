@@ -1,0 +1,82 @@
+# UPI documentary — handoff
+
+**Film:** "FREE UPI का बिल कौन भरता है? / Who really pays for your 'free' UPI?"
+16:9 · 1920×1080 · 30 fps · Hindi 7:04.8 / English 7:21.0 · YouTube-ready (−14 LUFS).
+**Two editions from one project:** Hindi (Hinglish) = composition `Main`; English (Indian English) = composition `Main-EN`.
+Every tool takes `--lang en` for the English edition (files get an `_en` suffix; the upload kit goes to `publish/en/`).
+
+## Where things stand (23 Oct 2026: final films delivered)
+
+| Part | Status | Files |
+|---|---|---|
+| Research | ✅ every on-screen/narrated fact sourced; 5.4 confirmed from the Finance Ministry FAQs; 5.8 (NPCI circular number) unconfirmed and **not used** | `research/facts.md` |
+| Script | ✅ chapter-wise, Prestige three-act structure, Hinglish + English | `script/lines.json` |
+| Voiceover | ✅ **final Sarvam** `bulbul:v4-flash`: Hindi `shubh_hi_stories_dramatic` (pace 1.05), English `sarang_en_narration` (pace 1.15) | `assets/vo[_en]/` (git-ignored; regenerate with the commands below) |
+| Beat sync | ✅ 56 word-position beats per edition re-synced to the final voices | `tools/align_beats.py` → `script/beats_hi.json`, `beats_en.json` |
+| Official documents | ✅ real Gazette of India S.O. 5067(E) (Hindi / English page) + Ministry of Finance MDR FAQs in S31 | `video/public/docs/` |
+| Photos | ⏳ stylised line-art fallbacks (Wikimedia refused the cloud IP); add `video/public/photos/{parliament,supreme_court,kirana_shop}.jpg` to use photos | `video/public/photos/` |
+| Masters | ✅ `video/out/UPI_documentary_FINAL_{HINDI,ENGLISH}_1080p.mp4` (Hindi 7:04.8, English 7:21.0, −14 LUFS) — git-ignored, delivered to the user | `video/out/` |
+| Upload kits | ✅ descriptions (chapters, sources, credits incl. AI voice), subtitles, 3 thumbnails each | `publish/`, `publish/en/` |
+
+## Regenerating the voiceover / re-timing (needs Network access + the Sarvam key)
+The key is a **Network secret** in the cloud environment settings: allowed website `api.sarvam.ai`, header
+`api-subscription-key`, no prefix (the proxy adds it to every request; the key never enters the session).
+A plain environment variable `SARVAM_API_KEY` also works. `tools/tts_sarvam.py` handles both.
+
+```bash
+cd upi-documentary
+(cd video && npm ci)
+python3 -m venv /tmp/musicenv && /tmp/musicenv/bin/pip install -q numpy scipy soundfile pedalboard mido pyloudnorm
+GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1 --branch SFZ https://github.com/sgossner/vsco-2-ce /home/user/sgossner/vsco-2-ce   # 5 GB samples
+python3 tools/tts_sarvam.py --speaker shubh_hi_stories_dramatic                     # assets/vo/
+python3 tools/tts_sarvam.py --lang en --speaker sarang_en_narration --pace 1.15      # assets/vo_en/
+python3 tools/vo_check.py [--lang en]          # speech-to-text listen-check → assets/vo_check[_en].txt (lowest first)
+#   misread term? put its Devanagari spelling (lines.json → pronunciation) in that line's `tts`, re-run with --only <id>
+/tmp/musicenv/bin/python -I tools/align_beats.py [--lang en]   # needs the scratch VO too (tools/scratch_vo.py) as reference
+python3 tools/build_timeline.py [--lang en]
+```
+Other voices: `python3 tools/tts_sarvam.py --audition [--lang en]` (candidates in `MALE_VOICES`).
+
+### Optional upgrade
+Replace the illustrative growth curve in `S15_Explosion` (`video/src/scenes/pledge.tsx`, `curvePts`) with NPCI's monthly UPI volumes (npci.org.in → UPI product statistics), then remove the "curve shape illustrative" label.
+
+### Build, check, render
+```bash
+/tmp/musicenv/bin/python -I music/score.py      # score.wav + sfx.wav from the new cues
+/tmp/musicenv/bin/python -I tools/mix.py        # video/public/audio/mix.wav
+python3 tools/youtube_meta.py                   # description, chapters, SRTs
+# English edition: the same three commands with --lang en  → score_en.wav, mix_en.wav, publish/en/
+cd video
+node tools/stills.mjs qc seg-S00-ColdOpen:200,700 seg-S32-Rules:300,700 seg-S41-WhoPays:600   # spot-check layouts after re-timing
+REMOTION_3D_RES=1 REMOTION_AA=1 npx remotion render Main out/render.mp4        # Hindi, Full HD, ~35 min on 4 CPUs
+REMOTION_3D_RES=1 REMOTION_AA=1 npx remotion render Main-EN out/render_en.mp4 # English
+npx remotion still Thumbnail-EN ../publish/en/thumbnail.png --image-format=png
+cd .. && tools/finish.sh video/out/render.mp4 video/out/upi_documentary_final.mp4         # grain + vignette + YouTube encode
+tools/finish.sh video/out/render_en.mp4 video/out/upi_documentary_final_en.mp4
+# Fixing one stretch later? Re-render just those frames and lay them over the full render:
+#   npx remotion render Main out/patch.mp4 --frames=5040-5505 --muted   (same REMOTION_* flags)
+#   tools/finish.sh video/out/render.mp4 video/out/final.mp4 video/out/patch.mp4@5040
+```
+Check: no text overlaps after re-timing, the coin cuts to black on the beat, loudness −14 LUFS.
+
+## Render performance notes (CPU-only container)
+- WebGL uses legacy SwiftShader (`remotion.config.ts`): same pixels as "swangle", ~25× faster frame capture here.
+- Backdrops and the perspective grid are pre-baked images (`video/public/tex/bg_*.png`, `grid_*.png`); dust is one canvas.
+  Re-bake the grid with `npx remotion still GridBake public/tex/grid_<hue>.png --props='{"hue":"<hue>"}' --image-format=png`.
+- Reflections are baked once per scene (`StudioEnv` in `three/kit.tsx`); drei's `<Environment>` re-bakes every frame — don't use it.
+- 3D layers render at 0.75 scale and are upscaled by default; the delivered Full-HD masters use `REMOTION_3D_RES=1` (3D at native 1920×1080).
+- Grain + vignette are added by ffmpeg in `tools/finish.sh`, not in the browser.
+
+## Design notes
+- Structure = *The Prestige*'s three acts (Pledge → Turn → Prestige) + cold open in medias res, ticking-clock tension in chapter 3, spinning-coin open ending (an *Inception* nod). No film footage, quotes or music from any film are used.
+- Glow is done with additive "halo" sprites — post-processing bloom renders black on this CPU-only (SwiftShader) setup.
+- Every number on screen has a `Source ·` lower-third. The disclaimer card runs exactly 3 s after the title.
+- Music is 100% original and the samples are CC0, so there is no third-party Content ID risk.
+
+### Transitions, sound design and motion (v2)
+- Every scene-to-scene cut is designed in `tools/build_timeline.py` (`TRANSITIONS`: whip · zoom · panel · glitch · light · push3d; anything else dissolves). The picture lives in `video/src/components/Transitions.tsx`; the matching sound in `music/sfx_design.py` (`cut_sound`), placed by `transitions()` in `music/score.py` at each cut's `t_mid`. Change a cut in one place and both follow.
+- Transition sounds are built from shaped pink noise through swept ladder filters (no zipper noise), steep low-passes (no hiss), stereo pan moves, and CC0 VSCO samples (reversed cymbal, bell tree, rubbed bass drum, glass). The old noise-sweep `whoosh` is retired.
+- `music/score.py` writes `video/src/data/hits[_en].json` (frame, strength) for every big hit; `<Punch>` in `Main.tsx` uses it for a camera punch-in + short shake. Run the score before rendering.
+- Scenes get a slow push + handheld drift (`SceneCam`), the 0.45 letterbox is drawn once above all scenes (`SceneBars`, so it never moves with a transition), and a chapter tag + progress line sits in the top bar (`ChapterHUD`).
+- Text: `Words` mode `rise` slides each word up through a mask; `*accent*` words get an animated highlight bar (`marker={false}` to turn it off).
+- Cold open v2 (`scenes/cold.tsx`): clock dive → 3D night map of India with payment arcs (`data/india_night.json`, built by `tools/make_night_map.py` from the datameet india-composite GeoJSON) → kinetic payment vignettes → phone burst → 3D "FREE" that cracks and shatters → layered endless bill → WHO? shockwave → title slam. Its beat timings are listed at the top of the file and mirrored in `cold_open()` in the score.
