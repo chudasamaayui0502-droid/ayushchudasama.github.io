@@ -9,6 +9,7 @@
    "chapter": "c0",
    "t": 0.0,
    "dur": 27.961,
+   "trans_in": null,
    "lines": [
     {
      "id": "c0_01",
@@ -53,6 +54,7 @@
    "chapter": null,
    "t": 28.0,
    "dur": 4.0,
+   "trans_in": null,
    "lines": []
   },
   {
@@ -61,6 +63,7 @@
    "chapter": null,
    "t": 32.0,
    "dur": 3.0,
+   "trans_in": null,
    "lines": []
   },
   {
@@ -69,6 +72,7 @@
    "chapter": "c1",
    "t": 35.0,
    "dur": 3.0,
+   "trans_in": null,
    "lines": []
   },
   {
@@ -77,6 +81,14 @@
    "chapter": "c1",
    "t": 38.0,
    "dur": 8.135,
+   "trans_in": {
+    "type": "dissolve",
+    "frames": 12,
+    "dir": 1,
+    "color": "",
+    "from_scene": false,
+    "t_mid": 38.2
+   },
    "lines": [
     {
      "id": "c1_01",
@@ -96,6 +108,14 @@
    "chapter": "c1",
    "t": 46.5,
    "dur": 5.415,
+   "trans_in": {
+    "type": "zoom",
+    "frames": 14,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 46.71
+   },
    "lines": [
     {
      "id": "c1_03",
@@ -110,6 +130,14 @@
    "chapter": "c1",
    "t": 52.0,
    "dur": 13.077,
+   "trans_in": {
+    "type": "whip",
+    "frames": 10,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 52.15
+   },
    "lines": [
     {
      "id": "c1_04",
@@ -129,6 +157,14 @@
    "chapter": "c1",
    "t": 65.5,
    "dur": 20.392,
+   "trans_in": {
+    "type": "panel",
+    "frames": 16,
+    "dir": 1,
+    "color": "amber",
+    "from_scene": true,
+    "t_mid": 65.767
+   },
    "lines": [
     {
      "id": "c1_06",
@@ -148,6 +184,14 @@
    "chapter": "c1",
    "t": 86.0,
    "dur": 19.304,
+   "trans_in": {
+    "type": "light",
+    "frames": 16,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 86.267
+   },
    "lines": [
     {
      "id": "c1_09",
@@ -172,6 +216,14 @@
    "chapter": "c1",
    "t": 105.5,
    "dur": 9.347,
+   "trans_in": {
+    "type": "push3d",
+    "frames": 18,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 105.8
+   },
    "lines": [
     {
      "id": "c1_12",
@@ -191,6 +243,7 @@
    "chapter": "c2",
    "t": 115.0,
    "dur": 3.0,
+   "trans_in": null,
    "lines": []
   },
   {
@@ -199,6 +252,14 @@
    "chapter": "c2",
    "t": 118.0,
    "dur": 9.345,
+   "trans_in": {
+    "type": "dissolve",
+    "frames": 12,
+    "dir": 1,
+    "color": "",
+    "from_scene": false,
+    "t_mid": 118.2
+   },
    "lines": [
     {
      "id": "c2_01",
@@ -218,6 +279,14 @@
    "chapter": "c2",
    "t": 127.5,
    "dur": 16.541,
+   "trans_in": {
+    "type": "zoom",
+    "frames": 14,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 127.71
+   },
    "lines": [
     {
      "id": "c2_03",
@@ -242,6 +311,14 @@
    "chapter": "c2",
    "t": 144.5,
    "dur": 20.096,
+   "trans_in": {
+    "type": "panel",
+    "frames": 16,
+    "dir": -1,
+    "color": "teal",
+    "from_scene": true,
+    "t_mid": 144.767
+   },
    "lines": [
     {
      "id": "c2_06",
@@ -261,6 +338,14 @@
    "chapter": "c2",
    "t": 165.0,
    "dur": 14.099,
+   "trans_in": {
+    "type": "whip",
+    "frames": 10,
+    "dir": -1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 165.15
+   },
    "lines": [
     {
      "id": "c2_08",
@@ -275,6 +360,14 @@
    "chapter": "c2",
    "t": 179.5,
    "dur": 31.755,
+   "trans_in": {
+    "type": "light",
+    "frames": 16,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 179.767
+   },
    "lines": [
     {
      "id": "c2_11",
@@ -304,6 +397,14 @@
    "chapter": "c2",
    "t": 211.5,
    "dur": 10.008,
+   "trans_in": {
+    "type": "push3d",
+    "frames": 18,
+    "dir": -1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 211.8
+   },
    "lines": [
     {
      "id": "c2_15",
@@ -323,6 +424,7 @@
    "chapter": "c3",
    "t": 222.0,
    "dur": 3.0,
+   "trans_in": null,
    "lines": []
   },
   {
@@ -331,6 +433,14 @@
    "chapter": "c3",
    "t": 225.0,
    "dur": 5.288,
+   "trans_in": {
+    "type": "dissolve",
+    "frames": 12,
+    "dir": 1,
+    "color": "",
+    "from_scene": false,
+    "t_mid": 225.2
+   },
    "lines": [
     {
      "id": "c3_01",
@@ -345,6 +455,14 @@
    "chapter": "c3",
    "t": 230.5,
    "dur": 7.507,
+   "trans_in": {
+    "type": "zoom",
+    "frames": 14,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 230.71
+   },
    "lines": [
     {
      "id": "c3_02",
@@ -359,6 +477,14 @@
    "chapter": "c3",
    "t": 238.5,
    "dur": 31.611,
+   "trans_in": {
+    "type": "panel",
+    "frames": 16,
+    "dir": 1,
+    "color": "red",
+    "from_scene": true,
+    "t_mid": 238.767
+   },
    "lines": [
     {
      "id": "c3_03",
@@ -398,6 +524,14 @@
    "chapter": "c3",
    "t": 270.5,
    "dur": 7.211,
+   "trans_in": {
+    "type": "whip",
+    "frames": 10,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 270.65
+   },
    "lines": [
     {
      "id": "c3_09",
@@ -412,6 +546,14 @@
    "chapter": "c3",
    "t": 278.0,
    "dur": 21.165,
+   "trans_in": {
+    "type": "glitch",
+    "frames": 9,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 278.12
+   },
    "lines": [
     {
      "id": "c3_10",
@@ -436,6 +578,14 @@
    "chapter": "c3",
    "t": 299.5,
    "dur": 13.416,
+   "trans_in": {
+    "type": "zoom",
+    "frames": 14,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 299.71
+   },
    "lines": [
     {
      "id": "c3_13",
@@ -450,6 +600,14 @@
    "chapter": "c3",
    "t": 313.0,
    "dur": 15.361,
+   "trans_in": {
+    "type": "push3d",
+    "frames": 18,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 313.3
+   },
    "lines": [
     {
      "id": "c3_14",
@@ -469,6 +627,14 @@
    "chapter": "c3",
    "t": 328.5,
    "dur": 12.252,
+   "trans_in": {
+    "type": "glitch",
+    "frames": 9,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 328.62
+   },
    "lines": [
     {
      "id": "c3_16",
@@ -488,6 +654,7 @@
    "chapter": "c4",
    "t": 341.0,
    "dur": 3.0,
+   "trans_in": null,
    "lines": []
   },
   {
@@ -496,6 +663,14 @@
    "chapter": "c4",
    "t": 344.0,
    "dur": 22.664,
+   "trans_in": {
+    "type": "dissolve",
+    "frames": 12,
+    "dir": 1,
+    "color": "",
+    "from_scene": false,
+    "t_mid": 344.2
+   },
    "lines": [
     {
      "id": "c4_01",
@@ -525,6 +700,14 @@
    "chapter": "c4",
    "t": 367.0,
    "dur": 19.387,
+   "trans_in": {
+    "type": "whip",
+    "frames": 10,
+    "dir": -1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 367.15
+   },
    "lines": [
     {
      "id": "c4_05",
@@ -544,6 +727,14 @@
    "chapter": "c4",
    "t": 386.5,
    "dur": 16.797,
+   "trans_in": {
+    "type": "light",
+    "frames": 16,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 386.767
+   },
    "lines": [
     {
      "id": "c4_07",
@@ -563,6 +754,14 @@
    "chapter": "c4",
    "t": 403.5,
    "dur": 10.64,
+   "trans_in": {
+    "type": "zoom",
+    "frames": 14,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 403.71
+   },
    "lines": [
     {
      "id": "c4_09",
@@ -582,6 +781,7 @@
    "chapter": null,
    "t": 414.5,
    "dur": 1.2,
+   "trans_in": null,
    "lines": []
   },
   {
@@ -590,6 +790,14 @@
    "chapter": "c5",
    "t": 416.0,
    "dur": 20.131,
+   "trans_in": {
+    "type": "dissolve",
+    "frames": 12,
+    "dir": 1,
+    "color": "",
+    "from_scene": false,
+    "t_mid": 416.2
+   },
    "lines": [
     {
      "id": "c5_01",

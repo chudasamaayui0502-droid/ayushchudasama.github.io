@@ -1,3 +1,4 @@
+import React, { useContext } from "react";
 import { AbsoluteFill, staticFile, useCurrentFrame } from "remotion";
 import { clamp, drift } from "../lib/anim";
 import { interpolate } from "remotion";
@@ -31,8 +32,13 @@ export const Film: React.FC<{ grain?: number; vignette?: number; on?: boolean }>
   );
 };
 
+/** True inside <Main>: the scene letterbox is drawn once above everything, so it never moves with a transition. */
+export const GlobalLetterbox = React.createContext(false);
+
 /** Cinema letterbox bars (2.39:1 inside the 16:9 frame). amount 0..1 */
-export const Letterbox: React.FC<{ amount: number }> = ({ amount }) => {
+export const Letterbox: React.FC<{ amount: number; force?: boolean }> = ({ amount, force }) => {
+  const global = useContext(GlobalLetterbox);
+  if (global && amount < 1 && !force) return null;
   const bar = 136 * amount; // 1080 - 1920/2.39 = ~277 → 138 per side
   return (
     <AbsoluteFill style={{ pointerEvents: "none" }}>

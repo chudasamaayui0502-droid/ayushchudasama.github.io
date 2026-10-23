@@ -185,17 +185,26 @@ def whoosh(dur=0.9, peak=0.6, lo=300, hi=7000) -> np.ndarray:
 
 
 def riser(dur=3.0, lo=200, hi=5000) -> np.ndarray:
+    """Tension riser: pink noise through a smoothly swept band-pass (filter state kept between blocks,
+    so no zipper noise) plus a rising tonal cluster, steeply low-passed so it never hisses."""
+    import pedalboard as pb  # local: engine stays importable without it
+
     n = secs(dur)
     t = np.arange(n) / SR
-    noise = RNG.normal(0, 1, n).astype(np.float32)
+    X = np.fft.rfft(RNG.normal(0, 1, n))
+    f = np.fft.rfftfreq(n, 1 / SR)
+    f[0] = f[1]
+    noise = np.fft.irfft(X / np.sqrt(f), n).astype(np.float32)
+    noise /= np.std(noise) + 1e-9
+    flt = pb.LadderFilter(mode=pb.LadderFilter.Mode.BPF12, cutoff_hz=float(lo), resonance=0.3)
     out = np.zeros(n, np.float32)
-    chunk = secs(0.02)
-    for i in range(0, n, chunk):
+    blk = 128
+    for i in range(0, n, blk):
         k = (i / n) ** 2
-        c = lo + (hi - lo) * k
-        seg = noise[max(0, i - 1024) : i + chunk]
-        f = bp(seg, c * 0.6, c * 1.4)
-        out[i : i + chunk] = f[-len(noise[i : i + chunk]) :]
+        flt.cutoff_hz = float(min(lo * (hi / lo) ** k, SR * 0.45))
+        out[i : i + blk] = flt.process(noise[i : i + blk][None, :], SR, reset=False)[0]
+    sos = butter(6, min(hi * 1.6, 11000), btype="low", fs=SR, output="sos")
+    out = sosfilt(sos, out).astype(np.float32)
     tone = sum(np.sin(2 * np.pi * np.cumsum(midi_hz(50 + 12 * k) * (1 + 1.0 * (t / dur) ** 2)) / SR) for k in range(3)) / 3
     env = (t / dur) ** 2.2
     return ((out * 1.3 + tone * 0.25) * env).astype(np.float32)

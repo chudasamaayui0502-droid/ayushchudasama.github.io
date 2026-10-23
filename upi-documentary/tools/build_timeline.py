@@ -40,6 +40,20 @@ CHAPTER_DUR = 3.0
 COIN_BLACK = 1.2    # hard cut to black after the coin
 ENDSCREEN = 10.0    # YouTube end-screen space
 
+# Scene-to-scene transitions, designed per cut (picture in video/src/Main.tsx, sound in music/score.py).
+# type: whip | zoom | panel | glitch | light | push3d   (anything not listed: dissolve)
+TRANSITIONS = {
+    "S12_QR": ("zoom",), "S13_Launch": ("whip", 1), "S14_ZeroMDR": ("panel", 1, "amber"), "S15_Explosion": ("light",),
+    "S16_PledgeEnd": ("push3d", 1),
+    "S21_Machine": ("zoom",), "S22_Subsidy": ("panel", -1, "teal"), "S23_Gap": ("whip", -1), "S24_Memory": ("light",),
+    "S25_Budget": ("push3d", -1),
+    "S31_Notification": ("zoom",), "S32_Rules": ("panel", 1, "red"), "S33_Revenue": ("whip", 1), "S34_Countdown": ("glitch",),
+    "S35_Map": ("zoom",), "S36_Court": ("push3d", 1), "S37_Deferral": ("glitch",),
+    "S41_WhoPays": ("whip", -1), "S42_Question": ("light",), "S43_Coin": ("zoom",),
+}
+TRANS_FRAMES = {"whip": 10, "zoom": 14, "panel": 16, "glitch": 9, "light": 16, "push3d": 18, "dissolve": 12}
+TRANS_MID = {"whip": 0.45, "zoom": 0.45, "panel": 0.5, "glitch": 0.4, "light": 0.5, "push3d": 0.5, "dissolve": 0.5}  # where the cut reads
+
 
 def wav_seconds(path: pathlib.Path) -> float:
     with wave.open(str(path)) as w:
@@ -108,6 +122,17 @@ def main():
     segments[-1]["dur"] = round(segments[-1]["dur"] + ENDSCREEN, 3)
     t = segments[-1]["t"] + segments[-1]["dur"]
 
+    # transitions into scenes (the first scene of a chapter / after black gets a soft dissolve)
+    for prev, nxt in zip(segments, segments[1:]):
+        if nxt["kind"] != "scene":
+            continue
+        spec = TRANSITIONS.get(nxt["id"], ("dissolve",)) if prev["kind"] == "scene" else ("dissolve",)
+        kind = spec[0]
+        frames = TRANS_FRAMES[kind]
+        nxt["trans_in"] = {"type": kind, "frames": frames, "dir": spec[1] if len(spec) > 1 else 1,
+                           "color": spec[2] if len(spec) > 2 else "", "from_scene": prev["kind"] == "scene",
+                           "t_mid": round(nxt["t"] + frames * TRANS_MID[kind] / FPS, 3)}
+
     total = round(t, 3)
     # frames
     tl = {"lang": lang, "fps": FPS, "seconds": total, "frames": int(round(total * FPS)), "voDir": vo_dir.name,
@@ -130,6 +155,7 @@ def main():
     # music/mix cues (seconds)
     for s in segments:
         cues.append({"kind": s["kind"], "id": s["id"], "chapter": s.get("chapter"), "t": s["t"], "dur": s["dur"],
+                     "trans_in": s.get("trans_in"),
                      "lines": [{"id": l["id"], "t": l["t"], "dur": l["dur"]} for l in s.get("lines", [])]})
     (ROOT / "music").mkdir(exist_ok=True)
     (ROOT / "music" / f"cues{sfx}.json").write_text(json.dumps({"lang": lang, "seconds": total, "voDir": vo_dir.name, "segments": cues},

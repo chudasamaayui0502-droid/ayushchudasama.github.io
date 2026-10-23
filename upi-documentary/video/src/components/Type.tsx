@@ -22,7 +22,10 @@ export const Words: React.FC<{
   tracking?: number;
   out?: number; // frame at which to fade the whole block out
   style?: React.CSSProperties;
+  /** rise = slide up through a mask (default) · blur = soft focus-in · punch = scale slam */
   mode?: "rise" | "blur" | "punch";
+  /** animated highlight bar behind *accent* words */
+  marker?: boolean;
 }> = ({
   text,
   start,
@@ -38,6 +41,7 @@ export const Words: React.FC<{
   out,
   style,
   mode = "rise",
+  marker = true,
 }) => {
   const frame = useCurrentFrame();
   const fadeOut = out !== undefined ? 1 - prog(frame, out, 10, ease.in) : 1;
@@ -66,7 +70,7 @@ export const Words: React.FC<{
             .map((w, wi) => {
               const i = idx++;
               const s = start + i * stagger;
-              const p = prog(frame, s, mode === "punch" ? 7 : 14, ease.out);
+              const p = prog(frame, s, mode === "punch" ? 7 : mode === "rise" ? 12 : 14, ease.out);
               let word = w;
               if (word.startsWith("*")) {
                 hotState = true;
@@ -77,22 +81,67 @@ export const Words: React.FC<{
                 hotState = false;
                 word = word.replace(/\*/g, "");
               }
-              const y = mode === "rise" ? (1 - p) * 0.55 : 0;
-              const blur = mode === "punch" ? 0 : (1 - p) * 14;
+              const blur = mode === "blur" ? (1 - p) * 14 : mode === "rise" ? (1 - p) * 4 : 0;
               const sc = mode === "punch" ? interpolate(p, [0, 1], [1.6, 1]) : 1;
+              const shadow = hot ? `0 0 28px ${accent}66` : "0 2px 24px rgba(0,0,0,0.6)";
+              const mk = hot && marker ? prog(frame, s + 7, 12, ease.out) : 0;
+              const bar =
+                mk > 0 ? (
+                  <span
+                    style={{
+                      position: "absolute",
+                      left: "-0.06em",
+                      right: "-0.06em",
+                      bottom: "0.2em",
+                      height: "0.3em",
+                      background: accent,
+                      opacity: 0.24,
+                      transform: `scaleX(${mk})`,
+                      transformOrigin: align === "right" ? "100% 50%" : "0% 50%",
+                      borderRadius: 3,
+                      zIndex: -1,
+                    }}
+                  />
+                ) : null;
+              if (mode === "rise") {
+                // slide up from behind an invisible mask line; padding keeps Devanagari matras unclipped
+                return (
+                  <span key={wi} style={{ display: "inline-block", overflow: "hidden", padding: "0.22em 0.08em 0.26em", margin: "-0.22em calc(0.26em - 0.08em) -0.26em -0.08em", verticalAlign: "top" }}>
+                    <span
+                      style={{
+                        display: "inline-block",
+                        position: "relative",
+                        zIndex: 0,
+                        opacity: Math.min(1, p * 1.6),
+                        transform: `translateY(${(1 - p) * 1.15}em) rotate(${(1 - p) * 4}deg)`,
+                        transformOrigin: "0% 100%",
+                        filter: blur > 0.3 ? `blur(${blur.toFixed(1)}px)` : undefined,
+                        color: hot ? accent : undefined,
+                        textShadow: shadow,
+                      }}
+                    >
+                      {bar}
+                      {word}
+                    </span>
+                  </span>
+                );
+              }
               return (
                 <span
                   key={wi}
                   style={{
                     display: "inline-block",
+                    position: "relative",
+                    zIndex: 0,
                     marginRight: "0.26em",
                     opacity: p,
-                    transform: `translateY(${y}em) scale(${sc})`,
+                    transform: `scale(${sc})`,
                     filter: blur > 0.2 ? `blur(${blur}px)` : undefined,
                     color: hot ? accent : undefined,
-                    textShadow: hot ? `0 0 28px ${accent}66` : "0 2px 24px rgba(0,0,0,0.6)",
+                    textShadow: shadow,
                   }}
                 >
+                  {bar}
                   {word}
                 </span>
               );

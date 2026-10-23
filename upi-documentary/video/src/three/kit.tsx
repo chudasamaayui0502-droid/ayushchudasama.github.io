@@ -439,3 +439,97 @@ export const projectToScreen = (
   const v = new THREE.Vector3(...p).project(cam);
   return { x: (v.x * 0.5 + 0.5) * W, y: (-v.y * 0.5 + 0.5) * H, visible: v.z < 1 };
 };
+
+/* ------------------------------------------------- glow points + light trails */
+
+const glowTexCache: { tex?: THREE.Texture } = {};
+const glowTexture = () => {
+  if (glowTexCache.tex) return glowTexCache.tex;
+  const c = document.createElement("canvas");
+  c.width = c.height = 128;
+  const ctx = c.getContext("2d")!;
+  const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+  g.addColorStop(0, "rgba(255,255,255,1)");
+  g.addColorStop(0.12, "rgba(255,255,255,0.85)");
+  g.addColorStop(0.32, "rgba(255,255,255,0.22)");
+  g.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 128, 128);
+  const t = new THREE.CanvasTexture(c);
+  glowTexCache.tex = t;
+  return t;
+};
+
+/**
+ * Many additive glow sprites in one draw call, with per-point size (world units), alpha and colour.
+ * The parent fills the arrays every frame (positions n*3, sizes n, alphas n, colors n*3).
+ */
+export const GlowPoints: React.FC<{ positions: Float32Array; sizes: Float32Array; alphas: Float32Array; colors: Float32Array; fov?: number }> = ({
+  positions,
+  sizes,
+  alphas,
+  colors,
+  fov = 35,
+}) => {
+  const { size } = useThree();
+  const n = sizes.length;
+  const geo = useMemo(() => {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(n * 3), 3));
+    g.setAttribute("psize", new THREE.BufferAttribute(new Float32Array(n), 1));
+    g.setAttribute("palpha", new THREE.BufferAttribute(new Float32Array(n), 1));
+    g.setAttribute("pcolor", new THREE.BufferAttribute(new Float32Array(n * 3), 3));
+    return g;
+  }, [n]);
+  const mat = useMemo(
+    () =>
+      new THREE.ShaderMaterial({
+        uniforms: { map: { value: glowTexture() }, scale: { value: 1 } },
+        vertexShader: `
+          attribute float psize; attribute float palpha; attribute vec3 pcolor;
+          varying float vA; varying vec3 vC; uniform float scale;
+          void main() {
+            vA = palpha; vC = pcolor;
+            vec4 mv = modelViewMatrix * vec4(position, 1.0);
+            gl_PointSize = min(512.0, psize * scale / max(0.001, -mv.z));
+            gl_Position = projectionMatrix * mv;
+          }`,
+        fragmentShader: `
+          uniform sampler2D map; varying float vA; varying vec3 vC;
+          void main() {
+            vec4 t = texture2D(map, gl_PointCoord);
+            gl_FragColor = vec4(vC * t.rgb * vA, t.a * vA); // additive light; alpha follows the sprite so the CSS backdrop is never blocked
+          }`,
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      }),
+    [],
+  );
+  useLayoutEffect(() => {
+    mat.uniforms.scale.value = size.height / (2 * Math.tan((fov * Math.PI) / 360));
+    (geo.getAttribute("position") as THREE.BufferAttribute).copyArray(positions).needsUpdate = true;
+    (geo.getAttribute("psize") as THREE.BufferAttribute).copyArray(sizes).needsUpdate = true;
+    (geo.getAttribute("palpha") as THREE.BufferAttribute).copyArray(alphas).needsUpdate = true;
+    (geo.getAttribute("pcolor") as THREE.BufferAttribute).copyArray(colors).needsUpdate = true;
+  });
+  return <points geometry={geo} material={mat} frustumCulled={false} />;
+};
+
+/** Static line segments whose per-vertex colours change every frame (additive light trails). */
+export const LightTrails: React.FC<{ positions: Float32Array; colors: Float32Array }> = ({ positions, colors }) => {
+  const geo = useMemo(() => {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    g.setAttribute("color", new THREE.BufferAttribute(new Float32Array(colors.length), 3));
+    return g;
+  }, [positions, colors.length]);
+  useLayoutEffect(() => {
+    (geo.getAttribute("color") as THREE.BufferAttribute).copyArray(colors).needsUpdate = true;
+  });
+  return (
+    <lineSegments geometry={geo} frustumCulled={false}>
+      <lineBasicMaterial vertexColors transparent depthWrite={false} blending={THREE.AdditiveBlending} toneMapped={false} />
+    </lineSegments>
+  );
+};

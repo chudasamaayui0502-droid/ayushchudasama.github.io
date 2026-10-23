@@ -20,15 +20,18 @@ import soundfile as sf
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from engine import (  # noqa: E402
     SFZ, SR, Bus, adsr, braam, fade, heartbeat, impact, load_wav, lp, nn, pad, riser, secs, shepard,
-    stamp_thud, sub_boom, supersaw, tick, typewriter_click, whoosh,
+    stamp_thud, sub_boom, supersaw, tick, typewriter_click,
 )
+import sfx_design as SD  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 LANG = "en" if "--lang" in sys.argv and sys.argv[sys.argv.index("--lang") + 1] == "en" else "hi"
 SFX = "" if LANG == "hi" else "_en"
 _pos = [a for a in sys.argv[1:] if not a.startswith("--") and a not in ("en", "hi")]
 VSCO = pathlib.Path(_pos[0] if _pos else os.environ.get("VSCO_DIR", "/home/user/sgossner/vsco-2-ce"))
+SD.init(VSCO)
 FPS = 30
+HITS: list[tuple[float, float]] = []  # (time, strength) -> the video's camera punch
 cues = json.loads((ROOT / "music" / f"cues{SFX}.json").read_text())
 T = cues["seconds"] + 4
 SEG = {s["id"]: s for s in cues["segments"]}
@@ -146,6 +149,7 @@ def ticks(t0, t1, step=0.5, gain=0.35):
 
 
 def hit(t, gain=0.8, cym=True, timp="D2"):
+    HITS.append((t, min(1.0, gain / 0.9)))
     synth.add(t, impact(3.5), gain * 0.9)
     if timp:
         play(perc, "Timpani", timp, t, 2.0, 120, gain * 1.2, release=3)
@@ -153,9 +157,9 @@ def hit(t, gain=0.8, cym=True, timp="D2"):
     if bd.exists():
         perc.add(t, load_wav(str(bd)), gain * 0.9)
     if cym:
-        c = VSCO / "VSCO 1 Percussion" / "cymbal-crash1_ff.wav"
+        c = VSCO / "Percussion" / "cymbal-crash1_mf_rr1.wav"
         if c.exists():
-            perc.add(t, load_wav(str(c)), gain * 0.45, 0.2)
+            perc.add(t, lp(load_wav(str(c)), 9000), gain * 0.3, 0.2)
 
 
 def big_braam(t, notes=("D1", "A1", "D2", "F2"), dur=5.0, gain=0.7):
@@ -167,9 +171,8 @@ def big_braam(t, notes=("D1", "A1", "D2", "F2"), dur=5.0, gain=0.7):
 
 
 def pre_suck(t, dur=1.2, gain=0.5):
-    """Reverse-swell into a hit (the classic inhale before the BRAAM)."""
-    r = riser(dur, 300, 7000)
-    synth.add(t - dur, r, gain)
+    """Reverse-cymbal inhale into a hit (the classic breath before the BRAAM)."""
+    fx(t, SD.swell(dur), gain * 0.9, bus=synth)
 
 
 def motif(bus, inst, t, octv=4, vel=70, gain=1.0, beat=0.5, var=False):
@@ -189,8 +192,14 @@ def harp_gliss(t, notes=("D4", "F4", "A4", "D5", "F5", "A5", "D6"), step=0.045, 
         play(keys, "Harp", n, t + i * step, 1.5, 85, gain, (i / len(notes) - 0.5), release=2.0)
 
 
-def whoosh_at(t, gain=0.35, dur=0.9):
-    sfx.add(t - dur * 0.6, whoosh(dur, dur * 0.6), gain)
+def fx(t, made, gain, bus=None):
+    """Place a designed sound so its anchor (the moment it 'reads') lands on t."""
+    audio, anchor = made
+    (bus or sfx).add(t - anchor, audio, gain)
+
+
+def cut(kind: str, t: float, gain: float, direction: int = 1):
+    fx(t, SD.cut_sound(kind, direction), gain)
 
 
 def typewrite(t, text, gain=0.18):
@@ -215,17 +224,31 @@ def cold_open():
     string_pad(a, e, ["Dm"], bar=e - a, vel=55, gain=0.7)
     ostinato(b, e, PROG_A, step=0.125, bar=2.0, vel=82, gain=0.9)
     hit(b, 0.45, cym=False)
-    hit(c, 0.5, cym=False, timp="A1" if False else "D2")
-    whoosh_at(c, 0.4)
-    paid = c + (lend("c0_03") - c) * fr("c0_03", 0.72)
+    hit(c, 0.5, cym=False, timp="D2")
+    # beats shared with video/src/scenes/cold.tsx (see the timing contract at the top of that file)
+    map_in = lt("c0_01", frames=-8)
+    cut("zoom", map_in + 2 / FPS, 0.42)  # dive through the clock into the night map
+    fx(a, SD.data_shimmer(b - a), 0.16)
+    count = lt("c0_01", 0.45)
+    for k in range(14):  # the counter rolling up
+        sfx.add(count + (k / 14) ** 1.6 * 26 / FPS, typewriter_click(), 0.09)
+    play(keys, "Glockenspiel", "D6", count + 26 / FPS, 1.0, 75, 0.25)
+    third = (lend("c0_02") - b) / 3
+    for k, direction in enumerate((1, -1, 1)):
+        v = b + round(k * third * FPS) / FPS
+        cut("whip", v + 3 / FPS, 0.3, direction)
+        play(keys, "Glockenspiel", ("A5", "C6", "D6")[k], v + 16 / FPS, 0.8, 70, 0.2)  # the PAID chip
+    paid = c + round((lend("c0_03") - c) * fr("c0_03", 0.72) * FPS) / FPS
     play(keys, "Glockenspiel", "A5", paid, 1.2, 100, 0.55)
     play(keys, "Glockenspiel", "D6", paid + 0.09, 1.2, 100, 0.55)
+    fx(paid, SD.shockwave(), 0.22)  # the money bursts out of the phone
     # FREE
     hit(d, 0.7, cym=True)
     chord(brass, "FHornSus", ["D3", "F3", "A3"], d, 0.6, 115, 0.9)
     sfx.add(d + 8 / FPS, stamp_thud(), 0.5)
     sfx.add(d + (lend("c0_04") - d) * fr("c0_04", 0.45), stamp_thud(), 0.5)
-    # "लेकिन..." — the floor drops out
+    # "लेकिन..." — FREE shatters, the floor drops out
+    fx(e, SD.shatter(), 0.5)
     synth.add(e, sub_boom(4.0, 60, 28), 0.8)
     synth.add(e, braam(["D1", "A1"], 4.0, bright=0.4), 0.35)
     synth.add(e, pad(["D2", "A2", "D3"], f - e + 1.0, bright=0.08), 0.35)
@@ -237,7 +260,8 @@ def cold_open():
     for n, inst in (("Bb1", "ContrabassSusVB"), ("D2", "CelloEnsTrem"), ("F2", "CelloEnsTrem")):
         lo_ = min(r["_lo"] for r in I(inst).regions)
         play(strings, inst, n if nn(n) >= lo_ else "D2", f, g - f, 70, 0.6, release=0.8, attack=0.6)
-    # silence on "कौन?", then the inhale into the title
+    # "कौन?" lands with an air blast, then the inhale into the title
+    fx(lt("c0_07", 0.45), SD.shockwave(), 0.26)
     pre_suck(at("S01_Title"), 1.3, 0.45)
 
 
@@ -332,13 +356,13 @@ def chapter2():
     go = lt("c2_01", 0.7)
     pre_suck(go, 1.4, 0.4)
     hit(go, 0.6, cym=True)
-    whoosh_at(go + 0.4, 0.5, 1.4)
+    cut("push3d", go + 0.4, 0.4)
     for k, n in enumerate(("D6", "F6", "A6", "C7")):
         play(keys, "Glockenspiel", n if nn(n) <= 96 else "A6", go + 0.1 + k * 0.07, 1.5, 80, 0.25)
     bil = lt("c2_02", 0.55)
     sfx.add(bil, stamp_thud(), 0.5)
     play(brass, "TromboneSus", "Bb1" if nn("Bb1") >= 34 else "D2", bil, 1.8, 110, 0.8)
-    whoosh_at(lend("c2_02") + 0.4, 0.4, 1.2)
+    cut("whip", lend("c2_02") + 0.4, 0.24)
     synth.add(at("S20_Vanish"), pad(["D2", "A2"], end("S20_Vanish") - at("S20_Vanish"), bright=0.06), 0.3)
     # S21 machine: synth bass pulse + spiccato, until the question
     t0 = at("S21_Machine")
@@ -377,7 +401,7 @@ def chapter2():
     ticks(t0, t1, 0.5, 0.3)
     synth.add(t0, pad(["D3", "A3", "F4"], t1 - t0, bright=0.08), 0.28)
     for k, st in enumerate((lt("c2_12"), lt("c2_13"), lt("c2_14"))):
-        whoosh_at(st - 4 / FPS, 0.25, 0.7)
+        cut("whip", st - 2 / FPS, 0.2, 1 if k % 2 == 0 else -1)
         if k < 2:
             motif(keys, "Glockenspiel", st + 0.4, octv=6, vel=62, gain=0.35, beat=0.35)
     rbi = lt("c2_14")
@@ -420,13 +444,13 @@ def chapter3():
     # law + documents
     sfx.add(lt("c3_01", 0.45), stamp_thud(), 0.5)
     play(brass, "FHornSus", "D3", lt("c3_01", 0.45), 1.2, 105, 0.6)
-    whoosh_at(lt("c3_02"), 0.35)
-    whoosh_at(lt("c3_02", 0.55), 0.35)
+    cut("panel", lt("c3_02"), 0.28)
+    cut("panel", lt("c3_02", 0.55), 0.28, -1)
     # rules: a braam per rule
-    for lid in ("c3_04", "c3_05", "c3_06", "c3_07", "c3_08"):
+    for k, lid in enumerate(("c3_04", "c3_05", "c3_06", "c3_07", "c3_08")):
         synth.add(lt(lid, frames=-4), braam(["D1", "A1"], 2.2, bright=0.6), 0.4)
         play(perc, "Timpani", "D2", lt(lid, frames=-4), 1.5, 110, 0.6)
-        whoosh_at(lt(lid, frames=-4), 0.25, 0.6)
+        cut("panel", lt(lid, frames=-4), 0.22, 1 if k % 2 == 0 else -1)
     sfx.add(lt("c3_08", 0.62), stamp_thud(), 0.55)
     # revenue counter
     rc = lt("c3_09", 0.35)
@@ -501,7 +525,7 @@ def chapter4():
     while t < b42:
         play(strings, "ContrabassSpic", "A1" if nn("A1") >= 24 else "D2", t, 0.4, 75, 0.45)
         t += 1.0
-    sfx.add(lt("c4_07", 0.3), whoosh(0.6, 0.3), 0.25)
+    cut("whip", lt("c4_07", 0.3) + 0.3, 0.2, -1)
     # S43: the spinning coin
     a43, black = at("S43_Coin"), at("BLACK")
     play(strings, "SViolinVib", "A5", a43 + 0.2, black - a43 - 0.3, 50, 0.45, attack=1.2, release=0.1)
@@ -524,11 +548,19 @@ def outro():
     play(strings, "CelloEnsSusVib", "D3", a + 0.5, e_ - a - 1.5, 50, 0.4, attack=1.5)
 
 
+CUT_GAIN = {"whip": 0.3, "zoom": 0.34, "panel": 0.3, "glitch": 0.22, "light": 0.3, "push3d": 0.36, "dissolve": 0.18}
+
+
 def transitions():
-    segs = cues["segments"]
-    for prev, nxt in zip(segs, segs[1:]):
-        if prev["kind"] == "scene" and nxt["kind"] == "scene":
-            whoosh_at(nxt["t"], 0.22, 0.8)
+    """One designed sound per cut, matched to the picture transition chosen in tools/build_timeline.py."""
+    for s in cues["segments"]:
+        tr = s.get("trans_in")
+        if not tr:
+            continue
+        cut(tr["type"], tr["t_mid"], CUT_GAIN[tr["type"]], tr.get("dir", 1))
+        if tr["type"] == "light":
+            play(keys, "Glockenspiel", "D6", tr["t_mid"], 1.2, 60, 0.16)
+            play(keys, "Glockenspiel", "A6", tr["t_mid"] + 0.06, 1.2, 55, 0.12)
 
 
 def datelines():
@@ -558,9 +590,9 @@ def main():
     y = process(synth, chain(pb.HighpassFilter(24), pb.Reverb(room_size=0.7, damping=0.5, wet_level=0.15, dry_level=0.95), pb.Compressor(-14, 2.5, 10, 200)))
     music = s * 1.0 + b * 0.9 + p * 0.85 + k * 0.8 + y * 0.9
     music = chain(pb.HighpassFilter(28), pb.Compressor(-16, 2.2, 25, 220), pb.Limiter(-1.5, 300))(music.T, SR).T
-    fx = chain(pb.Reverb(room_size=0.5, damping=0.6, wet_level=0.12, dry_level=0.95))(sfx.buf.T, SR).T
+    fx_out = chain(pb.Reverb(room_size=0.5, damping=0.6, wet_level=0.12, dry_level=0.95))(sfx.buf.T, SR).T
     # hard silence on the cut to black (the coin never lands)
-    for arr in (music, fx):
+    for arr in (music, fx_out):
         b0, b1 = secs(at("BLACK")), secs(at("BLACK") + SEG["BLACK"]["dur"])
         arr[b0:b1] = 0
         arr[b0 - secs(0.01) : b0] *= np.linspace(1, 0, secs(0.01))[:, None]
@@ -568,7 +600,10 @@ def main():
     out = ROOT / "music" / "render"
     out.mkdir(exist_ok=True)
     sf.write(out / f"score{SFX}.wav", fade(music[:n], 0.0, 1.5), SR, subtype="PCM_24")
-    sf.write(out / f"sfx{SFX}.wav", fx[:n], SR, subtype="PCM_24")
+    sf.write(out / f"sfx{SFX}.wav", fx_out[:n], SR, subtype="PCM_24")
+    hits = sorted({(round(t * FPS), round(k, 2)) for t, k in HITS if 0 <= t < cues["seconds"] and k >= 0.4})
+    (ROOT / "video" / "src" / "data" / f"hits{SFX}.json").write_text(json.dumps([list(h) for h in hits]))
+    print("hits", len(hits))
     print("wrote", out / f"score{SFX}.wav", out / f"sfx{SFX}.wav")
 
 

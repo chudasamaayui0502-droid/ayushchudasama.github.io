@@ -149,6 +149,14 @@
      "dur": 4.373
     }
    ],
+   "trans_in": {
+    "type": "dissolve",
+    "frames": 12,
+    "dir": 1,
+    "color": "",
+    "from_scene": false,
+    "t_mid": 38.7
+   },
    "from": 1155,
    "frames": 250
   },
@@ -170,6 +178,14 @@
      "dur": 2.56
     }
    ],
+   "trans_in": {
+    "type": "zoom",
+    "frames": 14,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 47.21
+   },
    "from": 1410,
    "frames": 146
   },
@@ -201,6 +217,14 @@
      "dur": 4.672
     }
    ],
+   "trans_in": {
+    "type": "whip",
+    "frames": 10,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 52.15
+   },
    "from": 1560,
    "frames": 428
   },
@@ -232,6 +256,14 @@
      "dur": 10.283
     }
    ],
+   "trans_in": {
+    "type": "panel",
+    "frames": 16,
+    "dir": 1,
+    "color": "amber",
+    "from_scene": true,
+    "t_mid": 66.767
+   },
    "from": 1995,
    "frames": 595
   },
@@ -273,6 +305,14 @@
      "dur": 4.544
     }
    ],
+   "trans_in": {
+    "type": "light",
+    "frames": 16,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 86.767
+   },
    "from": 2595,
    "frames": 524
   },
@@ -304,6 +344,14 @@
      "dur": 3.712
     }
    ],
+   "trans_in": {
+    "type": "push3d",
+    "frames": 18,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 104.3
+   },
    "from": 3120,
    "frames": 307
   },
@@ -347,6 +395,14 @@
      "dur": 3.136
     }
    ],
+   "trans_in": {
+    "type": "dissolve",
+    "frames": 12,
+    "dir": 1,
+    "color": "",
+    "from_scene": false,
+    "t_mid": 117.7
+   },
    "from": 3525,
    "frames": 304
   },
@@ -388,6 +444,14 @@
      "dur": 4.864
     }
    ],
+   "trans_in": {
+    "type": "zoom",
+    "frames": 14,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 128.21
+   },
    "from": 3840,
    "frames": 617
   },
@@ -419,6 +483,14 @@
      "dur": 13.312
     }
    ],
+   "trans_in": {
+    "type": "panel",
+    "frames": 16,
+    "dir": -1,
+    "color": "teal",
+    "from_scene": true,
+    "t_mid": 149.267
+   },
    "from": 4470,
    "frames": 563
   },
@@ -440,6 +512,14 @@
      "dur": 13.717
     }
    ],
+   "trans_in": {
+    "type": "whip",
+    "frames": 10,
+    "dir": -1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 168.15
+   },
    "from": 5040,
    "frames": 442
   },
@@ -491,6 +571,14 @@
      "dur": 6.123
     }
    ],
+   "trans_in": {
+    "type": "light",
+    "frames": 16,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 183.267
+   },
    "from": 5490,
    "frames": 758
   },
@@ -522,6 +610,14 @@
      "dur": 3.563
     }
    ],
+   "trans_in": {
+    "type": "push3d",
+    "frames": 18,
+    "dir": -1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 208.8
+   },
    "from": 6255,
    "frames": 346
   },
@@ -555,6 +651,14 @@
      "dur": 5.44
     }
    ],
+   "trans_in": {
+    "type": "dissolve",
+    "frames": 12,
+    "dir": 1,
+    "color": "",
+    "from_scene": false,
+    "t_mid": 223.7
+   },
    "from": 6705,
    "frames": 193
   },
@@ -576,6 +680,14 @@
      "dur": 6.528
     }
    ],
+   "trans_in": {
+    "type": "zoom",
+    "frames": 14,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 230.21
+   },
    "from": 6900,
    "frames": 226
   },
@@ -647,6 +759,14 @@
      "dur": 4.8
     }
    ],
+   "trans_in": {
+    "type": "panel",
+    "frames": 16,
+    "dir": 1,
+    "color": "red",
+    "from_scene": true,
+    "t_mid": 238.267
+   },
    "from": 7140,
    "frames": 1058
   },
@@ -668,6 +788,14 @@
      "dur": 4.907
     }
    ],
+   "trans_in": {
+    "type": "whip",
+    "frames": 10,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 273.65
+   },
    "from": 8205,
    "frames": 195
   },
@@ -709,6 +837,14 @@
      "dur": 8.704
     }
    ],
+   "trans_in": {
+    "type": "glitch",
+    "frames": 9,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 280.62
+   },
    "from": 8415,
    "frames": 645
   },
@@ -730,6 +866,14 @@
      "dur": 10.475
     }
    ],
+   "trans_in": {
+    "type": "zoom",
+    "frames": 14,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 302.21
+   },
    "from": 9060,
    "frames": 344
   },
@@ -761,6 +905,14 @@
      "dur": 5.035
     }
    ],
+   "trans_in": {
+    "type": "push3d",
+    "frames": 18,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 313.8
+   },
    "from": 9405,
    "frames": 485
   },
@@ -792,6 +944,14 @@
      "dur": 3.989
     }
    ],
+   "trans_in": {
+    "type": "glitch",
+    "frames": 9,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 330.12
+   },
    "from": 9900,
    "frames": 368
   },
@@ -855,6 +1015,14 @@
      "dur": 4.053
     }
    ],
+   "trans_in": {
+    "type": "dissolve",
+    "frames": 12,
+    "dir": 1,
+    "color": "",
+    "from_scene": false,
+    "t_mid": 345.7
+   },
    "from": 10365,
    "frames": 786
   },
@@ -886,6 +1054,14 @@
      "dur": 11.008
     }
    ],
+   "trans_in": {
+    "type": "whip",
+    "frames": 10,
+    "dir": -1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 372.15
+   },
    "from": 11160,
    "frames": 681
   },
@@ -917,6 +1093,14 @@
      "dur": 8.96
     }
    ],
+   "trans_in": {
+    "type": "light",
+    "frames": 16,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 395.267
+   },
    "from": 11850,
    "frames": 575
   },
@@ -948,6 +1132,14 @@
      "dur": 1.728
     }
    ],
+   "trans_in": {
+    "type": "zoom",
+    "frames": 14,
+    "dir": 1,
+    "color": "",
+    "from_scene": true,
+    "t_mid": 414.71
+   },
    "from": 12435,
    "frames": 340
   },
@@ -977,6 +1169,14 @@
      "dur": 8.0
     }
    ],
+   "trans_in": {
+    "type": "dissolve",
+    "frames": 12,
+    "dir": 1,
+    "color": "",
+    "from_scene": false,
+    "t_mid": 427.7
+   },
    "from": 12825,
    "frames": 570
   }

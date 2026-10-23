@@ -89,7 +89,7 @@ Check: no text overlaps after re-timing, the coin cuts to black on the beat, lou
 - Backdrops and the perspective grid are pre-baked images (`video/public/tex/bg_*.png`, `grid_*.png`); dust is one canvas.
   Re-bake the grid with `npx remotion still GridBake public/tex/grid_<hue>.png --props='{"hue":"<hue>"}' --image-format=png`.
 - Reflections are baked once per scene (`StudioEnv` in `three/kit.tsx`); drei's `<Environment>` re-bakes every frame — don't use it.
-- 3D layers render at 0.75 scale and are upscaled (`REMOTION_3D_RES=1` for full-res if time allows).
+- 3D layers render at 0.75 scale and are upscaled by default; the delivered Full-HD masters use `REMOTION_3D_RES=1` (3D at native 1920×1080).
 - Grain + vignette are added by ffmpeg in `tools/finish.sh`, not in the browser.
 
 ## Design notes
@@ -97,3 +97,11 @@ Check: no text overlaps after re-timing, the coin cuts to black on the beat, lou
 - Glow is done with additive "halo" sprites — post-processing bloom renders black on this CPU-only (SwiftShader) setup.
 - Every number on screen has a `Source ·` lower-third. The disclaimer card runs exactly 3 s after the title.
 - Music is 100% original and the samples are CC0, so there is no third-party Content ID risk.
+
+### Transitions, sound design and motion (v2)
+- Every scene-to-scene cut is designed in `tools/build_timeline.py` (`TRANSITIONS`: whip · zoom · panel · glitch · light · push3d; anything else dissolves). The picture lives in `video/src/components/Transitions.tsx`; the matching sound in `music/sfx_design.py` (`cut_sound`), placed by `transitions()` in `music/score.py` at each cut's `t_mid`. Change a cut in one place and both follow.
+- Transition sounds are built from shaped pink noise through swept ladder filters (no zipper noise), steep low-passes (no hiss), stereo pan moves, and CC0 VSCO samples (reversed cymbal, bell tree, rubbed bass drum, glass). The old noise-sweep `whoosh` is retired.
+- `music/score.py` writes `video/src/data/hits[_en].json` (frame, strength) for every big hit; `<Punch>` in `Main.tsx` uses it for a camera punch-in + short shake. Run the score before rendering.
+- Scenes get a slow push + handheld drift (`SceneCam`), the 0.45 letterbox is drawn once above all scenes (`SceneBars`, so it never moves with a transition), and a chapter tag + progress line sits in the top bar (`ChapterHUD`).
+- Text: `Words` mode `rise` slides each word up through a mask; `*accent*` words get an animated highlight bar (`marker={false}` to turn it off).
+- Cold open v2 (`scenes/cold.tsx`): clock dive → 3D night map of India with payment arcs (`data/india_night.json`, built by `tools/make_night_map.py` from the datameet india-composite GeoJSON) → kinetic payment vignettes → phone burst → 3D "FREE" that cracks and shatters → layered endless bill → WHO? shockwave → title slam. Its beat timings are listed at the top of the file and mirrored in `cold_open()` in the score.

@@ -54,8 +54,8 @@ for label, url in re.findall(r"\[([^\]]+)\]\((https?://[^)]+)\)", facts):
 chapter_block = "\n".join(f"{ts(t)} {n}" for t, n in chapters)
 source_block = "\n".join(f"• {l} — {u}" for l, u in links)
 credits = """🎵 CREDITS
-• Original score composed for this film (no third-party music). Orchestral samples: VS Chamber Orchestra Community Edition (VSCO-2-CE), public domain (CC0).
-• India map: datameet/maps "india-composite" (CC BY 2.5 India), simplified.
+• Original score and sound design made for this film (no third-party music or SFX libraries). Orchestral and percussion samples: VS Chamber Orchestra Community Edition (VSCO-2-CE), public domain (CC0).
+• India maps: datameet/maps "india-composite" (CC BY 2.5 India), simplified; city positions approximate.
 • Fonts: Teko, Mukta, Tiro Devanagari Hindi, Montserrat, Cormorant Garamond, IBM Plex Mono — SIL Open Font License.
 • Photos: see the credits list in this description once added (Wikimedia Commons / Pexels; licences noted per image)."""
 
