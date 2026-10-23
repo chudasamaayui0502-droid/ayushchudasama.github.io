@@ -4,11 +4,11 @@ From 2020, UPI ran with zero merchant fees — 800 million payments a day, almos
 
 ⏱ CHAPTERS
 00:00 Cold open — 800 million times a day
-00:35 Chapter 1 — The Pledge (The Promise)
-01:55 Chapter 2 — The Turn (The Vanishing Bill)
-03:42 Chapter 3 — The Bill (14 September)
-05:41 Chapter 4 — The Prestige (The Real Cost)
-06:56 Your verdict + sources
+00:36 Chapter 1 — The Pledge (The Promise)
+01:58 Chapter 2 — The Turn (The Vanishing Bill)
+03:47 Chapter 3 — The Bill (14 September)
+05:42 Chapter 4 — The Prestige (The Real Cost)
+07:02 Your verdict + sources
 
 ⚠️ DISCLAIMER
 For educational and informational purposes only. This is not financial or legal advice. Facts are based on public sources as of 23 October 2026; rules may change. Some visuals are illustrative.
@@ -37,10 +37,13 @@ For educational and informational purposes only. This is not financial or legal 
 • IANS — https://ianslive.in/upi-payments-need-to-be-made-sustainable-in-future-rbi-governor--20250725145949
 • Outlook Business — https://www.outlookbusiness.com/economy-and-policy/someone-has-to-pay-rbi-governor-weighs-in-on-upi-fee-debate
 • Outlook Business — https://www.outlookbusiness.com/economy-and-policy/amendment-to-taxation-act-payment-and-settlement-systems-act-get-presidents-assent
+• Gazette of India S.O. 5067(E), 14 Sep 2026 (PDF) — https://egazette.gov.in/WriteReadData/2026/276170.pdf
+• Ministry of Finance (DFS) MDR FAQs, 15 Sep 2026 (PDF) — https://financialservices.gov.in/sites/default/files/2026-09/FAQs---Merchant-Discount-Rate--MDR--on-Select-UPI--P2M--Transactions_0.pdf
 • TechCrunch — https://techcrunch.com/2026/09/15/india-ends-free-ride-for-larger-transactions-on-its-ubiquitous-digital-payments-network/
 • Medianama — https://www.medianama.com/2026/09/223-pil-supreme-court-charges-upi-payments/
 • AIR — https://newsonair.gov.in/supreme-court-refuses-to-stay-mdr-on-specified-upi-transactions-above-%E2%82%B92000/
 • ThePrint — https://theprint.in/india/sc-refuses-to-stay-mdr-on-upi-payments-above-rs-2000-issues-notice-to-centre/3055713/
+• PIB, Ministry of Finance, 15 Sep 2026 — https://www.pib.gov.in/PressReleasePage.aspx?PRID=2310586&reg=48&lang=1
 • CNBC — https://www.cnbc.com/2026/09/17/upi-payments-visa-amazon-phonepe.html
 • Business Standard, 18 Sep 2026 — https://www.business-standard.com/industry/banking/upi-mdr-returns-rs-2000-merchants-retailers-petrol-pumps-banks-126091800962_1.html
 • SCC Online blog — https://www.scconline.com/blog/post/2026/09/16/npci-released-upi-mdr-faqs-explained/
@@ -58,6 +61,7 @@ For educational and informational purposes only. This is not financial or legal 
 🎵 CREDITS
 • Original score and sound design made for this film (no third-party music or SFX libraries). Orchestral and percussion samples: VS Chamber Orchestra Community Edition (VSCO-2-CE), public domain (CC0).
 • India maps: datameet/maps "india-composite" (CC BY 2.5 India), simplified; city positions approximate.
+• Narration: AI-generated voice (Sarvam AI, Bulbul). Official documents shown: Gazette of India S.O. 5067(E) and the Ministry of Finance MDR FAQs (links above).
 • Fonts: Teko, Mukta, Tiro Devanagari Hindi, Montserrat, Cormorant Garamond, IBM Plex Mono — SIL Open Font License.
 • Photos: see the credits list in this description once added (Wikimedia Commons / Pexels; licences noted per image).
 

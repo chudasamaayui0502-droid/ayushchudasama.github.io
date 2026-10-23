@@ -1,0 +1,11 @@
+{
+ "speaker": "shubh_hi_stories_dramatic",
+ "model": "bulbul:v4-flash",
+ "pace": 1.05,
+ "pitch": -0.05,
+ "loudness": 1.1,
+ "sr": 48000,
+ "only": "c1_04,c2_03,c3_09,c3_14,c3_16",
+ "audition": false,
+ "lang": "hi"
+}

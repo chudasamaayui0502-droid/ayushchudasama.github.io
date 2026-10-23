@@ -149,8 +149,10 @@ def main():
                            "t": l["t"], "dur": l["dur"]} for l in s["lines"]]
         tl["segments"].append(f)
     (ROOT / "video" / "src" / f"timeline{sfx}.json").write_text(json.dumps(tl, ensure_ascii=False, indent=1))
-    # the video reads the English word-position overrides from its own copy; keep it in sync
-    (ROOT / "video" / "src" / "data" / "beats_en.json").write_text((ROOT / "script" / "beats_en.json").read_text())
+    # the video reads the word-position tables from its own copies; keep them in sync
+    for name in ("beats_hi.json", "beats_en.json"):
+        src = ROOT / "script" / name
+        (ROOT / "video" / "src" / "data" / name).write_text(src.read_text() if src.exists() else '{"_doc": "identity"}\n')
 
     # music/mix cues (seconds)
     for s in segments:

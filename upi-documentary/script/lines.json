@@ -119,7 +119,7 @@
         {
           "id": "c1_04",
           "scene": "S13_Launch",
-          "tts": "अगस्त दो हज़ार सोलह। NPCI का नया system — UPI — इक्कीस बैंकों के साथ शुरू होता है।",
+          "tts": "अगस्त दो हज़ार सोलह। एन-पी-सी-आई का नया system — UPI — इक्कीस बैंकों के साथ शुरू होता है।",
           "display": "अगस्त 2016 — NPCI का नया system, Unified Payments Interface (UPI), 21 बैंकों के साथ आम लोगों के लिए शुरू।",
           "en": "August 2016. NPCI's new system, the Unified Payments Interface, opens to the public with 21 banks.",
           "src": "1.1, 1.2",
@@ -237,7 +237,7 @@
         {
           "id": "c2_03",
           "scene": "S21_Machine",
-          "tts": "आपके एक scan के पीछे, एक पूरी मशीन चलती है — आपका app, आपका बैंक, NPCI, और दुकानदार का बैंक।",
+          "tts": "आपके एक scan के पीछे, एक पूरी मशीन चलती है — आपका app, आपका बैंक, एन-पी-सी-आई, और दुकानदार का बैंक।",
           "display": "एक scan के पीछे पूरी मशीन — app · आपका बैंक · NPCI switch · दुकानदार का बैंक",
           "en": "Behind your one scan runs an entire machine: your app, your bank, NPCI's switch, and the shop's bank.",
           "src": "3.3",
@@ -445,7 +445,7 @@
         {
           "id": "c3_09",
           "scene": "S33_Revenue",
-          "tts": "NPCI का अनुमान — हर साल, बीस हज़ार छह सौ करोड़ रुपये तक।",
+          "tts": "एन-पी-सी-आई का अनुमान — हर साल, बीस हज़ार छह सौ करोड़ रुपये तक।",
           "display": "NPCI का अनुमान — हर साल ₹20,600 करोड़ तक",
           "en": "By NPCI's estimate, this could raise up to ₹20,600 crore a year.",
           "src": "5.7",
@@ -495,7 +495,7 @@
         {
           "id": "c3_14",
           "scene": "S36_Court",
-          "tts": "मामला Supreme Court पहुँचा। कोर्ट ने रोक से इनकार किया... और सरकार, RBI और NPCI से जवाब माँगा।",
+          "tts": "मामला Supreme Court पहुँचा। कोर्ट ने रोक से इनकार किया... और सरकार, RBI और एन-पी-सी-आई से जवाब माँगा।",
           "display": "28 सितंबर · Supreme Court: रोक से इनकार · Centre, RBI, NPCI से 4 हफ़्ते में जवाब",
           "en": "The case reached the Supreme Court. On 28 September it refused a stay and asked the Centre, RBI and NPCI to reply within four weeks.",
           "src": "6.4",
@@ -515,7 +515,7 @@
         {
           "id": "c3_16",
           "scene": "S37_Deferral",
-          "tts": "और फिर — deadline से सिर्फ़ दो दिन पहले — NPCI ने ऐलान किया...",
+          "tts": "और फिर — deadline से सिर्फ़ दो दिन पहले — एन-पी-सी-आई ने ऐलान किया...",
           "display": "13 अक्टूबर — deadline से सिर्फ़ 2 दिन पहले, NPCI:",
           "en": "Then, just two days before the deadline, on 13 October, NPCI announced:",
           "src": "6.6",

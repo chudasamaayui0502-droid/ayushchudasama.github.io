@@ -56,6 +56,7 @@ source_block = "\n".join(f"• {l} — {u}" for l, u in links)
 credits = """🎵 CREDITS
 • Original score and sound design made for this film (no third-party music or SFX libraries). Orchestral and percussion samples: VS Chamber Orchestra Community Edition (VSCO-2-CE), public domain (CC0).
 • India maps: datameet/maps "india-composite" (CC BY 2.5 India), simplified; city positions approximate.
+• Narration: AI-generated voice (Sarvam AI, Bulbul). Official documents shown: Gazette of India S.O. 5067(E) and the Ministry of Finance MDR FAQs (links above).
 • Fonts: Teko, Mukta, Tiro Devanagari Hindi, Montserrat, Cormorant Garamond, IBM Plex Mono — SIL Open Font License.
 • Photos: see the credits list in this description once added (Wikimedia Commons / Pexels; licences noted per image)."""
 

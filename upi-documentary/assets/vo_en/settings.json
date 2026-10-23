@@ -1,0 +1,11 @@
+{
+ "speaker": "sarang_en_narration",
+ "model": "bulbul:v4-flash",
+ "pace": 1.15,
+ "pitch": -0.05,
+ "loudness": 1.1,
+ "sr": 48000,
+ "only": "",
+ "audition": false,
+ "lang": "en"
+}

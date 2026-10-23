@@ -1,6 +1,7 @@
 import { useContext } from "react";
 import rawHi from "./timeline.json";
 import rawEn from "./timeline_en.json";
+import beatsHi from "./data/beats_hi.json";
 import beatsEn from "./data/beats_en.json";
 import hitsHi from "./data/hits.json";
 import hitsEn from "./data/hits_en.json";
@@ -60,11 +61,13 @@ export const HITS: Record<Lang, [number, number][]> = {
   en: hitsEn as unknown as [number, number][],
 };
 
-const BEATS_EN = beatsEn as unknown as Record<string, Record<string, number>>;
+const BEATS: Record<Lang, Record<string, Record<string, number>>> = {
+  hi: beatsHi as unknown as Record<string, Record<string, number>>,
+  en: beatsEn as unknown as Record<string, Record<string, number>>,
+};
 
-/** Word-position fraction for a line, with the English override table applied in the English edition. */
-export const beatFrac = (lang: Lang | undefined, lineId: string, f: number) =>
-  lang === "en" ? (BEATS_EN[lineId]?.[String(f)] ?? f) : f;
+/** Word-position fraction for a line, re-synced to that edition's final voice (tools/align_beats.py). */
+export const beatFrac = (lang: Lang | undefined, lineId: string, f: number) => BEATS[lang ?? "hi"][lineId]?.[String(f)] ?? f;
 
 /** Line timings relative to the start of their segment: L.c1_04.at / .end / .len / .fr(0.6) */
 export const relLines = (seg: Seg) => {

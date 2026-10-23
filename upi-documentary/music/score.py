@@ -46,12 +46,13 @@ def end(seg: str) -> float:
     return SEG[seg]["t"] + SEG[seg]["dur"]
 
 
-BEATS_EN = json.loads((ROOT / "script" / "beats_en.json").read_text()) if LANG == "en" else {}
+_bf = ROOT / "script" / f"beats_{LANG}.json"
+BEATS = json.loads(_bf.read_text()) if _bf.exists() else {}
 
 
 def fr(lid: str, frac: float) -> float:
-    """Word-position fraction, with the English override table in the English edition (same as the video)."""
-    return BEATS_EN.get(lid, {}).get(str(frac), frac) if isinstance(BEATS_EN.get(lid), dict) else frac
+    """Word-position fraction re-synced to this edition's final voice (tools/align_beats.py; same table as the video)."""
+    return BEATS.get(lid, {}).get(str(frac), frac) if isinstance(BEATS.get(lid), dict) else frac
 
 
 def lt(lid: str, frac: float = 0.0, frames: float = 0.0) -> float:

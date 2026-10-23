@@ -1,50 +1,50 @@
 {
  "lang": "en",
- "seconds": 436.131,
- "voDir": "vo_scratch_en",
+ "seconds": 441.015,
+ "voDir": "vo_en",
  "segments": [
   {
    "kind": "scene",
    "id": "S00_ColdOpen",
    "chapter": "c0",
    "t": 0.0,
-   "dur": 27.961,
+   "dur": 29.278,
    "trans_in": null,
    "lines": [
     {
      "id": "c0_01",
      "t": 1.2,
-     "dur": 2.475
+     "dur": 3.005
     },
     {
      "id": "c0_02",
-     "t": 3.895,
-     "dur": 5.184
+     "t": 4.425,
+     "dur": 5.777
     },
     {
      "id": "c0_03",
-     "t": 9.299,
-     "dur": 4.48
+     "t": 10.422,
+     "dur": 4.394
     },
     {
      "id": "c0_04",
-     "t": 13.999,
-     "dur": 2.688
+     "t": 15.036,
+     "dur": 2.793
     },
     {
      "id": "c0_05",
-     "t": 17.037,
-     "dur": 4.672
+     "t": 18.179,
+     "dur": 4.257
     },
     {
      "id": "c0_06",
-     "t": 22.159,
-     "dur": 2.816
+     "t": 22.886,
+     "dur": 3.206
     },
     {
      "id": "c0_07",
-     "t": 25.875,
-     "dur": 1.536
+     "t": 26.991,
+     "dur": 1.737
     }
    ]
   },
@@ -52,7 +52,7 @@
    "kind": "title",
    "id": "S01_Title",
    "chapter": null,
-   "t": 28.0,
+   "t": 29.5,
    "dur": 4.0,
    "trans_in": null,
    "lines": []
@@ -61,7 +61,7 @@
    "kind": "disclaimer",
    "id": "S02_Disclaimer",
    "chapter": null,
-   "t": 32.0,
+   "t": 33.5,
    "dur": 3.0,
    "trans_in": null,
    "lines": []
@@ -70,7 +70,7 @@
    "kind": "chapter",
    "id": "CH_c1",
    "chapter": "c1",
-   "t": 35.0,
+   "t": 36.5,
    "dur": 3.0,
    "trans_in": null,
    "lines": []
@@ -79,26 +79,26 @@
    "kind": "scene",
    "id": "S11_ThreeParts",
    "chapter": "c1",
-   "t": 38.0,
-   "dur": 8.135,
+   "t": 39.5,
+   "dur": 7.756,
    "trans_in": {
     "type": "dissolve",
     "frames": 12,
     "dir": 1,
     "color": "",
     "from_scene": false,
-    "t_mid": 38.2
+    "t_mid": 39.7
    },
    "lines": [
     {
      "id": "c1_01",
-     "t": 38.45,
-     "dur": 2.219
+     "t": 39.95,
+     "dur": 2.17
     },
     {
      "id": "c1_02",
-     "t": 40.989,
-     "dur": 4.096
+     "t": 42.44,
+     "dur": 3.766
     }
    ]
   },
@@ -106,21 +106,21 @@
    "kind": "scene",
    "id": "S12_QR",
    "chapter": "c1",
-   "t": 46.5,
-   "dur": 5.415,
+   "t": 47.5,
+   "dur": 7.037,
    "trans_in": {
     "type": "zoom",
     "frames": 14,
     "dir": 1,
     "color": "",
     "from_scene": true,
-    "t_mid": 46.71
+    "t_mid": 47.71
    },
    "lines": [
     {
      "id": "c1_03",
-     "t": 46.95,
-     "dur": 3.115
+     "t": 47.95,
+     "dur": 4.737
     }
    ]
   },
@@ -128,26 +128,26 @@
    "kind": "scene",
    "id": "S13_Launch",
    "chapter": "c1",
-   "t": 52.0,
-   "dur": 13.077,
+   "t": 55.0,
+   "dur": 14.388,
    "trans_in": {
     "type": "whip",
     "frames": 10,
     "dir": 1,
     "color": "",
     "from_scene": true,
-    "t_mid": 52.15
+    "t_mid": 55.15
    },
    "lines": [
     {
      "id": "c1_04",
-     "t": 52.45,
-     "dur": 6.912
+     "t": 55.45,
+     "dur": 7.103
     },
     {
      "id": "c1_05",
-     "t": 59.682,
-     "dur": 4.245
+     "t": 62.873,
+     "dur": 5.365
     }
    ]
   },
@@ -155,26 +155,26 @@
    "kind": "scene",
    "id": "S14_ZeroMDR",
    "chapter": "c1",
-   "t": 65.5,
-   "dur": 20.392,
+   "t": 69.5,
+   "dur": 18.724,
    "trans_in": {
     "type": "panel",
     "frames": 16,
     "dir": 1,
     "color": "amber",
     "from_scene": true,
-    "t_mid": 65.767
+    "t_mid": 69.767
    },
    "lines": [
     {
      "id": "c1_06",
-     "t": 65.95,
-     "dur": 8.704
+     "t": 69.95,
+     "dur": 8.013
     },
     {
      "id": "c1_07",
-     "t": 74.974,
-     "dur": 10.368
+     "t": 78.283,
+     "dur": 9.391
     }
    ]
   },
@@ -182,31 +182,31 @@
    "kind": "scene",
    "id": "S15_Explosion",
    "chapter": "c1",
-   "t": 86.0,
-   "dur": 19.304,
+   "t": 88.5,
+   "dur": 18.956,
    "trans_in": {
     "type": "light",
     "frames": 16,
     "dir": 1,
     "color": "",
     "from_scene": true,
-    "t_mid": 86.267
+    "t_mid": 88.767
    },
    "lines": [
     {
      "id": "c1_09",
-     "t": 86.45,
-     "dur": 2.048
+     "t": 88.95,
+     "dur": 2.303
     },
     {
      "id": "c1_10",
-     "t": 89.498,
-     "dur": 7.893
+     "t": 92.253,
+     "dur": 8.5
     },
     {
      "id": "c1_11",
-     "t": 97.711,
-     "dur": 6.443
+     "t": 101.073,
+     "dur": 5.233
     }
    ]
   },
@@ -214,26 +214,26 @@
    "kind": "scene",
    "id": "S16_PledgeEnd",
    "chapter": "c1",
-   "t": 105.5,
-   "dur": 9.347,
+   "t": 107.5,
+   "dur": 10.052,
    "trans_in": {
     "type": "push3d",
     "frames": 18,
     "dir": 1,
     "color": "",
     "from_scene": true,
-    "t_mid": 105.8
+    "t_mid": 107.8
    },
    "lines": [
     {
      "id": "c1_12",
-     "t": 105.95,
-     "dur": 3.563
+     "t": 107.95,
+     "dur": 4.256
     },
     {
      "id": "c1_13",
-     "t": 109.833,
-     "dur": 3.264
+     "t": 112.526,
+     "dur": 3.276
     }
    ]
   },
@@ -241,7 +241,7 @@
    "kind": "chapter",
    "id": "CH_c2",
    "chapter": "c2",
-   "t": 115.0,
+   "t": 118.0,
    "dur": 3.0,
    "trans_in": null,
    "lines": []
@@ -250,26 +250,26 @@
    "kind": "scene",
    "id": "S20_Vanish",
    "chapter": "c2",
-   "t": 118.0,
-   "dur": 9.345,
+   "t": 121.0,
+   "dur": 10.93,
    "trans_in": {
     "type": "dissolve",
     "frames": 12,
     "dir": 1,
     "color": "",
     "from_scene": false,
-    "t_mid": 118.2
+    "t_mid": 121.2
    },
    "lines": [
     {
      "id": "c2_01",
-     "t": 118.45,
-     "dur": 4.501
+     "t": 121.45,
+     "dur": 5.988
     },
     {
      "id": "c2_02",
-     "t": 123.271,
-     "dur": 2.624
+     "t": 127.758,
+     "dur": 2.722
     }
    ]
   },
@@ -277,31 +277,31 @@
    "kind": "scene",
    "id": "S21_Machine",
    "chapter": "c2",
-   "t": 127.5,
-   "dur": 16.541,
+   "t": 132.0,
+   "dur": 18.664,
    "trans_in": {
     "type": "zoom",
     "frames": 14,
     "dir": 1,
     "color": "",
     "from_scene": true,
-    "t_mid": 127.71
+    "t_mid": 132.21
    },
    "lines": [
     {
      "id": "c2_03",
-     "t": 127.95,
-     "dur": 6.549
+     "t": 132.45,
+     "dur": 7.86
     },
     {
      "id": "c2_04",
-     "t": 134.819,
-     "dur": 3.307
+     "t": 140.63,
+     "dur": 3.91
     },
     {
      "id": "c2_05",
-     "t": 138.446,
-     "dur": 4.245
+     "t": 144.86,
+     "dur": 4.453
     }
    ]
   },
@@ -309,26 +309,26 @@
    "kind": "scene",
    "id": "S22_Subsidy",
    "chapter": "c2",
-   "t": 144.5,
-   "dur": 20.096,
+   "t": 151.0,
+   "dur": 18.988,
    "trans_in": {
     "type": "panel",
     "frames": 16,
     "dir": -1,
     "color": "teal",
     "from_scene": true,
-    "t_mid": 144.767
+    "t_mid": 151.267
    },
    "lines": [
     {
      "id": "c2_06",
-     "t": 144.95,
-     "dur": 3.712
+     "t": 151.45,
+     "dur": 4.327
     },
     {
      "id": "c2_07",
-     "t": 148.982,
-     "dur": 14.464
+     "t": 156.097,
+     "dur": 12.741
     }
    ]
   },
@@ -336,21 +336,21 @@
    "kind": "scene",
    "id": "S23_Gap",
    "chapter": "c2",
-   "t": 165.0,
-   "dur": 14.099,
+   "t": 170.0,
+   "dur": 13.878,
    "trans_in": {
     "type": "whip",
     "frames": 10,
     "dir": -1,
     "color": "",
     "from_scene": true,
-    "t_mid": 165.15
+    "t_mid": 170.15
    },
    "lines": [
     {
      "id": "c2_08",
-     "t": 165.45,
-     "dur": 13.099
+     "t": 170.45,
+     "dur": 12.878
     }
    ]
   },
@@ -358,36 +358,36 @@
    "kind": "scene",
    "id": "S24_Memory",
    "chapter": "c2",
-   "t": 179.5,
-   "dur": 31.755,
+   "t": 184.0,
+   "dur": 31.642,
    "trans_in": {
     "type": "light",
     "frames": 16,
     "dir": 1,
     "color": "",
     "from_scene": true,
-    "t_mid": 179.767
+    "t_mid": 184.267
    },
    "lines": [
     {
      "id": "c2_11",
-     "t": 179.95,
-     "dur": 3.179
+     "t": 184.45,
+     "dur": 3.415
     },
     {
      "id": "c2_12",
-     "t": 183.729,
-     "dur": 10.048
+     "t": 188.465,
+     "dur": 9.407
     },
     {
      "id": "c2_13",
-     "t": 194.277,
-     "dur": 7.253
+     "t": 198.372,
+     "dur": 7.027
     },
     {
      "id": "c2_14",
-     "t": 202.23,
-     "dur": 7.275
+     "t": 206.099,
+     "dur": 7.793
     }
    ]
   },
@@ -395,26 +395,26 @@
    "kind": "scene",
    "id": "S25_Budget",
    "chapter": "c2",
-   "t": 211.5,
-   "dur": 10.008,
+   "t": 216.0,
+   "dur": 10.875,
    "trans_in": {
     "type": "push3d",
     "frames": 18,
     "dir": -1,
     "color": "",
     "from_scene": true,
-    "t_mid": 211.8
+    "t_mid": 216.3
    },
    "lines": [
     {
      "id": "c2_15",
-     "t": 211.95,
-     "dur": 4.48
+     "t": 216.45,
+     "dur": 4.735
     },
     {
      "id": "c2_16",
-     "t": 216.75,
-     "dur": 3.008
+     "t": 221.505,
+     "dur": 3.62
     }
    ]
   },
@@ -422,7 +422,7 @@
    "kind": "chapter",
    "id": "CH_c3",
    "chapter": "c3",
-   "t": 222.0,
+   "t": 227.0,
    "dur": 3.0,
    "trans_in": null,
    "lines": []
@@ -431,21 +431,21 @@
    "kind": "scene",
    "id": "S30_Law",
    "chapter": "c3",
-   "t": 225.0,
-   "dur": 5.288,
+   "t": 230.0,
+   "dur": 5.323,
    "trans_in": {
     "type": "dissolve",
     "frames": 12,
     "dir": 1,
     "color": "",
     "from_scene": false,
-    "t_mid": 225.2
+    "t_mid": 230.2
    },
    "lines": [
     {
      "id": "c3_01",
-     "t": 225.45,
-     "dur": 4.288
+     "t": 230.45,
+     "dur": 4.323
     }
    ]
   },
@@ -453,21 +453,21 @@
    "kind": "scene",
    "id": "S31_Notification",
    "chapter": "c3",
-   "t": 230.5,
-   "dur": 7.507,
+   "t": 235.5,
+   "dur": 7.057,
    "trans_in": {
     "type": "zoom",
     "frames": 14,
     "dir": 1,
     "color": "",
     "from_scene": true,
-    "t_mid": 230.71
+    "t_mid": 235.71
    },
    "lines": [
     {
      "id": "c3_02",
-     "t": 230.95,
-     "dur": 6.507
+     "t": 235.95,
+     "dur": 6.057
     }
    ]
   },
@@ -475,46 +475,46 @@
    "kind": "scene",
    "id": "S32_Rules",
    "chapter": "c3",
-   "t": 238.5,
-   "dur": 31.611,
+   "t": 243.0,
+   "dur": 30.066,
    "trans_in": {
     "type": "panel",
     "frames": 16,
     "dir": 1,
     "color": "red",
     "from_scene": true,
-    "t_mid": 238.767
+    "t_mid": 243.267
    },
    "lines": [
     {
      "id": "c3_03",
-     "t": 238.95,
-     "dur": 1.429
+     "t": 243.45,
+     "dur": 0.912
     },
     {
      "id": "c3_04",
-     "t": 240.579,
-     "dur": 5.739
+     "t": 244.562,
+     "dur": 5.089
     },
     {
      "id": "c3_05",
-     "t": 246.638,
-     "dur": 3.968
+     "t": 249.971,
+     "dur": 3.63
     },
     {
      "id": "c3_06",
-     "t": 250.926,
-     "dur": 4.352
+     "t": 253.921,
+     "dur": 5.375
     },
     {
      "id": "c3_07",
-     "t": 255.598,
-     "dur": 8.128
+     "t": 259.616,
+     "dur": 7.529
     },
     {
      "id": "c3_08",
-     "t": 264.046,
-     "dur": 4.715
+     "t": 267.465,
+     "dur": 4.251
     }
    ]
   },
@@ -522,21 +522,21 @@
    "kind": "scene",
    "id": "S33_Revenue",
    "chapter": "c3",
-   "t": 270.5,
-   "dur": 7.211,
+   "t": 273.5,
+   "dur": 7.803,
    "trans_in": {
     "type": "whip",
     "frames": 10,
     "dir": 1,
     "color": "",
     "from_scene": true,
-    "t_mid": 270.65
+    "t_mid": 273.65
    },
    "lines": [
     {
      "id": "c3_09",
-     "t": 270.95,
-     "dur": 5.611
+     "t": 273.95,
+     "dur": 6.202
     }
    ]
   },
@@ -544,31 +544,31 @@
    "kind": "scene",
    "id": "S34_Countdown",
    "chapter": "c3",
-   "t": 278.0,
-   "dur": 21.165,
+   "t": 281.5,
+   "dur": 21.067,
    "trans_in": {
     "type": "glitch",
     "frames": 9,
     "dir": 1,
     "color": "",
     "from_scene": true,
-    "t_mid": 278.12
+    "t_mid": 281.62
    },
    "lines": [
     {
      "id": "c3_10",
-     "t": 278.45,
-     "dur": 1.899
+     "t": 281.95,
+     "dur": 2.379
     },
     {
      "id": "c3_11",
-     "t": 280.949,
-     "dur": 8.384
+     "t": 284.929,
+     "dur": 8.083
     },
     {
      "id": "c3_12",
-     "t": 289.653,
-     "dur": 8.363
+     "t": 293.333,
+     "dur": 8.084
     }
    ]
   },
@@ -576,21 +576,21 @@
    "kind": "scene",
    "id": "S35_Map",
    "chapter": "c3",
-   "t": 299.5,
-   "dur": 13.416,
+   "t": 303.0,
+   "dur": 11.73,
    "trans_in": {
     "type": "zoom",
     "frames": 14,
     "dir": 1,
     "color": "",
     "from_scene": true,
-    "t_mid": 299.71
+    "t_mid": 303.21
    },
    "lines": [
     {
      "id": "c3_13",
-     "t": 299.95,
-     "dur": 12.416
+     "t": 303.45,
+     "dur": 10.73
     }
    ]
   },
@@ -598,26 +598,26 @@
    "kind": "scene",
    "id": "S36_Court",
    "chapter": "c3",
-   "t": 313.0,
-   "dur": 15.361,
+   "t": 315.0,
+   "dur": 15.573,
    "trans_in": {
     "type": "push3d",
     "frames": 18,
     "dir": 1,
     "color": "",
     "from_scene": true,
-    "t_mid": 313.3
+    "t_mid": 315.3
    },
    "lines": [
     {
      "id": "c3_14",
-     "t": 313.45,
-     "dur": 8.704
+     "t": 315.45,
+     "dur": 8.411
     },
     {
      "id": "c3_15",
-     "t": 322.474,
-     "dur": 4.437
+     "t": 324.181,
+     "dur": 4.943
     }
    ]
   },
@@ -625,26 +625,26 @@
    "kind": "scene",
    "id": "S37_Deferral",
    "chapter": "c3",
-   "t": 328.5,
-   "dur": 12.252,
+   "t": 331.0,
+   "dur": 11.186,
    "trans_in": {
     "type": "glitch",
     "frames": 9,
     "dir": 1,
     "color": "",
     "from_scene": true,
-    "t_mid": 328.62
+    "t_mid": 331.12
    },
    "lines": [
     {
      "id": "c3_16",
-     "t": 328.95,
-     "dur": 3.84
+     "t": 331.45,
+     "dur": 3.417
     },
     {
      "id": "c3_17",
-     "t": 333.29,
-     "dur": 5.312
+     "t": 335.367,
+     "dur": 4.669
     }
    ]
   },
@@ -652,7 +652,7 @@
    "kind": "chapter",
    "id": "CH_c4",
    "chapter": "c4",
-   "t": 341.0,
+   "t": 342.5,
    "dur": 3.0,
    "trans_in": null,
    "lines": []
@@ -661,36 +661,36 @@
    "kind": "scene",
    "id": "S40_Return",
    "chapter": "c4",
-   "t": 344.0,
-   "dur": 22.664,
+   "t": 345.5,
+   "dur": 25.736,
    "trans_in": {
     "type": "dissolve",
     "frames": 12,
     "dir": 1,
     "color": "",
     "from_scene": false,
-    "t_mid": 344.2
+    "t_mid": 345.7
    },
    "lines": [
     {
      "id": "c4_01",
-     "t": 344.45,
-     "dur": 4.117
+     "t": 345.95,
+     "dur": 5.848
     },
     {
      "id": "c4_02",
-     "t": 349.367,
-     "dur": 3.861
+     "t": 352.598,
+     "dur": 3.983
     },
     {
      "id": "c4_03",
-     "t": 354.029,
-     "dur": 7.339
+     "t": 357.381,
+     "dur": 8.35
     },
     {
      "id": "c4_04",
-     "t": 361.687,
-     "dur": 3.627
+     "t": 366.051,
+     "dur": 3.835
     }
    ]
   },
@@ -698,26 +698,26 @@
    "kind": "scene",
    "id": "S41_WhoPays",
    "chapter": "c4",
-   "t": 367.0,
-   "dur": 19.387,
+   "t": 371.5,
+   "dur": 20.072,
    "trans_in": {
     "type": "whip",
     "frames": 10,
     "dir": -1,
     "color": "",
     "from_scene": true,
-    "t_mid": 367.15
+    "t_mid": 371.65
    },
    "lines": [
     {
      "id": "c4_05",
-     "t": 367.45,
-     "dur": 8.277
+     "t": 371.95,
+     "dur": 8.28
     },
     {
      "id": "c4_06",
-     "t": 376.047,
-     "dur": 8.789
+     "t": 380.55,
+     "dur": 9.472
     }
    ]
   },
@@ -725,26 +725,26 @@
    "kind": "scene",
    "id": "S42_Question",
    "chapter": "c4",
-   "t": 386.5,
-   "dur": 16.797,
+   "t": 392.0,
+   "dur": 16.816,
    "trans_in": {
     "type": "light",
     "frames": 16,
     "dir": 1,
     "color": "",
     "from_scene": true,
-    "t_mid": 386.767
+    "t_mid": 392.267
    },
    "lines": [
     {
      "id": "c4_07",
-     "t": 386.95,
-     "dur": 6.4
+     "t": 392.45,
+     "dur": 5.708
     },
     {
      "id": "c4_08",
-     "t": 393.67,
-     "dur": 8.277
+     "t": 398.478,
+     "dur": 8.988
     }
    ]
   },
@@ -752,26 +752,26 @@
    "kind": "scene",
    "id": "S43_Coin",
    "chapter": "c4",
-   "t": 403.5,
-   "dur": 10.64,
+   "t": 409.0,
+   "dur": 11.088,
    "trans_in": {
     "type": "zoom",
     "frames": 14,
     "dir": 1,
     "color": "",
     "from_scene": true,
-    "t_mid": 403.71
+    "t_mid": 409.21
    },
    "lines": [
     {
      "id": "c4_09",
-     "t": 403.95,
-     "dur": 4.992
+     "t": 409.45,
+     "dur": 5.075
     },
     {
      "id": "c4_10",
-     "t": 409.262,
-     "dur": 1.728
+     "t": 414.845,
+     "dur": 2.093
     }
    ]
   },
@@ -779,7 +779,7 @@
    "kind": "black",
    "id": "BLACK",
    "chapter": null,
-   "t": 414.5,
+   "t": 420.5,
    "dur": 1.2,
    "trans_in": null,
    "lines": []
@@ -788,21 +788,21 @@
    "kind": "scene",
    "id": "S50_Outro",
    "chapter": "c5",
-   "t": 416.0,
-   "dur": 20.131,
+   "t": 422.0,
+   "dur": 19.015,
    "trans_in": {
     "type": "dissolve",
     "frames": 12,
     "dir": 1,
     "color": "",
     "from_scene": false,
-    "t_mid": 416.2
+    "t_mid": 422.2
    },
    "lines": [
     {
      "id": "c5_01",
-     "t": 416.45,
-     "dur": 9.131
+     "t": 422.45,
+     "dur": 8.015
     }
    ]
   }
