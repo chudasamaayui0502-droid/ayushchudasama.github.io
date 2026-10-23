@@ -28,6 +28,7 @@ export const TL = raw as unknown as {
   voDir: string;
   title_hi: string;
   title_en: string;
+  facts_as_of: string;
   disclaimer: { hi: string; en: string };
   segments: Seg[];
 };

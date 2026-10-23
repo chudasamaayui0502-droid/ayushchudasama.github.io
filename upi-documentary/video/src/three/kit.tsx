@@ -278,6 +278,11 @@ const drawCoinFace = (ctx: CanvasRenderingContext2D, glyph: string, value: strin
     ctx.lineTo(S / 2 + Math.cos(a) * S * 0.49, S / 2 + Math.sin(a) * S * 0.49);
     ctx.stroke();
   }
+  // cylinder caps map the canvas rotated 90° clockwise; pre-rotate so the face reads upright
+  ctx.save();
+  ctx.translate(S / 2, S / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.translate(-S / 2, -S / 2);
   ctx.fillStyle = heightMap ? "#ffffff" : "#e9ebef";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
@@ -287,7 +292,7 @@ const drawCoinFace = (ctx: CanvasRenderingContext2D, glyph: string, value: strin
     ctx.font = "600 260px 'Teko'";
     ctx.fillText(value, S / 2, S * 0.78);
   }
-  // cylinder caps are mapped with the texture's v flipped relative to canvas; mirror for the front face
+  ctx.restore();
 };
 
 /* ------------------------------------------------------------ particles */
@@ -381,3 +386,20 @@ export const GlowNode: React.FC<{ position: [number, number, number]; color?: st
     <Halo size={size * 7} color={color} opacity={0.15 + on * 0.6} />
   </group>
 );
+
+/** Project a world point to screen pixels for a camera at `pos` looking at `target` (matches <CamRig>). */
+export const projectToScreen = (
+  p: [number, number, number],
+  pos: [number, number, number],
+  target: [number, number, number],
+  fov = 35,
+  W = 1920,
+  H = 1080,
+) => {
+  const cam = new THREE.PerspectiveCamera(fov, W / H, 0.1, 400);
+  cam.position.set(...pos);
+  cam.lookAt(...target);
+  cam.updateMatrixWorld();
+  const v = new THREE.Vector3(...p).project(cam);
+  return { x: (v.x * 0.5 + 0.5) * W, y: (-v.y * 0.5 + 0.5) * H, visible: v.z < 1 };
+};

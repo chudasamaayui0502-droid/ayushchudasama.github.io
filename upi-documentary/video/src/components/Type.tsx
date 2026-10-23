@@ -72,9 +72,9 @@ export const Words: React.FC<{
                 word = word.slice(1);
               }
               const hot = hotState;
-              if (word.endsWith("*")) {
+              if (word.includes("*")) {
                 hotState = false;
-                word = word.slice(0, -1);
+                word = word.replace(/\*/g, "");
               }
               const y = mode === "rise" ? (1 - p) * 0.55 : 0;
               const blur = mode === "punch" ? 0 : (1 - p) * 14;
@@ -183,13 +183,14 @@ const groupIndian = (s: string) => {
 };
 
 /** Rubber stamp that slams in. */
-export const Stamp: React.FC<{ text: string; at: number; color?: string; rotate?: number; size?: number; sub?: string }> = ({
+export const Stamp: React.FC<{ text: string; at: number; color?: string; rotate?: number; size?: number; sub?: string; blend?: "screen" | "multiply" | "normal" }> = ({
   text,
   at,
   color = C.red,
   rotate = -8,
   size = 120,
   sub,
+  blend = "screen",
 }) => {
   const frame = useCurrentFrame();
   const d = frame - at;
@@ -214,7 +215,7 @@ export const Stamp: React.FC<{ text: string; at: number; color?: string; rotate?
         lineHeight: 1.05,
         textAlign: "center",
         boxShadow: `0 0 50px ${color}44, inset 0 0 30px ${color}33`,
-        mixBlendMode: "screen",
+        mixBlendMode: blend,
       }}
     >
       {text}

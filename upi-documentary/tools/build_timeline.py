@@ -107,7 +107,7 @@ def main():
     total = round(t, 3)
     # frames
     tl = {"fps": FPS, "seconds": total, "frames": int(round(total * FPS)), "voDir": vo_dir.name,
-          "disclaimer": script["disclaimer"], "title_hi": script["title_hi"], "title_en": script["title_en"],
+          "disclaimer": script["disclaimer"], "facts_as_of": script["facts_as_of"], "title_hi": script["title_hi"], "title_en": script["title_en"],
           "segments": []}
     for s in segments:
         f = dict(s)
