@@ -313,11 +313,12 @@ export const S43_Coin: React.FC<SceneProps> = ({ seg }) => {
         <CamRig pos={[drift(frame, 3, 0.25), 1.4, camZ]} target={[0, 1.0, 0]} fov={32} />
         <ambientLight intensity={0.15} />
         <spotLight position={[2, 7, 4]} angle={0.4} penumbra={0.8} intensity={320} color="#fff1dc" />
-        <pointLight position={[-4, 2, -2]} intensity={40} color={C.teal} />
+        <pointLight position={[-1.5, 2.6, -4]} intensity={14} color={C.teal} />
+        <pointLight position={[3, 1.5, 3]} intensity={18} color="#ffc890" />
         {/* glossy table */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
           <planeGeometry args={[40, 40]} />
-          <meshStandardMaterial color="#07090e" metalness={0.9} roughness={0.18} />
+          <meshPhongMaterial color="#07090e" specular="#3a3f4a" shininess={60} />
         </mesh>
         {/* spinning coin standing on its edge */}
         <group position={[0, 1.0, 0]} rotation={[0, 0, Math.sin(frame * 0.35) * wobble]}>

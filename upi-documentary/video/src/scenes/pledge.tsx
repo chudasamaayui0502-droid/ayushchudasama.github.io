@@ -102,6 +102,7 @@ export const S12_QR: React.FC<SceneProps> = ({ seg }) => {
         <Halo position={[0, 0, -0.5]} size={10} color={C.teal} opacity={0.25 + reveal * 0.35} />
         <QRBlocks cells={cells} rise={reveal} size={4.4} color="#f2efe8" emissive={0.12 + reveal * 0.25} />
       </Stage>
+      <AbsoluteFill style={{ background: "radial-gradient(ellipse 45% 30% at 18% 12%, rgba(4,6,11,0.85), rgba(4,6,11,0) 100%)" }} />
       <AbsoluteFill style={{ padding: "120px 140px", justifyContent: "flex-start" }}>
         <Words text="हमारी कहानी में वो आम सी चीज़ है..." start={L.c1_03.at} size={52} align="left" color={C.inkDim} weight={500} />
       </AbsoluteFill>

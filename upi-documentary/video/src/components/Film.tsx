@@ -1,26 +1,25 @@
-import { AbsoluteFill, Img, staticFile, useCurrentFrame } from "remotion";
+import { AbsoluteFill, staticFile, useCurrentFrame } from "remotion";
 import { clamp, drift } from "../lib/anim";
 import { interpolate } from "remotion";
 
-/** Film grain + vignette + gentle gate weave. Sits on top of everything. */
-export const Film: React.FC<{ grain?: number; vignette?: number }> = ({ grain = 0.09, vignette = 0.75 }) => {
+/**
+ * Film grain + vignette. For final renders these are applied by ffmpeg in tools/finish.sh
+ * (much faster than compositing them per frame on the CPU), so this only draws when `on`.
+ */
+export const Film: React.FC<{ grain?: number; vignette?: number; on?: boolean }> = ({ grain = 0.16, vignette = 0.75, on = false }) => {
   const frame = useCurrentFrame();
+  if (!on) return null;
   const g = Math.floor(frame / 2) % 8; // grain changes every 2 frames (12 fps grain = film-like)
-  const ox = (frame * 37) % 64;
-  const oy = (frame * 53) % 64;
+  const ox = (frame * 137) % 512;
+  const oy = (frame * 251) % 512;
   return (
     <AbsoluteFill style={{ pointerEvents: "none" }}>
-      <Img
-        src={staticFile(`tex/grain${g}.png`)}
+      <AbsoluteFill
         style={{
-          position: "absolute",
-          left: -64 + ox,
-          top: -64 + oy,
-          width: 1920 + 128,
-          height: 1080 + 128,
+          backgroundImage: `url(${staticFile(`tex/grainA${g}.png`)})`,
+          backgroundSize: "512px 512px",
+          backgroundPosition: `${ox}px ${oy}px`,
           opacity: grain,
-          mixBlendMode: "overlay",
-          imageRendering: "auto",
         }}
       />
       <AbsoluteFill
@@ -60,19 +59,17 @@ export const LightLeak: React.FC<{ start: number; dur: number; color?: string; s
     <AbsoluteFill style={{ pointerEvents: "none", mixBlendMode: "screen" }}>
       <AbsoluteFill
         style={{
-          background: `radial-gradient(ellipse 38% 90% at ${x}% 50%, rgba(${color},${a}) 0%, rgba(${color},${a * 0.35}) 35%, rgba(0,0,0,0) 70%)`,
-          filter: "blur(30px)",
+          background: `radial-gradient(ellipse 42% 95% at ${x}% 50%, rgba(${color},${a}) 0%, rgba(${color},${a * 0.45}) 30%, rgba(${color},${a * 0.12}) 55%, rgba(0,0,0,0) 75%)`,
         }}
       />
       <div
         style={{
           position: "absolute",
-          top: "49.6%",
+          top: "49.4%",
           left: 0,
           right: 0,
-          height: 6,
-          background: `linear-gradient(90deg, rgba(0,0,0,0), rgba(${color},${a * 0.9}) ${x}%, rgba(0,0,0,0))`,
-          filter: "blur(3px)",
+          height: 12,
+          background: `linear-gradient(90deg, rgba(0,0,0,0), rgba(${color},${a * 0.35}) ${x - 20}%, rgba(${color},${a * 0.9}) ${x}%, rgba(${color},${a * 0.35}) ${x + 20}%, rgba(0,0,0,0))`,
         }}
       />
     </AbsoluteFill>

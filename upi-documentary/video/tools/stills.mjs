@@ -15,11 +15,11 @@ const serveUrl = await bundle({ entryPoint: path.join(root, "src/index.ts"), pub
 const files = [];
 for (const spec of specs) {
   const [id, framesStr] = spec.split(":");
-  const composition = await selectComposition({ serveUrl, id, browserExecutable, chromiumOptions: { gl: "swangle" } });
+  const composition = await selectComposition({ serveUrl, id, browserExecutable, chromiumOptions: { gl: "swiftshader" } });
   for (const f of framesStr.split(",").map(Number)) {
     const frame = Math.min(f, composition.durationInFrames - 1);
     const output = path.join(outDir, `${id}_${frame}.jpg`);
-    await renderStill({ serveUrl, composition, frame, output, imageFormat: "jpeg", jpegQuality: 85, browserExecutable, chromiumOptions: { gl: "swangle" } });
+    await renderStill({ serveUrl, composition, frame, output, imageFormat: "jpeg", jpegQuality: 85, browserExecutable, chromiumOptions: { gl: "swiftshader" } });
     files.push(output);
     process.stdout.write(`${id}@${frame} `);
   }

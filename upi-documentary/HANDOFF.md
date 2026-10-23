@@ -63,9 +63,18 @@ Replace the illustrative growth curve in `S15_Explosion` (`video/src/scenes/pled
 python3 tools/youtube_meta.py                   # description, chapters, SRTs
 cd video
 node tools/stills.mjs qc seg-S00-ColdOpen:200,700 seg-S32-Rules:300,700 seg-S41-WhoPays:600   # spot-check layouts after re-timing
-npx remotion render Main out/upi_documentary_final.mp4    # ~60–90 min on 4 CPUs
+npx remotion render Main out/render.mp4                # ~45–60 min on 4 CPUs
+cd .. && tools/finish.sh video/out/render.mp4 video/out/upi_documentary_final.mp4   # grain + vignette + YouTube encode
 ```
 Check: no text overlaps after re-timing, the coin cuts to black on the beat, loudness −14 LUFS.
+
+## Render performance notes (CPU-only container)
+- WebGL uses legacy SwiftShader (`remotion.config.ts`): same pixels as "swangle", ~25× faster frame capture here.
+- Backdrops and the perspective grid are pre-baked images (`video/public/tex/bg_*.png`, `grid_*.png`); dust is one canvas.
+  Re-bake the grid with `npx remotion still GridBake public/tex/grid_<hue>.png --props='{"hue":"<hue>"}' --image-format=png`.
+- Reflections are baked once per scene (`StudioEnv` in `three/kit.tsx`); drei's `<Environment>` re-bakes every frame — don't use it.
+- 3D layers render at 0.75 scale and are upscaled (`REMOTION_3D_RES=1` for full-res if time allows).
+- Grain + vignette are added by ffmpeg in `tools/finish.sh`, not in the browser.
 
 ## Design notes
 - Structure = *The Prestige*'s three acts (Pledge → Turn → Prestige) + cold open in medias res, ticking-clock tension in chapter 3, spinning-coin open ending (an *Inception* nod). No film footage, quotes or music from any film are used.

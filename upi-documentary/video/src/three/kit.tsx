@@ -1,7 +1,7 @@
 import React, { useLayoutEffect, useMemo } from "react";
 import * as THREE from "three";
 import { useThree } from "@react-three/fiber";
-import { Environment, Lightformer, RoundedBox } from "@react-three/drei";
+import { RoundedBox } from "@react-three/drei";
 import { ThreeCanvas } from "@remotion/three";
 import { useCurrentFrame, useVideoConfig } from "remotion";
 import QRCode from "qrcode";
@@ -16,32 +16,68 @@ export const Stage: React.FC<{
   bloom?: number;
   fog?: [string, number, number];
   env?: boolean;
-}> = ({ children, fov = 35, fog, env = true }) => {
+  /** internal render scale for the 3D layer (text/2D stays full-res); 0.75 = 1440×810 */
+  res?: number;
+}> = ({ children, fov = 35, fog, env = true, res = Number(process.env.REMOTION_3D_RES ?? 0.75) }) => {
   const { width, height } = useVideoConfig();
+  const w = Math.round(width * res);
+  const h = Math.round(height * res);
   return (
-    <ThreeCanvas
-      width={width}
-      height={height}
-      camera={{ fov, near: 0.1, far: 400, position: [0, 0, 10] }}
-      gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, outputColorSpace: THREE.SRGBColorSpace }}
-      style={{ position: "absolute", inset: 0 }}
-    >
-      {fog && <fog attach="fog" args={fog} />}
-      {env && <StudioEnv />}
-      {children}
-    </ThreeCanvas>
+    <div style={{ position: "absolute", left: 0, top: 0, width: w, height: h, transform: `scale(${1 / res})`, transformOrigin: "0 0" }}>
+      <ThreeCanvas
+        width={w}
+        height={h}
+        camera={{ fov, near: 0.1, far: 400, position: [0, 0, 10] }}
+        gl={{ antialias: process.env.REMOTION_AA === "1", toneMapping: THREE.ACESFilmicToneMapping, outputColorSpace: THREE.SRGBColorSpace }}
+        style={{ position: "absolute", inset: 0 }}
+      >
+        {fog && <fog attach="fog" args={fog} />}
+        {env && <StudioEnv />}
+        {children}
+      </ThreeCanvas>
+    </div>
   );
 };
 
-/** Procedural studio reflections (no HDR download): softboxes for metal and glass. */
-const StudioEnv: React.FC = () => (
-  <Environment resolution={256} frames={1}>
-    <Lightformer form="rect" intensity={3} color="#ffffff" position={[0, 5, -6]} scale={[10, 2, 1]} />
-    <Lightformer form="rect" intensity={2.2} color="#ffb868" position={[-6, 1, 2]} rotation-y={Math.PI / 2} scale={[6, 3, 1]} />
-    <Lightformer form="rect" intensity={1.6} color="#7ff5ea" position={[6, 0, 2]} rotation-y={-Math.PI / 2} scale={[6, 3, 1]} />
-    <Lightformer form="ring" intensity={1.2} color="#ffffff" position={[0, 0, 8]} scale={3} />
-  </Environment>
-);
+/**
+ * Procedural studio reflections (no HDR download): softbox planes baked ONCE into a PMREM
+ * environment map. (drei's <Environment> re-bakes on every Remotion frame — 10× slower.)
+ */
+const StudioEnv: React.FC = () => {
+  const { gl, scene } = useThree();
+  useLayoutEffect(() => {
+    const pm = new THREE.PMREMGenerator(gl);
+    const env = new THREE.Scene();
+    env.background = new THREE.Color("#05070c");
+    const box = (color: string, intensity: number, pos: [number, number, number], scale: [number, number]) => {
+      const m = new THREE.Mesh(
+        new THREE.PlaneGeometry(1, 1),
+        new THREE.MeshBasicMaterial({ color: new THREE.Color(color).multiplyScalar(intensity), side: THREE.DoubleSide }),
+      );
+      m.position.set(...pos);
+      m.scale.set(scale[0], scale[1], 1);
+      m.lookAt(0, 0, 0);
+      env.add(m);
+    };
+    box("#ffffff", 3, [0, 5, -6], [10, 2]);
+    box("#ffb868", 2.2, [-6, 1, 2], [6, 3]);
+    box("#7ff5ea", 1.6, [6, 0, 2], [6, 3]);
+    box("#ffffff", 2.4, [0, 0.5, 8], [7, 5]);
+    const tex = pm.fromScene(env, 0.03).texture;
+    scene.environment = tex;
+    return () => {
+      scene.environment = null;
+      tex.dispose();
+      pm.dispose();
+      env.traverse((o) => {
+        const mesh = o as THREE.Mesh;
+        mesh.geometry?.dispose();
+        (mesh.material as THREE.Material | undefined)?.dispose?.();
+      });
+    };
+  }, [gl, scene]);
+  return null;
+};
 
 /** Frame-driven camera: position + look-at target + optional fov. */
 export const CamRig: React.FC<{ pos: [number, number, number]; target?: [number, number, number]; fov?: number; roll?: number }> = ({
@@ -376,14 +412,14 @@ export const GlowNode: React.FC<{ position: [number, number, number]; color?: st
 }) => (
   <group position={position}>
     <mesh>
-      <icosahedronGeometry args={[size, 4]} />
+      <icosahedronGeometry args={[size, 3]} />
       <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.4 + on * 2.6} metalness={0.2} roughness={0.3} />
     </mesh>
     <mesh>
-      <torusGeometry args={[size * 1.6, size * 0.04, 8, 96]} />
+      <torusGeometry args={[size * 1.6, size * 0.04, 6, 64]} />
       <meshBasicMaterial color={color} transparent opacity={0.25 + on * 0.6} toneMapped={false} />
     </mesh>
-    <Halo size={size * 7} color={color} opacity={0.15 + on * 0.6} />
+    <Halo size={size * 4.5} color={color} opacity={0.18 + on * 0.6} />
   </group>
 );
 
