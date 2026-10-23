@@ -7,8 +7,8 @@ set -euo pipefail
 in="${1:?input render}"
 out="${2:?output file}"
 ffmpeg -y -hide_banner -loglevel warning -stats -i "$in" \
-  -vf "vignette=angle=PI/4.6:mode=forward,noise=c0s=7:c0f=t+u,format=yuv420p" \
-  -c:v libx264 -preset slow -profile:v high -level 4.2 -crf 16 -maxrate 24M -bufsize 48M \
+  -vf "vignette=angle=PI/4.6:mode=forward,noise=c0s=4:c0f=t+u,format=yuv420p" \
+  -c:v libx264 -preset slow -profile:v high -level 4.2 -crf 17 -maxrate 16M -bufsize 32M \
   -g 15 -bf 2 -movflags +faststart \
   -color_primaries bt709 -color_trc bt709 -colorspace bt709 \
   -c:a aac -b:a 320k -ar 48000 \
