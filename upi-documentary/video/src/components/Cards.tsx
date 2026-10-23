@@ -52,7 +52,8 @@ export const ChapterCard: React.FC<{ num: number; en: string; hi: string; dur: n
             style={{
               fontFamily: F.wide,
               fontWeight: 300,
-              fontSize: 150,
+              // long names shrink so the widest (most tracked-out) moment still fits inside the frame
+              fontSize: Math.min(150, 1640 / (en.length * (0.66 + 0.5))),
               letterSpacing: `${track}em`,
               paddingLeft: `${track}em`,
               color: C.ink,

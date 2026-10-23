@@ -283,6 +283,9 @@ export const S23_Gap: React.FC<SceneProps> = ({ seg }) => {
   const fill = prog(frame, fillAt, 30, ease.out) * 0.15;
   const gapOn = prog(frame, fillAt + 30, 20);
   const TW = 520, TH = 640, TX = 1180, TY = 200;
+  // before the numbers arrive: a red ghost of the tank draws itself, with an unanswered ₹ ? pulsing inside
+  const ghost = prog(frame, L.c2_08.at + 6, 40, ease.cam) * (1 - tank);
+  const ask = prog(frame, L.c2_08.at + 24, 16) * (1 - prog(frame, tankAt - 8, 12));
   return (
     <AbsoluteFill>
       <Backdrop hue="red" light={0.55} />
@@ -300,6 +303,20 @@ export const S23_Gap: React.FC<SceneProps> = ({ seg }) => {
           <div style={{ fontFamily: F.hiDisplay, fontSize: 110, color: C.amber, lineHeight: 1 }}>{t("₹1,500 करोड़", "₹1,500 crore")}</div>
         </div>
       </AbsoluteFill>
+      {ghost > 0.001 && (
+        <svg width={TW + 40} height={TH + 40} style={{ position: "absolute", left: TX - 20, top: TY - 20, overflow: "visible" }}>
+          <rect x={21.5} y={21.5} width={TW - 3} height={TH - 3} rx={24} fill="none" stroke={C.red} strokeWidth={3} pathLength={1} strokeDasharray={1} strokeDashoffset={1 - ghost} opacity={0.75} style={{ filter: `drop-shadow(0 0 14px ${C.red})` }} />
+          {Array.from({ length: 7 }).map((_, i) => (
+            <line key={i} x1={40} x2={TW} y1={60 + i * 90 + ((frame * 1.4) % 90)} y2={60 + i * 90 + ((frame * 1.4) % 90)} stroke={C.red} strokeWidth={1} opacity={0.18 * ghost} />
+          ))}
+        </svg>
+      )}
+      {ask > 0.001 && (
+        <div style={{ position: "absolute", left: TX, top: TY + TH * 0.3, width: TW, textAlign: "center", opacity: ask * (0.55 + 0.25 * Math.sin(frame * 0.16)), transform: `scale(${0.9 + 0.1 * ask})` }}>
+          <div style={{ fontFamily: F.hiDisplay, fontSize: 230, color: C.red, lineHeight: 1, textShadow: `0 0 60px ${C.red}88` }}>₹ ?</div>
+          <div style={{ fontFamily: F.mono, fontSize: 22, letterSpacing: "0.3em", color: C.inkDim, marginTop: 10 }}>{t("असली ख़र्च?", "THE REAL COST?")}</div>
+        </div>
+      )}
       {/* the tank */}
       <div style={{ position: "absolute", left: TX, top: TY, width: TW, height: TH, opacity: tank, transform: `scale(${0.9 + tank * 0.1})` }}>
         <div style={{ position: "absolute", inset: 0, border: `3px solid ${C.ink}`, borderRadius: 24, boxShadow: "0 0 60px rgba(242,239,232,0.08) inset" }} />
