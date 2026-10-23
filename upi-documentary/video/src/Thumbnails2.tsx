@@ -11,9 +11,9 @@ loadFonts();
 /*
  * Two alternative YouTube thumbnails (1280×720; render with --scale=1.5 for a crisp 1920×1080 upload).
  *   ThumbNever   — dark, cinematic, one hero object + 3 huge words (documentary "downfall" look)
- *   ThumbWhoPays — bright versus layout: ₹0 for you vs ~₹10,000 cr a year, big yellow question, red arrow
- * Every claim on them is one the film makes and sources (₹0 fee to users; ~₹10,000 cr annual cost per the
- * Payments Council of India; 0.4% MDR above ₹2,000).
+ *   ThumbWhoPays — bright versus layout: ₹0 for you vs ~₹20,000 cr a year, big yellow question, red arrow
+ * Every claim on them is sourced (₹0 fee to users; ~₹20,000 cr a year to run UPI per the Ministry of Finance
+ * MDR FAQs of 15 Sep 2026, Q10 — research/facts.md 5.9; 0.4% MDR above ₹2,000).
  */
 
 /* ------------------------------------------------------------------ shared bits */
@@ -143,7 +143,7 @@ export const ThumbNever: React.FC<{ lang?: Lang }> = ({ lang = "hi" }) => {
   );
 };
 
-/* ============================================ B: "₹0 for you — ~₹10,000 cr: WHO PAYS?" */
+/* ============================================ B: "₹0 for you — ~₹20,000 cr: WHO PAYS?" */
 
 const VersusPhone: React.FC = () => {
   const cells = useMemo(() => qrMatrix(QR_TEXT), []);
@@ -208,7 +208,7 @@ export const ThumbWhoPays: React.FC<{ lang?: Lang }> = ({ lang = "hi" }) => {
       <BillPaper lang={lang} />
       {/* right number */}
       <div style={{ position: "absolute", right: 44, top: 528, textAlign: "right" }}>
-        <div style={{ fontFamily: F.hiDisplay, fontSize: 128, lineHeight: 0.85, color: "#ff4d4d", textShadow: outline, whiteSpace: "nowrap" }}>~₹10,000 CR</div>
+        <div style={{ fontFamily: F.hiDisplay, fontSize: 128, lineHeight: 0.85, color: "#ff4d4d", textShadow: outline, whiteSpace: "nowrap" }}>~₹20,000 CR</div>
         <div style={{ fontFamily: F.wide, fontWeight: 800, fontSize: 28, color: "#fff", letterSpacing: "0.06em", textShadow: outline, marginTop: 6 }}>{lang === "en" ? "COST TO RUN UPI / YEAR" : "UPI चलाने का सालाना ख़र्च"}</div>
       </div>
       {/* the big question */}

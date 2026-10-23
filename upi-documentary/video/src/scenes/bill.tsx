@@ -68,28 +68,44 @@ export const S31_Notification: React.FC<SceneProps> = ({ seg }) => {
   const second = L.c3_02.at + Math.round(L.c3_02.len * L.c3_02.fr(0.55));
   const a = prog(frame, L.c3_02.at, 26, ease.cam);
   const b = prog(frame, second, 26, ease.cam);
-  const cam = { x: keys(frame, [[0, -220], [second, -150], [seg.frames, 180]]), y: -20 + drift(frame, 3, 8), z: keys(frame, [[0, -180], [seg.frames, 60]]), ry: keys(frame, [[0, 8], [seg.frames, -8]]) };
+  // documentary push-ins: wide on the Gazette page, push to its highlighted line; then pan to the FAQ and push again
+  const W1 = lang === "en" ? 760 : 620;
+  const H1 = lang === "en" ? (W1 * 580) / 1324 : (W1 * 1190) / 1324;
+  const off1 = ((lang === "en" ? 0.62 : 0.695) - 0.5) * H1 * 1.04;
+  const off2 = (0.6 - 0.5) * ((560 * 1671) / 1323) * 0.97;
+  const X1 = -170, X2 = 330;
+  const cam = {
+    x: keys(frame, [[0, X1], [second, X1], [second + 34, X2], [seg.frames, X2 + 20]]),
+    y: keys(frame, [[0, 0], [L.c3_02.at + 40, off1 + 30], [second, off1 + 30], [second + 34, off2 + 20], [seg.frames, off2 + 20]]) + drift(frame, 3, 6),
+    z: keys(frame, [[0, -140], [second - 4, 560], [second + 34, 360], [seg.frames, 540]]),
+    ry: keys(frame, [[0, 6], [seg.frames, -6]]),
+  };
   return (
     <AbsoluteFill>
       <Backdrop hue="neutral" light={0.8} />
       <ParallaxWorld cam={cam}>
-        <Layer z={-80} x={-230} y={60 + (1 - a) * 400} rotateY={10} opacity={a}>
+        <Layer z={-60} x={X1} y={30 + (1 - a) * 400} rotateY={8} opacity={a}>
           <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
             <div style={{ transform: "rotate(-3deg)" }}>
-              <DocPage name="mof_notification_2026-09-14" title={t("वित्त मंत्रालय — Notification", "Finance Ministry — Notification")} date="14 SEP 2026" width={440} highlight={{ top: 38, height: 5, p: prog(frame, L.c3_02.at + 30, 30) }} />
+              {/* Gazette of India Extraordinary, S.O. 5067(E): Hindi page for the Hindi edition, English page for the English one */}
+              {lang === "en" ? (
+                <DocPage name="mof_notification_2026-09-14_en" title="Gazette of India · S.O. 5067(E)" date="14 SEP 2026" width={W1} aspect={580 / 1324} highlight={{ top: 59.5, height: 5, p: prog(frame, L.c3_02.at + 30, 30) }} />
+              ) : (
+                <DocPage name="mof_notification_2026-09-14" title="भारत का राजपत्र · का.आ. 5067(अ)" date="14 SEP 2026" width={W1} aspect={1190 / 1324} highlight={{ top: 68, height: 3.5, p: prog(frame, L.c3_02.at + 30, 30) }} />
+              )}
             </div>
           </AbsoluteFill>
         </Layer>
-        <Layer z={20} x={330} y={30 + (1 - b) * 400} rotateY={-8} opacity={b}>
+        <Layer z={40} x={X2} y={20 + (1 - b) * 500} rotateY={-6} opacity={b}>
           <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
             <div style={{ transform: "rotate(2.5deg)" }}>
-              <DocPage name="npci_circular_2026-09-15" title="NPCI — Operational Circular" date="15 SEP 2026" width={440} highlight={{ top: 44, height: 5, p: prog(frame, second + 24, 30) }} />
+              <DocPage name="mof_faq_2026-09-15" title={t("वित्त मंत्रालय — MDR FAQs", "Ministry of Finance — MDR FAQs")} date="15 SEP 2026" width={560} aspect={1671 / 1323} highlight={{ top: 57, height: 6.5, p: prog(frame, second + 24, 30) }} />
             </div>
           </AbsoluteFill>
         </Layer>
       </ParallaxWorld>
       <Dateline en="14 SEP 2026" hi={t("14 सितंबर 2026", "14 September 2026")} start={L.c3_02.at} />
-      <Source text="Finance Ministry notification (14 Sep) · NPCI circular (15 Sep) — via TechCrunch" start={second} />
+      <Source text="Gazette of India S.O. 5067(E), 14 Sep 2026 · Ministry of Finance (DFS) FAQs, 15 Sep 2026" start={second} />
       <Dust count={40} />
       <Letterbox amount={0.45} />
     </AbsoluteFill>

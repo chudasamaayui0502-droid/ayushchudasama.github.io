@@ -30,24 +30,31 @@ export const PhotoPlate: React.FC<{ name: string; fallback: React.ReactNode; dur
 };
 
 /**
- * A document page. Uses the real page image public/docs/<name>.png when present
- * (extracted from the official PDF in the next session). Otherwise shows an
- * unreadable placeholder page that is clearly a stand-in, never a fake record.
+ * A document page. Uses the real page image public/docs/<name>.png when present (cut from the official
+ * PDF; `aspect` = its height / width, `highlight` in % of that image). Otherwise shows an unreadable
+ * placeholder page that is clearly a stand-in, never a fake record.
  */
-export const DocPage: React.FC<{ name: string; title: string; date: string; width?: number; highlight?: { top: number; height: number; p: number } }> = ({
+export const DocPage: React.FC<{ name: string; title: string; date: string; width?: number; aspect?: number; highlight?: { top: number; height: number; p: number } }> = ({
   name,
   title,
   date,
   width = 620,
+  aspect,
   highlight,
 }) => {
   const file = `docs/${name}.png`;
   const real = has(file);
-  const h = width * 1.414;
+  const h = width * (real && aspect ? aspect : 1.414);
   return (
-    <div style={{ width, height: h, position: "relative", boxShadow: "0 50px 140px rgba(0,0,0,0.8)", background: "#efe7d6", overflow: "hidden" }}>
+    <div style={{ width, height: h, position: "relative", boxShadow: "0 50px 140px rgba(0,0,0,0.8)", background: "#efe7d6" }}>
+      {real && (
+        <div style={{ position: "absolute", left: 0, top: "100%", marginTop: 16, whiteSpace: "nowrap" }}>
+          <div style={{ fontFamily: F.mono, fontSize: 15, letterSpacing: "0.2em", color: C.amber }}>{date}</div>
+          <div style={{ fontFamily: F.hiBody, fontSize: 22, fontWeight: 600, color: C.ink }}>{title}</div>
+        </div>
+      )}
       {real ? (
-        <Img src={staticFile(file)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        <Img src={staticFile(file)} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
       ) : (
         <>
           <Img src={staticFile("tex/paper.png")} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />

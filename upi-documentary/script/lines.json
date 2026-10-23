@@ -375,12 +375,12 @@
         {
           "id": "c3_02",
           "scene": "S31_Notification",
-          "tts": "चौदह सितंबर — सरकार का notification। अगले दिन, NPCI का circular।",
-          "display": "14 सितंबर — वित्त मंत्रालय का notification · 15 सितंबर — NPCI circular",
-          "en": "14 September: the Finance Ministry's notification. The very next day, NPCI's circular.",
+          "tts": "चौदह सितंबर — वित्त मंत्रालय का notification। अगले दिन — पूरे नियम।",
+          "display": "14 सितंबर — वित्त मंत्रालय का Gazette notification · 15 सितंबर — पूरे नियम (FAQs)",
+          "en": "14 September: the Finance Ministry's notification. The next day, the full rulebook.",
           "src": "5.2",
-          "tts_en": "September fourteenth: the Finance Ministry's notification. The next day, NPCI's circular.",
-          "display_en": "14 September: the Finance Ministry's notification. The next day, NPCI's circular."
+          "tts_en": "September fourteenth: the Finance Ministry's notification. The next day, the full rulebook.",
+          "display_en": "14 September: the Finance Ministry's notification. The next day, the full rulebook."
         },
         {
           "id": "c3_03",
