@@ -1,0 +1,982 @@
+{
+ "fps": 30,
+ "seconds": 446.5,
+ "frames": 13395,
+ "voDir": "vo_scratch",
+ "disclaimer": {
+  "hi": "यह वीडियो केवल शैक्षिक और जानकारी के उद्देश्य से है। यह वित्तीय या कानूनी सलाह नहीं है। तथ्य 23 अक्टूबर 2026 तक के सार्वजनिक स्रोतों पर आधारित हैं; नियम बदल सकते हैं। कुछ दृश्य प्रतीकात्मक हैं।",
+  "en": "For educational and informational purposes only. Not financial or legal advice. Facts are based on public sources as of 23 Oct 2026; rules may change. Some visuals are illustrative."
+ },
+ "title_hi": "FREE UPI का बिल कौन भरता है?",
+ "title_en": "WHO REALLY PAYS FOR YOUR 'FREE' UPI?",
+ "segments": [
+  {
+   "kind": "scene",
+   "id": "S00_ColdOpen",
+   "chapter": "c0",
+   "t": 0.0,
+   "dur": 28.494,
+   "lines": [
+    {
+     "id": "c0_01",
+     "display": "हर दिन... 80 करोड़ बार।",
+     "en": "Every day... 800 million times.",
+     "src": "2.2",
+     "from": 36,
+     "frames": 56,
+     "t": 1.2,
+     "dur": 1.856
+    },
+    {
+     "id": "c0_02",
+     "display": "कोई चाय ख़रीदता है... कोई पेट्रोल भरवाता है... कोई किराया भेजता है।",
+     "en": "Someone buys tea... someone fills petrol... someone sends rent.",
+     "src": "",
+     "from": 98,
+     "frames": 138,
+     "t": 3.276,
+     "dur": 4.608
+    },
+    {
+     "id": "c0_03",
+     "display": "एक QR code. एक scan. और 2 second में — पैसा पहुँच गया।",
+     "en": "One QR code. One scan. And in two seconds, the money arrives.",
+     "src": "",
+     "from": 243,
+     "frames": 159,
+     "t": 8.104,
+     "dur": 5.312
+    },
+    {
+     "id": "c0_04",
+     "display": "न कोई fee... न कोई charge। बिल्कुल फ़्री।",
+     "en": "No fee. No charge. Completely free.",
+     "src": "1.4",
+     "from": 409,
+     "frames": 98,
+     "t": 13.636,
+     "dur": 3.264
+    },
+    {
+     "id": "c0_05",
+     "display": "लेकिन दुनिया का सबसे बड़ा real-time payment system... फ़्री में नहीं चलता।",
+     "en": "But the world's largest real-time payment system doesn't run for free.",
+     "src": "2.4",
+     "from": 518,
+     "frames": 152,
+     "t": 17.25,
+     "dur": 5.056
+    },
+    {
+     "id": "c0_06",
+     "display": "कोई तो है... जो हर दिन इसका बिल भर रहा है।",
+     "en": "Someone is paying its bill, every single day.",
+     "src": "3.1",
+     "from": 683,
+     "frames": 89,
+     "t": 22.756,
+     "dur": 2.965
+    },
+    {
+     "id": "c0_07",
+     "display": "सवाल ये है — कौन?",
+     "en": "The question is: who?",
+     "src": "",
+     "from": 799,
+     "frames": 40,
+     "t": 26.621,
+     "dur": 1.323
+    }
+   ],
+   "from": 0,
+   "frames": 855
+  },
+  {
+   "kind": "title",
+   "id": "S01_Title",
+   "t": 28.5,
+   "dur": 4.0,
+   "from": 855,
+   "frames": 120
+  },
+  {
+   "kind": "disclaimer",
+   "id": "S02_Disclaimer",
+   "t": 32.5,
+   "dur": 3.0,
+   "from": 975,
+   "frames": 90
+  },
+  {
+   "kind": "chapter",
+   "id": "CH_c1",
+   "t": 35.5,
+   "dur": 3.0,
+   "chapter": "c1",
+   "num": 1,
+   "name_en": "THE PLEDGE",
+   "name_hi": "वादा",
+   "from": 1065,
+   "frames": 90
+  },
+  {
+   "kind": "scene",
+   "id": "S11_ThreeParts",
+   "chapter": "c1",
+   "t": 38.5,
+   "dur": 8.348,
+   "lines": [
+    {
+     "id": "c1_01",
+     "display": "हर जादू के तीन हिस्से होते हैं।",
+     "en": "Every magic trick has three parts.",
+     "src": "",
+     "from": 1168,
+     "frames": 65,
+     "t": 38.95,
+     "dur": 2.155
+    },
+    {
+     "id": "c1_02",
+     "display": "पहला हिस्सा — वादा। जादूगर आपको एक आम सी चीज़ दिखाता है।",
+     "en": "Part one: the pledge. The magician shows you something perfectly ordinary.",
+     "src": "",
+     "from": 1243,
+     "frames": 131,
+     "t": 41.425,
+     "dur": 4.373
+    }
+   ],
+   "from": 1155,
+   "frames": 250
+  },
+  {
+   "kind": "scene",
+   "id": "S12_QR",
+   "chapter": "c1",
+   "t": 47.0,
+   "dur": 4.86,
+   "lines": [
+    {
+     "id": "c1_03",
+     "display": "हमारी कहानी में वो आम चीज़ है... ये।",
+     "en": "In our story, that ordinary thing is... this.",
+     "src": "",
+     "from": 1424,
+     "frames": 77,
+     "t": 47.45,
+     "dur": 2.56
+    }
+   ],
+   "from": 1410,
+   "frames": 146
+  },
+  {
+   "kind": "scene",
+   "id": "S13_Launch",
+   "chapter": "c1",
+   "t": 52.0,
+   "dur": 14.251,
+   "lines": [
+    {
+     "id": "c1_04",
+     "display": "अगस्त 2016 — NPCI का नया system, Unified Payments Interface (UPI), 21 बैंकों के साथ आम लोगों के लिए शुरू।",
+     "en": "August 2016. NPCI's new system, the Unified Payments Interface, opens to the public with 21 banks.",
+     "src": "1.1, 1.2",
+     "from": 1574,
+     "frames": 230,
+     "t": 52.45,
+     "dur": 7.659
+    },
+    {
+     "id": "c1_05",
+     "display": "पहले पूरे महीने में... 10 लाख transactions भी नहीं होते।",
+     "en": "In that first full month, there aren't even a million transactions.",
+     "src": "1.2",
+     "from": 1813,
+     "frames": 140,
+     "t": 60.429,
+     "dur": 4.672
+    }
+   ],
+   "from": 1560,
+   "frames": 428
+  },
+  {
+   "kind": "scene",
+   "id": "S14_ZeroMDR",
+   "chapter": "c1",
+   "t": 66.5,
+   "dur": 19.837,
+   "lines": [
+    {
+     "id": "c1_06",
+     "display": "1 जनवरी 2020 — UPI और RuPay debit card पर MDR ज़ीरो।",
+     "en": "Then comes 1 January 2020. The government makes MDR zero on UPI and RuPay debit cards.",
+     "src": "1.4",
+     "from": 2008,
+     "frames": 247,
+     "t": 66.95,
+     "dur": 8.235
+    },
+    {
+     "id": "c1_07",
+     "display": "MDR (Merchant Discount Rate) — digital payment लेने पर दुकानदार की fee। UPI पर पहले 0.30% तक।",
+     "en": "MDR, the Merchant Discount Rate: the small fee a shop pays to accept a digital payment. On UPI it used to be up to 0.30%.",
+     "src": "1.3",
+     "from": 2265,
+     "frames": 308,
+     "t": 75.505,
+     "dur": 10.283
+    }
+   ],
+   "from": 1995,
+   "frames": 595
+  },
+  {
+   "kind": "scene",
+   "id": "S15_Explosion",
+   "chapter": "c1",
+   "t": 86.5,
+   "dur": 17.469,
+   "lines": [
+    {
+     "id": "c1_09",
+     "display": "और फिर... UPI फट पड़ता है।",
+     "en": "And then... UPI explodes.",
+     "src": "",
+     "from": 2608,
+     "frames": 76,
+     "t": 86.95,
+     "dur": 2.539
+    },
+    {
+     "id": "c1_10",
+     "display": "सितंबर 2026 — 24.07 अरब transactions · हर दिन औसतन 80 करोड़+",
+     "en": "September 2026: 24 billion transactions in a month. On average, more than 800 million a day.",
+     "src": "2.1, 2.2",
+     "from": 2715,
+     "frames": 224,
+     "t": 90.489,
+     "dur": 7.467
+    },
+    {
+     "id": "c1_11",
+     "display": "दुनिया के ~49% real-time payments भारत में (ACI Worldwide, 2023 data)",
+     "en": "According to ACI Worldwide, almost half of the world's real-time payments happen in India.",
+     "src": "2.4",
+     "from": 2948,
+     "frames": 136,
+     "t": 98.275,
+     "dur": 4.544
+    }
+   ],
+   "from": 2595,
+   "frames": 524
+  },
+  {
+   "kind": "scene",
+   "id": "S16_PledgeEnd",
+   "chapter": "c1",
+   "t": 104.0,
+   "dur": 10.221,
+   "lines": [
+    {
+     "id": "c1_12",
+     "display": "वादा पूरा हुआ। UPI फ़्री था, तेज़ था... हर जगह था।",
+     "en": "The pledge was kept. UPI was free, fast... everywhere.",
+     "src": "",
+     "from": 3134,
+     "frames": 120,
+     "t": 104.45,
+     "dur": 3.989
+    },
+    {
+     "id": "c1_13",
+     "display": "लेकिन जादू में, जो दिखता है... वो पूरा सच नहीं होता।",
+     "en": "But in magic, what you see is never the whole truth.",
+     "src": "",
+     "from": 3263,
+     "frames": 111,
+     "t": 108.759,
+     "dur": 3.712
+    }
+   ],
+   "from": 3120,
+   "frames": 307
+  },
+  {
+   "kind": "chapter",
+   "id": "CH_c2",
+   "t": 114.5,
+   "dur": 3.0,
+   "chapter": "c2",
+   "num": 2,
+   "name_en": "THE TURN",
+   "name_hi": "ग़ायब बिल",
+   "from": 3435,
+   "frames": 90
+  },
+  {
+   "kind": "scene",
+   "id": "S20_Vanish",
+   "chapter": "c2",
+   "t": 117.5,
+   "dur": 10.135,
+   "lines": [
+    {
+     "id": "c2_01",
+     "display": "दूसरा हिस्सा — The Turn। जादूगर उस चीज़ को ग़ायब कर देता है।",
+     "en": "Part two: the turn. The magician makes the ordinary thing... disappear.",
+     "src": "",
+     "from": 3538,
+     "frames": 143,
+     "t": 117.95,
+     "dur": 4.779
+    },
+    {
+     "id": "c2_02",
+     "display": "UPI में जो ग़ायब हुआ, वो था — बिल।",
+     "en": "In UPI, what disappeared was the bill.",
+     "src": "",
+     "from": 3691,
+     "frames": 94,
+     "t": 123.049,
+     "dur": 3.136
+    }
+   ],
+   "from": 3525,
+   "frames": 304
+  },
+  {
+   "kind": "scene",
+   "id": "S21_Machine",
+   "chapter": "c2",
+   "t": 128.0,
+   "dur": 20.552,
+   "lines": [
+    {
+     "id": "c2_03",
+     "display": "एक scan के पीछे पूरी मशीन — app · आपका बैंक · NPCI switch · दुकानदार का बैंक",
+     "en": "Behind your one scan runs an entire machine: your app, your bank, NPCI's switch, and the shop's bank.",
+     "src": "3.3",
+     "from": 3853,
+     "frames": 258,
+     "t": 128.45,
+     "dur": 8.597
+    },
+    {
+     "id": "c2_04",
+     "display": "Servers · Security · Fraud checks — 24×7",
+     "en": "Servers, security, fraud checks, customer support, around the clock.",
+     "src": "",
+     "from": 4121,
+     "frames": 140,
+     "t": 137.367,
+     "dur": 4.651
+    },
+    {
+     "id": "c2_05",
+     "display": "ये सब मुफ़्त नहीं। तो fee ज़ीरो होने के बाद, ख़र्च गया कहाँ?",
+     "en": "None of it is free. So when the fee went to zero, where did the cost go?",
+     "src": "",
+     "from": 4270,
+     "frames": 146,
+     "t": 142.338,
+     "dur": 4.864
+    }
+   ],
+   "from": 3840,
+   "frames": 617
+  },
+  {
+   "kind": "scene",
+   "id": "S22_Subsidy",
+   "chapter": "c2",
+   "t": 149.0,
+   "dur": 18.773,
+   "lines": [
+    {
+     "id": "c2_06",
+     "display": "पहला जवाब — सरकार। यानी, taxpayer का पैसा।",
+     "en": "Answer one: the government. In other words, taxpayers' money.",
+     "src": "3.1",
+     "from": 4484,
+     "frames": 106,
+     "t": 149.45,
+     "dur": 3.541
+    },
+    {
+     "id": "c2_07",
+     "display": "सरकारी incentive (UPI + RuPay) — 2021-22: ₹1,389 करोड़ · 2022-23: ₹2,210 करोड़ · 2023-24: ₹3,631 करोड़ (PIB)",
+     "en": "Per PIB data, the government paid banks incentives: ₹1,389 crore in 2021-22, rising to ₹3,631 crore by 2023-24.",
+     "src": "3.1",
+     "from": 4599,
+     "frames": 399,
+     "t": 153.311,
+     "dur": 13.312
+    }
+   ],
+   "from": 4470,
+   "frames": 563
+  },
+  {
+   "kind": "scene",
+   "id": "S23_Gap",
+   "chapter": "c2",
+   "t": 168.0,
+   "dur": 14.717,
+   "lines": [
+    {
+     "id": "c2_08",
+     "display": "Payments Council of India (मार्च 2025): सालाना ख़र्च ~₹10,000 करोड़ · सरकारी मदद ₹1,500 करोड़",
+     "en": "But the industry kept saying it isn't enough: per the Payments Council of India, running UPI costs about ₹10,000 crore a year, against only ₹1,500 crore of government support.",
+     "src": "3.4, 3.2",
+     "from": 5054,
+     "frames": 412,
+     "t": 168.45,
+     "dur": 13.717
+    }
+   ],
+   "from": 5040,
+   "frames": 442
+  },
+  {
+   "kind": "scene",
+   "id": "S24_Memory",
+   "chapter": "c2",
+   "t": 183.0,
+   "dur": 25.269,
+   "lines": [
+    {
+     "id": "c2_11",
+     "display": "और इस पूरे वक़्त, सरकार का जवाब एक ही था।",
+     "en": "And all this time, the government's answer was the same.",
+     "src": "",
+     "from": 5504,
+     "frames": 93,
+     "t": 183.45,
+     "dur": 3.115
+    },
+    {
+     "id": "c2_12",
+     "display": "21 अगस्त 2022 · वित्त मंत्रालय: “UPI is a digital public good… There is no consideration in Government to levy any charges for UPI services.”",
+     "en": "August 2022, Finance Ministry: UPI is a digital public good; there is no plan to levy any charges.",
+     "src": "4.1",
+     "from": 5615,
+     "frames": 214,
+     "t": 187.165,
+     "dur": 7.147
+    },
+    {
+     "id": "c2_13",
+     "display": "11 जून 2025 · वित्त मंत्रालय: MDR की ख़बरें “completely false, baseless and misleading”",
+     "en": "June 2025, Finance Ministry: reports of MDR on UPI are completely false, baseless and misleading.",
+     "src": "4.2",
+     "from": 5844,
+     "frames": 147,
+     "t": 194.811,
+     "dur": 4.885
+    },
+    {
+     "id": "c2_14",
+     "display": "25 जुलाई 2025 · RBI गवर्नर संजय मल्होत्रा: “Costs will have to be paid. Someone will have to bear the cost.”",
+     "en": "Just six weeks later, RBI Governor Sanjay Malhotra said: costs will have to be paid; someone will have to bear the cost.",
+     "src": "4.3",
+     "from": 6012,
+     "frames": 184,
+     "t": 200.397,
+     "dur": 6.123
+    }
+   ],
+   "from": 5490,
+   "frames": 758
+  },
+  {
+   "kind": "scene",
+   "id": "S25_Budget",
+   "chapter": "c2",
+   "t": 208.5,
+   "dur": 11.544,
+   "lines": [
+    {
+     "id": "c2_15",
+     "display": "Budget 2026-27: ₹2,196 करोड़ → ₹2,000 करोड़ (~10% कम)",
+     "en": "And in the 2026-27 budget, this support was cut by about 10% from the previous year.",
+     "src": "3.5",
+     "from": 6268,
+     "frames": 164,
+     "t": 208.95,
+     "dur": 5.461
+    },
+    {
+     "id": "c2_16",
+     "display": "बिल ग़ायब नहीं हुआ था। बस... किसी को दिख नहीं रहा था।",
+     "en": "The bill hadn't vanished. It just wasn't visible to anyone.",
+     "src": "",
+     "from": 6442,
+     "frames": 107,
+     "t": 214.731,
+     "dur": 3.563
+    }
+   ],
+   "from": 6255,
+   "frames": 346
+  },
+  {
+   "kind": "chapter",
+   "id": "CH_c3",
+   "t": 220.5,
+   "dur": 3.0,
+   "chapter": "c3",
+   "num": 3,
+   "name_en": "THE BILL",
+   "name_hi": "चौदह सितंबर",
+   "from": 6615,
+   "frames": 90
+  },
+  {
+   "kind": "scene",
+   "id": "S30_Law",
+   "chapter": "c3",
+   "t": 223.5,
+   "dur": 6.44,
+   "lines": [
+    {
+     "id": "c3_01",
+     "display": "अगस्त 2026 — संसद ने Payment and Settlement Systems Act बदला · 17 अगस्त: राष्ट्रपति की मंज़ूरी",
+     "en": "August 2026. Parliament amends the Payment and Settlement Systems Act, and on 17 August the President gives assent.",
+     "src": "5.1",
+     "from": 6718,
+     "frames": 163,
+     "t": 223.95,
+     "dur": 5.44
+    }
+   ],
+   "from": 6705,
+   "frames": 193
+  },
+  {
+   "kind": "scene",
+   "id": "S31_Notification",
+   "chapter": "c3",
+   "t": 230.0,
+   "dur": 7.528,
+   "lines": [
+    {
+     "id": "c3_02",
+     "display": "14 सितंबर — वित्त मंत्रालय का notification · 15 सितंबर — NPCI circular",
+     "en": "14 September: the Finance Ministry's notification. The very next day, NPCI's circular.",
+     "src": "5.2",
+     "from": 6914,
+     "frames": 196,
+     "t": 230.45,
+     "dur": 6.528
+    }
+   ],
+   "from": 6900,
+   "frames": 226
+  },
+  {
+   "kind": "scene",
+   "id": "S32_Rules",
+   "chapter": "c3",
+   "t": 238.0,
+   "dur": 35.259,
+   "lines": [
+    {
+     "id": "c3_03",
+     "display": "नियम सीधा है।",
+     "en": "The rule is simple.",
+     "src": "",
+     "from": 7154,
+     "frames": 37,
+     "t": 238.45,
+     "dur": 1.237
+    },
+    {
+     "id": "c3_04",
+     "display": "₹2,000 से ऊपर के merchant payment पर — 0.4% MDR",
+     "en": "Merchant payments above ₹2,000 carry a 0.4% MDR.",
+     "src": "5.3",
+     "from": 7197,
+     "frames": 186,
+     "t": 239.887,
+     "dur": 6.187
+    },
+    {
+     "id": "c3_05",
+     "display": "₹75,000 और उससे ऊपर — maximum ₹300",
+     "en": "Even on payments of ₹75,000 or more, at most ₹300.",
+     "src": "5.3",
+     "from": 7392,
+     "frames": 132,
+     "t": 246.394,
+     "dur": 4.416
+    },
+    {
+     "id": "c3_06",
+     "display": "Railways · Telecom · Insurance · Fuel — flat ₹5",
+     "en": "Railways, telecom, insurance and fuel: a flat ₹5.",
+     "src": "5.4",
+     "from": 7534,
+     "frames": 184,
+     "t": 251.13,
+     "dur": 6.144
+    },
+    {
+     "id": "c3_07",
+     "display": "Person-to-person — फ़्री · छोटे दुकानदार (UPI से ₹1 लाख/महीना तक) — कोई fee नहीं",
+     "en": "Person-to-person transfers stay free. Small merchants receiving up to ₹1 lakh a month via UPI pay nothing.",
+     "src": "5.5, 5.6",
+     "from": 7728,
+     "frames": 276,
+     "t": 257.594,
+     "dur": 9.195
+    },
+    {
+     "id": "c3_08",
+     "display": "Fee customer से नहीं ली जा सकती — दुकानदार देगा",
+     "en": "Most importantly, the fee cannot be taken from the customer. The shop pays it.",
+     "src": "5.6",
+     "from": 8013,
+     "frames": 144,
+     "t": 267.109,
+     "dur": 4.8
+    }
+   ],
+   "from": 7140,
+   "frames": 1058
+  },
+  {
+   "kind": "scene",
+   "id": "S33_Revenue",
+   "chapter": "c3",
+   "t": 273.5,
+   "dur": 6.507,
+   "lines": [
+    {
+     "id": "c3_09",
+     "display": "NPCI का अनुमान — हर साल ₹20,600 करोड़ तक",
+     "en": "By NPCI's estimate, this could raise up to ₹20,600 crore a year.",
+     "src": "5.7",
+     "from": 8218,
+     "frames": 147,
+     "t": 273.95,
+     "dur": 4.907
+    }
+   ],
+   "from": 8205,
+   "frames": 195
+  },
+  {
+   "kind": "scene",
+   "id": "S34_Countdown",
+   "chapter": "c3",
+   "t": 280.5,
+   "dur": 21.485,
+   "lines": [
+    {
+     "id": "c3_10",
+     "display": "और फिर... शुरू हुआ countdown।",
+     "en": "And then the countdown began.",
+     "src": "",
+     "from": 8428,
+     "frames": 70,
+     "t": 280.95,
+     "dur": 2.347
+    },
+    {
+     "id": "c3_11",
+     "display": "LocalCircles · 32,000+ दुकानदार: सिर्फ़ 17% fee ख़ुद उठाने को तैयार",
+     "en": "In a LocalCircles survey of over 32,000 merchants, only 17% said they would absorb the fee themselves.",
+     "src": "6.1",
+     "from": 8517,
+     "frames": 237,
+     "t": 283.897,
+     "dur": 7.915
+    },
+    {
+     "id": "c3_12",
+     "display": "LocalCircles · 67,000+ users: fee उन पर आए, तो सिर्फ़ 14% UPI पर टिकेंगे",
+     "en": "And of over 67,000 users, only 14% said they would stick with UPI if the fee were passed on to them.",
+     "src": "6.2",
+     "from": 8764,
+     "frames": 261,
+     "t": 292.131,
+     "dur": 8.704
+    }
+   ],
+   "from": 8415,
+   "frames": 645
+  },
+  {
+   "kind": "scene",
+   "id": "S35_Map",
+   "chapter": "c3",
+   "t": 302.0,
+   "dur": 11.475,
+   "lines": [
+    {
+     "id": "c3_13",
+     "display": "MP petrol pump dealers: 16 अक्टूबर से ₹2,000+ UPI बंद · पंजाब, हरियाणा से भी यही ऐलान",
+     "en": "Madhya Pradesh's petrol pump dealers announced: from 16 October, no UPI above ₹2,000. Punjab and Haryana said the same.",
+     "src": "6.3",
+     "from": 9074,
+     "frames": 314,
+     "t": 302.45,
+     "dur": 10.475
+    }
+   ],
+   "from": 9060,
+   "frames": 344
+  },
+  {
+   "kind": "scene",
+   "id": "S36_Court",
+   "chapter": "c3",
+   "t": 313.5,
+   "dur": 16.151,
+   "lines": [
+    {
+     "id": "c3_14",
+     "display": "28 सितंबर · Supreme Court: रोक से इनकार · Centre, RBI, NPCI से 4 हफ़्ते में जवाब",
+     "en": "The case reached the Supreme Court. On 28 September it refused a stay and asked the Centre, RBI and NPCI to reply within four weeks.",
+     "src": "6.4",
+     "from": 9418,
+     "frames": 267,
+     "t": 313.95,
+     "dur": 8.896
+    },
+    {
+     "id": "c3_15",
+     "display": "सरकार की ओर से (ASG): “It is neither a tax nor a fee.”",
+     "en": "And the government told the court: it is neither a tax nor a fee.",
+     "src": "6.5",
+     "from": 9695,
+     "frames": 151,
+     "t": 323.166,
+     "dur": 5.035
+    }
+   ],
+   "from": 9405,
+   "frames": 485
+  },
+  {
+   "kind": "scene",
+   "id": "S37_Deferral",
+   "chapter": "c3",
+   "t": 330.0,
+   "dur": 12.252,
+   "lines": [
+    {
+     "id": "c3_16",
+     "display": "13 अक्टूबर — deadline से सिर्फ़ 2 दिन पहले, NPCI:",
+     "en": "Then, just two days before the deadline, on 13 October, NPCI announced:",
+     "src": "6.6",
+     "from": 9914,
+     "frames": 155,
+     "t": 330.45,
+     "dur": 5.163
+    },
+    {
+     "id": "c3_17",
+     "display": "MDR — Diwali के बाद। नई तारीख़? अभी तय नहीं।",
+     "en": "MDR: after Diwali. The new date? Not decided yet.",
+     "src": "6.6",
+     "from": 10083,
+     "frames": 120,
+     "t": 336.113,
+     "dur": 3.989
+    }
+   ],
+   "from": 9900,
+   "frames": 368
+  },
+  {
+   "kind": "chapter",
+   "id": "CH_c4",
+   "t": 342.5,
+   "dur": 3.0,
+   "chapter": "c4",
+   "num": 4,
+   "name_en": "THE PRESTIGE",
+   "name_hi": "असली क़ीमत",
+   "from": 10275,
+   "frames": 90
+  },
+  {
+   "kind": "scene",
+   "id": "S40_Return",
+   "chapter": "c4",
+   "t": 345.5,
+   "dur": 26.184,
+   "lines": [
+    {
+     "id": "c4_01",
+     "display": "तीसरा हिस्सा — The Prestige। जब ग़ायब हुई चीज़ वापस आती है।",
+     "en": "And now, part three: the prestige. The moment the vanished thing comes back.",
+     "src": "",
+     "from": 10378,
+     "frames": 152,
+     "t": 345.95,
+     "dur": 5.056
+    },
+    {
+     "id": "c4_02",
+     "display": "वो बिल, जो 2020 में ग़ायब हुआ था... कभी ग़ायब हुआ ही नहीं।",
+     "en": "The bill that vanished in 2020 never really vanished.",
+     "src": "",
+     "from": 10554,
+     "frames": 138,
+     "t": 351.806,
+     "dur": 4.608
+    },
+    {
+     "id": "c4_03",
+     "display": "एक हिस्सा — taxpayer का पैसा, यानी आपका पैसा · बाक़ी — बैंक और payment companies",
+     "en": "For years, part of it was paid with taxpayers' money, which means, in some way, your money. The rest was carried by banks and payment companies.",
+     "src": "3.1, 3.4",
+     "from": 10716,
+     "frames": 262,
+     "t": 357.214,
+     "dur": 8.747
+    },
+    {
+     "id": "c4_04",
+     "display": "अब वो बिल लौट आया है — दुकानदार के counter पर।",
+     "en": "Now the bill is back, on the shopkeeper's counter.",
+     "src": "5.3",
+     "from": 10988,
+     "frames": 122,
+     "t": 366.281,
+     "dur": 4.053
+    }
+   ],
+   "from": 10365,
+   "frames": 786
+  },
+  {
+   "kind": "scene",
+   "id": "S41_WhoPays",
+   "chapter": "c4",
+   "t": 372.0,
+   "dur": 22.693,
+   "lines": [
+    {
+     "id": "c4_05",
+     "display": "क़ानून: charge आप पर नहीं · लेकिन business का हर ख़र्च, आख़िर में कहीं न कहीं क़ीमत में दिखता है",
+     "en": "The law says the charge can't be put on you. But economics says every business cost eventually shows up somewhere in prices.",
+     "src": "5.6",
+     "from": 11174,
+     "frames": 281,
+     "t": 372.45,
+     "dur": 9.365
+    },
+    {
+     "id": "c4_06",
+     "display": "Taxpayer के रूप में — आप · Customer के रूप में — शायद आप · System कमज़ोर पड़ा, तो नुक़सान — आपका",
+     "en": "So who pays for free UPI? As a taxpayer, you. As a customer, perhaps you. And if the system weakens, the loss is yours too.",
+     "src": "",
+     "from": 11464,
+     "frames": 330,
+     "t": 382.135,
+     "dur": 11.008
+    }
+   ],
+   "from": 11160,
+   "frames": 681
+  },
+  {
+   "kind": "scene",
+   "id": "S42_Question",
+   "chapter": "c4",
+   "t": 395.0,
+   "dur": 19.165,
+   "lines": [
+    {
+     "id": "c4_07",
+     "display": "असली सवाल: इस system की क़ीमत — कौन चुकाए, और कैसे?",
+     "en": "The real question isn't whether UPI should stay free. It's who should pay for the world's largest digital payment system, how much, and how.",
+     "src": "",
+     "from": 11864,
+     "frames": 243,
+     "t": 395.45,
+     "dur": 8.085
+    },
+    {
+     "id": "c4_08",
+     "display": "System को चलाने के लिए पैसा चाहिए  ⟷  करोड़ों छोटे दुकानदार — और cash की वापसी का ख़तरा",
+     "en": "On one side, the system needs money to run. On the other, millions of small shopkeepers, and the risk of a return to cash.",
+     "src": "6.1, 6.2",
+     "from": 12116,
+     "frames": 269,
+     "t": 403.855,
+     "dur": 8.96
+    }
+   ],
+   "from": 11850,
+   "frames": 575
+  },
+  {
+   "kind": "scene",
+   "id": "S43_Coin",
+   "chapter": "c4",
+   "t": 414.5,
+   "dur": 11.344,
+   "lines": [
+    {
+     "id": "c4_09",
+     "display": "फ़िलहाल — नई तारीख़ का इंतज़ार · Supreme Court में मामला बाक़ी",
+     "en": "For now, we wait for the new date. And the case is still pending in the Supreme Court.",
+     "src": "6.4, 6.6",
+     "from": 12448,
+     "frames": 171,
+     "t": 414.95,
+     "dur": 5.696
+    },
+    {
+     "id": "c4_10",
+     "display": "सिक्का... अभी घूम रहा है।",
+     "en": "The coin... is still spinning.",
+     "src": "",
+     "from": 12629,
+     "frames": 52,
+     "t": 420.966,
+     "dur": 1.728
+    }
+   ],
+   "from": 12435,
+   "frames": 340
+  },
+  {
+   "kind": "black",
+   "id": "BLACK",
+   "t": 426.0,
+   "dur": 1.2,
+   "from": 12780,
+   "frames": 36
+  },
+  {
+   "kind": "scene",
+   "id": "S50_Outro",
+   "chapter": "c5",
+   "t": 427.5,
+   "dur": 19.0,
+   "lines": [
+    {
+     "id": "c5_01",
+     "display": "आपको क्या लगता है — ये fee सही है या ग़लत? Comments में बताइए · Sources: description",
+     "en": "What do you think: is this fee on payments above ₹2,000 right or wrong? Tell us in the comments. All sources are in the description.",
+     "src": "",
+     "from": 12838,
+     "frames": 240,
+     "t": 427.95,
+     "dur": 8.0
+    }
+   ],
+   "from": 12825,
+   "frames": 570
+  }
+ ]
+}
