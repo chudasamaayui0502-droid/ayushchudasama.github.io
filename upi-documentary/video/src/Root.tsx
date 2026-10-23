@@ -4,12 +4,17 @@ import { TLS } from "./timeline";
 import { FPS, H, W } from "./theme";
 import "./fonts";
 import { Thumbnail } from "./Thumbnail";
+import { ThumbNever, ThumbWhoPays } from "./Thumbnails2";
 import { GridBake } from "./test/GridBake";
 
 export const RemotionRoot: React.FC = () => (
   <>
     <Composition id="Thumbnail" component={Thumbnail} defaultProps={{ lang: "hi" as const }} durationInFrames={1} fps={30} width={1280} height={720} />
     <Composition id="Thumbnail-EN" component={Thumbnail} defaultProps={{ lang: "en" as const }} durationInFrames={1} fps={30} width={1280} height={720} />
+    <Composition id="Thumb-Never" component={ThumbNever} defaultProps={{ lang: "hi" as const }} durationInFrames={1} fps={30} width={1280} height={720} />
+    <Composition id="Thumb-Never-EN" component={ThumbNever} defaultProps={{ lang: "en" as const }} durationInFrames={1} fps={30} width={1280} height={720} />
+    <Composition id="Thumb-WhoPays" component={ThumbWhoPays} defaultProps={{ lang: "hi" as const }} durationInFrames={1} fps={30} width={1280} height={720} />
+    <Composition id="Thumb-WhoPays-EN" component={ThumbWhoPays} defaultProps={{ lang: "en" as const }} durationInFrames={1} fps={30} width={1280} height={720} />
     <Composition id="GridBake" component={GridBake} defaultProps={{ hue: "teal" }} durationInFrames={1} fps={30} width={1920} height={1080} />
     <Composition id="Main" component={Main} defaultProps={{ lang: "hi" as const }} durationInFrames={TLS.hi.frames} fps={FPS} width={W} height={H} />
     <Composition id="Main-EN" component={Main} defaultProps={{ lang: "en" as const }} durationInFrames={TLS.en.frames} fps={FPS} width={W} height={H} />
