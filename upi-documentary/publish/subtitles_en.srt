@@ -1,0 +1,243 @@
+1
+00:00:01,200 --> 00:00:03,067
+Every day... 800 million times.
+
+2
+00:00:03,267 --> 00:00:07,867
+Someone buys tea... someone fills petrol... someone sends rent.
+
+3
+00:00:08,100 --> 00:00:13,400
+One QR code. One scan. And in two seconds, the money arrives.
+
+4
+00:00:13,633 --> 00:00:16,900
+No fee. No charge. Completely free.
+
+5
+00:00:17,267 --> 00:00:22,333
+But the world's largest real-time payment system doesn't run for free.
+
+6
+00:00:22,767 --> 00:00:25,733
+Someone is paying its bill, every single day.
+
+7
+00:00:26,633 --> 00:00:27,967
+The question is: who?
+
+8
+00:00:38,933 --> 00:00:41,100
+Every magic trick has three parts.
+
+9
+00:00:41,433 --> 00:00:45,800
+Part one: the pledge. The magician shows you something perfectly ordinary.
+
+10
+00:00:47,467 --> 00:00:50,033
+In our story, that ordinary thing is... this.
+
+11
+00:00:52,467 --> 00:01:00,133
+August 2016. NPCI's new system, the Unified Payments Interface, opens to the public with 21 banks.
+
+12
+00:01:00,433 --> 00:01:05,100
+In that first full month, there aren't even a million transactions.
+
+13
+00:01:06,933 --> 00:01:15,167
+Then comes 1 January 2020. The government makes MDR zero on UPI and RuPay debit cards.
+
+14
+00:01:15,500 --> 00:01:25,767
+MDR, the Merchant Discount Rate: the small fee a shop pays to accept a digital payment. On UPI it used to be up to 0.30%.
+
+15
+00:01:26,933 --> 00:01:29,467
+And then... UPI explodes.
+
+16
+00:01:30,500 --> 00:01:37,967
+September 2026: 24 billion transactions in a month. On average, more than 800 million a day.
+
+17
+00:01:38,267 --> 00:01:42,800
+According to ACI Worldwide, almost half of the world's real-time payments happen in India.
+
+18
+00:01:44,467 --> 00:01:48,467
+The pledge was kept. UPI was free, fast... everywhere.
+
+19
+00:01:48,767 --> 00:01:52,467
+But in magic, what you see is never the whole truth.
+
+20
+00:01:57,933 --> 00:02:02,700
+Part two: the turn. The magician makes the ordinary thing... disappear.
+
+21
+00:02:03,033 --> 00:02:06,167
+In UPI, what disappeared was the bill.
+
+22
+00:02:08,433 --> 00:02:17,033
+Behind your one scan runs an entire machine: your app, your bank, NPCI's switch, and the shop's bank.
+
+23
+00:02:17,367 --> 00:02:22,033
+Servers, security, fraud checks, customer support, around the clock.
+
+24
+00:02:22,333 --> 00:02:27,200
+None of it is free. So when the fee went to zero, where did the cost go?
+
+25
+00:02:29,467 --> 00:02:33,000
+Answer one: the government. In other words, taxpayers' money.
+
+26
+00:02:33,300 --> 00:02:46,600
+Per PIB data, the government paid banks incentives: ₹1,389 crore in 2021-22, rising to ₹3,631 crore by 2023-24.
+
+27
+00:02:48,467 --> 00:03:02,200
+But the industry kept saying it isn't enough: per the Payments Council of India, running UPI costs about ₹10,000 crore a year, against only ₹1,500 crore of government support.
+
+28
+00:03:03,467 --> 00:03:06,567
+And all this time, the government's answer was the same.
+
+29
+00:03:07,167 --> 00:03:14,300
+August 2022, Finance Ministry: UPI is a digital public good; there is no plan to levy any charges.
+
+30
+00:03:14,800 --> 00:03:19,700
+June 2025, Finance Ministry: reports of MDR on UPI are completely false, baseless and misleading.
+
+31
+00:03:20,400 --> 00:03:26,533
+Just six weeks later, RBI Governor Sanjay Malhotra said: costs will have to be paid; someone will have to bear the cost.
+
+32
+00:03:28,933 --> 00:03:34,400
+And in the 2026-27 budget, this support was cut by about 10% from the previous year.
+
+33
+00:03:34,733 --> 00:03:38,300
+The bill hadn't vanished. It just wasn't visible to anyone.
+
+34
+00:03:43,933 --> 00:03:49,367
+August 2026. Parliament amends the Payment and Settlement Systems Act, and on 17 August the President gives assent.
+
+35
+00:03:50,467 --> 00:03:57,000
+14 September: the Finance Ministry's notification. The very next day, NPCI's circular.
+
+36
+00:03:58,467 --> 00:03:59,700
+The rule is simple.
+
+37
+00:03:59,900 --> 00:04:06,100
+Merchant payments above ₹2,000 carry a 0.4% MDR.
+
+38
+00:04:06,400 --> 00:04:10,800
+Even on payments of ₹75,000 or more, at most ₹300.
+
+39
+00:04:11,133 --> 00:04:17,267
+Railways, telecom, insurance and fuel: a flat ₹5.
+
+40
+00:04:17,600 --> 00:04:26,800
+Person-to-person transfers stay free. Small merchants receiving up to ₹1 lakh a month via UPI pay nothing.
+
+41
+00:04:27,100 --> 00:04:31,900
+Most importantly, the fee cannot be taken from the customer. The shop pays it.
+
+42
+00:04:33,933 --> 00:04:38,833
+By NPCI's estimate, this could raise up to ₹20,600 crore a year.
+
+43
+00:04:40,933 --> 00:04:43,267
+And then the countdown began.
+
+44
+00:04:43,900 --> 00:04:51,800
+In a LocalCircles survey of over 32,000 merchants, only 17% said they would absorb the fee themselves.
+
+45
+00:04:52,133 --> 00:05:00,833
+And of over 67,000 users, only 14% said they would stick with UPI if the fee were passed on to them.
+
+46
+00:05:02,467 --> 00:05:12,933
+Madhya Pradesh's petrol pump dealers announced: from 16 October, no UPI above ₹2,000. Punjab and Haryana said the same.
+
+47
+00:05:13,933 --> 00:05:22,833
+The case reached the Supreme Court. On 28 September it refused a stay and asked the Centre, RBI and NPCI to reply within four weeks.
+
+48
+00:05:23,167 --> 00:05:28,200
+And the government told the court: it is neither a tax nor a fee.
+
+49
+00:05:30,467 --> 00:05:35,633
+Then, just two days before the deadline, on 13 October, NPCI announced:
+
+50
+00:05:36,100 --> 00:05:40,100
+MDR: after Diwali. The new date? Not decided yet.
+
+51
+00:05:45,933 --> 00:05:51,000
+And now, part three: the prestige. The moment the vanished thing comes back.
+
+52
+00:05:51,800 --> 00:05:56,400
+The bill that vanished in 2020 never really vanished.
+
+53
+00:05:57,200 --> 00:06:05,933
+For years, part of it was paid with taxpayers' money, which means, in some way, your money. The rest was carried by banks and payment companies.
+
+54
+00:06:06,267 --> 00:06:10,333
+Now the bill is back, on the shopkeeper's counter.
+
+55
+00:06:12,467 --> 00:06:21,833
+The law says the charge can't be put on you. But economics says every business cost eventually shows up somewhere in prices.
+
+56
+00:06:22,133 --> 00:06:33,133
+So who pays for free UPI? As a taxpayer, you. As a customer, perhaps you. And if the system weakens, the loss is yours too.
+
+57
+00:06:35,467 --> 00:06:43,567
+The real question isn't whether UPI should stay free. It's who should pay for the world's largest digital payment system, how much, and how.
+
+58
+00:06:43,867 --> 00:06:52,833
+On one side, the system needs money to run. On the other, millions of small shopkeepers, and the risk of a return to cash.
+
+59
+00:06:54,933 --> 00:07:00,633
+For now, we wait for the new date. And the case is still pending in the Supreme Court.
+
+60
+00:07:00,967 --> 00:07:02,700
+The coin... is still spinning.
+
+61
+00:07:07,933 --> 00:07:15,933
+What do you think: is this fee on payments above ₹2,000 right or wrong? Tell us in the comments. All sources are in the description.
