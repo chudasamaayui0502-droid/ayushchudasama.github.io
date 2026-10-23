@@ -17,7 +17,8 @@ i=1
 for p in "$@"; do
   file="${p%@*}"
   start="${p##*@}"
-  n=$(ffprobe -v error -count_frames -select_streams v:0 -show_entries stream=nb_read_frames -of csv=p=0 "$file")
+  n=$(ffprobe -v error -count_frames -select_streams v:0 -show_entries stream=nb_read_frames -of default=nw=1:nk=1 "$file" | tr -dc 0-9)
+  [[ -n "$n" && "$n" -gt 0 ]] || { echo "could not count frames in $file" >&2; exit 1; }
   end=$((start + n - 1))
   inputs+=(-i "$file")
   graph+="[$i:v]setpts=PTS-STARTPTS+${start}/30/TB[p$i];[$last][p$i]overlay=eof_action=pass:enable='between(n,${start},${end})'[v$i];"
