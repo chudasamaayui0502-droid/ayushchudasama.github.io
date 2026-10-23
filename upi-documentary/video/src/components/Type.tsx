@@ -2,6 +2,7 @@ import React from "react";
 import { interpolate, useCurrentFrame } from "remotion";
 import { C, F } from "../theme";
 import { clamp, ease, prog } from "../lib/anim";
+import { useLang } from "../lang";
 
 /**
  * Kinetic words. Splits on spaces only (safe for Devanagari conjuncts).
@@ -161,13 +162,16 @@ export const Counter: React.FC<{
   suffix?: string;
   decimals?: number;
   indian?: boolean;
-}> = ({ from = 0, to, start, dur, size = 140, color = C.ink, prefix = "", suffix = "", decimals = 0, indian = true }) => {
+}> = ({ from = 0, to, start, dur, size = 140, color = C.ink, prefix = "", suffix = "", decimals = 0, indian }) => {
   const frame = useCurrentFrame();
+  // Indian digit grouping (24,07,00,00,000) in the Hindi edition, international (24,070,000,000) in English
+  const lang = useLang();
+  const grouping = indian ?? lang !== "en";
   const t = prog(frame, start, dur, ease.soft);
   const v = from + (to - from) * t;
   const fixed = v.toFixed(decimals);
   const [int, dec] = fixed.split(".");
-  const grouped = indian ? groupIndian(int) : int.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const grouped = grouping ? groupIndian(int) : int.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   const str = prefix + grouped + (dec ? "." + dec : "") + suffix;
   return (
     <div style={{ fontFamily: F.hiDisplay, fontSize: size, color, fontWeight: 500, lineHeight: 1, fontVariantNumeric: "tabular-nums", letterSpacing: "0.02em", textShadow: `0 0 40px ${color}55` }}>

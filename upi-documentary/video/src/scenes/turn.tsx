@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import * as THREE from "three";
 import { AbsoluteFill, Sequence, interpolate, useCurrentFrame } from "remotion";
+import { useLang, useT } from "../lang";
 import { Line as DreiLine } from "@react-three/drei";
 import { SceneProps, relLines } from "../timeline";
 import { C, F } from "../theme";
@@ -15,12 +16,14 @@ import { CamRig, GlowNode, Halo, QRBlocks, QR_TEXT, RupeeField, Stage, projectTo
 /* ---------------------------------------------------------------- S20 */
 export const S20_Vanish: React.FC<SceneProps> = ({ seg }) => {
   const frame = useCurrentFrame();
+  const t = useT();
+  const lang = useLang();
   const L = relLines(seg);
   const cells = useMemo(() => qrMatrix(QR_TEXT), []);
-  const goAt = L.c2_01.at + Math.round(L.c2_01.len * 0.7);
+  const goAt = L.c2_01.at + Math.round(L.c2_01.len * L.c2_01.fr(0.7));
   const scatter = prog(frame, goAt, 46, ease.in);
   const camZ = keys(frame, [[0, 11], [goAt, 9.5], [L.c2_02.at, 7]]);
-  const billP = prog(frame, L.c2_02.at + Math.round(L.c2_02.len * 0.55), 10, ease.out);
+  const billP = prog(frame, L.c2_02.at + Math.round(L.c2_02.len * L.c2_02.fr(0.55)), 10, ease.out);
   const billGone = prog(frame, L.c2_02.end + 6, 26, ease.in);
   return (
     <AbsoluteFill>
@@ -36,12 +39,12 @@ export const S20_Vanish: React.FC<SceneProps> = ({ seg }) => {
       <AbsoluteFill style={{ background: "linear-gradient(rgba(4,6,11,0) 50%, rgba(4,6,11,0.9) 82%)", opacity: 1 - scatter }} />
       <AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "center", paddingBottom: 150 }}>
         <Sequence durationInFrames={L.c2_02.at} layout="none">
-          <Words text="दूसरा हिस्सा — *The Turn।*|जादूगर उस चीज़ को... *ग़ायब* कर देता है।" start={L.c2_01.at} size={56} />
+          <Words text={t("दूसरा हिस्सा — *The Turn।*|जादूगर उस चीज़ को... *ग़ायब* कर देता है।", "Part two — *the Turn.*|The magician makes it... *disappear.*")} start={L.c2_01.at} size={56} />
         </Sequence>
       </AbsoluteFill>
       <Sequence from={L.c2_02.at} layout="none">
         <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-start", paddingTop: 200 }}>
-          <Words text="UPI में जो ग़ायब हुआ, वो था —" start={2} size={50} color={C.inkDim} />
+          <Words text={t("UPI में जो ग़ायब हुआ, वो था —", "In UPI, what disappeared was —")} start={2} size={50} color={C.inkDim} />
         </AbsoluteFill>
         <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
           <div
@@ -57,7 +60,7 @@ export const S20_Vanish: React.FC<SceneProps> = ({ seg }) => {
               marginTop: 80,
             }}
           >
-            बिल
+            {t("बिल", "THE BILL")}
           </div>
         </AbsoluteFill>
         {billGone > 0 && (
@@ -73,12 +76,12 @@ export const S20_Vanish: React.FC<SceneProps> = ({ seg }) => {
 };
 
 /* ---------------------------------------------------------------- S21 */
-const MACHINE: { label: string; hi: string; icon: IconName; p: [number, number, number]; color: string }[] = [
-  { label: "YOUR APP", hi: "आपका app", icon: "phone", p: [-8, -0.6, 0], color: C.teal },
-  { label: "YOUR BANK", hi: "आपका बैंक", icon: "bank", p: [-4, 0.9, -2], color: C.teal },
-  { label: "NPCI SWITCH", hi: "NPCI", icon: "server", p: [0, -0.2, -3.2], color: C.amber },
-  { label: "SHOP'S BANK", hi: "दुकानदार का बैंक", icon: "bank", p: [4, 0.9, -2], color: C.teal },
-  { label: "SHOP", hi: "दुकान", icon: "shop", p: [8, -0.6, 0], color: C.teal },
+const MACHINE: { label: string; hi: string; en: string; icon: IconName; p: [number, number, number]; color: string }[] = [
+  { label: "YOUR APP", hi: "आपका app", en: "Scan & pay", icon: "phone", p: [-8, -0.6, 0], color: C.teal },
+  { label: "YOUR BANK", hi: "आपका बैंक", en: "Debits you", icon: "bank", p: [-4, 0.9, -2], color: C.teal },
+  { label: "NPCI SWITCH", hi: "NPCI", en: "Routes it", icon: "server", p: [0, -0.2, -3.2], color: C.amber },
+  { label: "SHOP'S BANK", hi: "दुकानदार का बैंक", en: "Credits the shop", icon: "bank", p: [4, 0.9, -2], color: C.teal },
+  { label: "SHOP", hi: "दुकान", en: "Gets paid", icon: "shop", p: [8, -0.6, 0], color: C.teal },
 ];
 
 const Packet: React.FC<{ t: number; curve: THREE.CatmullRomCurve3; color: string }> = ({ t, curve, color }) => {
@@ -96,11 +99,13 @@ const Packet: React.FC<{ t: number; curve: THREE.CatmullRomCurve3; color: string
 
 export const S21_Machine: React.FC<SceneProps> = ({ seg }) => {
   const frame = useCurrentFrame();
+  const t = useT();
+  const lang = useLang();
   const L = relLines(seg);
   const curve = useMemo(() => new THREE.CatmullRomCurve3(MACHINE.map((m) => new THREE.Vector3(...m.p))), []);
   const pts = useMemo(() => curve.getPoints(200).map((v) => [v.x, v.y, v.z] as [number, number, number]), [curve]);
-  const reveal = prog(frame, L.c2_03.at + 20, L.c2_03.len * 0.75, ease.soft); // path draws as the nodes are named
-  const askAt = L.c2_05.at + Math.round(L.c2_05.len * 0.45);
+  const reveal = prog(frame, L.c2_03.at + 20, L.c2_03.len * L.c2_03.fr(0.75), ease.soft); // path draws as the nodes are named
+  const askAt = L.c2_05.at + Math.round(L.c2_05.len * L.c2_05.fr(0.45));
   const stalled = frame >= askAt;
   const loop = ((frame - L.c2_03.at) % 75) / 75;
   const camPos: [number, number, number] = [keys(frame, [[0, -6], [seg.frames, 5]]) , 3.2 + drift(frame, 1, 0.2), keys(frame, [[0, 13], [L.c2_04.at, 15], [seg.frames, 12]])];
@@ -114,7 +119,7 @@ export const S21_Machine: React.FC<SceneProps> = ({ seg }) => {
         <ambientLight intensity={0.3} />
         <DreiLine points={pts.slice(0, Math.max(2, Math.floor(reveal * pts.length)))} color={stalled ? C.amber : C.teal} lineWidth={3} transparent opacity={0.8} />
         {MACHINE.map((m, i) => (
-          <GlowNode key={m.label} position={m.p} size={i === 2 ? 0.55 : 0.4} color={stalled ? C.amber : m.color} on={prog(frame, L.c2_03.at + 20 + i * (L.c2_03.len * 0.15), 12)} />
+          <GlowNode key={m.label} position={m.p} size={i === 2 ? 0.55 : 0.4} color={stalled ? C.amber : m.color} on={prog(frame, L.c2_03.at + 20 + i * (L.c2_03.len * L.c2_03.fr(0.15)), 12)} />
         ))}
         {reveal > 0.98 && !stalled && <Packet t={loop} curve={curve} color={C.teal} />}
         {stalled && <Packet t={0.5} curve={curve} color={C.amber} />}
@@ -122,11 +127,11 @@ export const S21_Machine: React.FC<SceneProps> = ({ seg }) => {
       {/* labels projected from 3D */}
       {MACHINE.map((m, i) => {
         const s = projectToScreen([m.p[0], m.p[1] - 1.1, m.p[2]], camPos, target, fov);
-        const on = prog(frame, L.c2_03.at + 20 + i * (L.c2_03.len * 0.15), 12);
+        const on = prog(frame, L.c2_03.at + 20 + i * (L.c2_03.len * L.c2_03.fr(0.15)), 12);
         return (
           <div key={m.label} style={{ position: "absolute", left: s.x - 150, top: s.y, width: 300, textAlign: "center", opacity: on }}>
             <div style={{ fontFamily: F.mono, fontSize: 20, letterSpacing: "0.25em", color: stalled ? C.amber : C.teal }}>{m.label}</div>
-            <div style={{ fontFamily: F.hiBody, fontSize: 34, color: C.ink, fontWeight: 600 }}>{m.hi}</div>
+            <div style={{ fontFamily: F.hiBody, fontSize: 34, color: C.ink, fontWeight: 600 }}>{t(m.hi, m.en)}</div>
           </div>
         );
       })}
@@ -147,9 +152,9 @@ export const S21_Machine: React.FC<SceneProps> = ({ seg }) => {
                 <div style={{ fontFamily: F.mono, fontSize: 20, letterSpacing: "0.22em", color: C.inkDim, marginTop: 8 }}>{lb}</div>
               </div>
             ))}
-            <div style={{ textAlign: "center", opacity: prog(frame - L.c2_04.at, Math.round(L.c2_04.len * 0.6), 10) }}>
+            <div style={{ textAlign: "center", opacity: prog(frame - L.c2_04.at, Math.round(L.c2_04.len * L.c2_04.fr(0.6)), 10) }}>
               <div style={{ fontFamily: F.hiDisplay, fontSize: 110, color: C.amber, lineHeight: 1.05 }}>24×7</div>
-              <div style={{ fontFamily: F.mono, fontSize: 20, letterSpacing: "0.22em", color: C.inkDim, marginTop: 8 }}>चौबीसों घंटे</div>
+              <div style={{ fontFamily: F.mono, fontSize: 20, letterSpacing: "0.22em", color: C.inkDim, marginTop: 8 }}>{t("चौबीसों घंटे", "AROUND THE CLOCK")}</div>
             </div>
           </div>
         </AbsoluteFill>
@@ -157,10 +162,10 @@ export const S21_Machine: React.FC<SceneProps> = ({ seg }) => {
       {/* c2_05: where did the cost go? */}
       <Sequence from={L.c2_05.at} layout="none">
         <AbsoluteFill style={{ justifyContent: "flex-start", alignItems: "center", paddingTop: 120 }}>
-          <Words text="ये सब *मुफ़्त नहीं* है।" start={2} size={58} />
+          <Words text={t("ये सब *मुफ़्त नहीं* है।", "None of this is *free.*")} start={2} size={58} />
         </AbsoluteFill>
         <AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "center", paddingBottom: 140 }}>
-          <Words text="तो ये ख़र्च... *गया कहाँ?*" start={askAt - L.c2_05.at} size={86} font={F.hiDisplay} weight={500} />
+          <Words text={t("तो ये ख़र्च... *गया कहाँ?*", "So where did *the cost go?*")} start={askAt - L.c2_05.at} size={86} font={F.hiDisplay} weight={500} />
         </AbsoluteFill>
       </Sequence>
       <Flash at={askAt} peak={0.22} color="255,165,58" />
@@ -181,6 +186,7 @@ const Bar3D: React.FC<{ h: number; w?: number; d?: number; color: string; x: num
   value,
   on,
 }) => {
+  const t = useT();
   const hh = h * on;
   const face: React.CSSProperties = { position: "absolute", left: 0, bottom: 0, transformOrigin: "50% 100%" };
   return (
@@ -190,7 +196,7 @@ const Bar3D: React.FC<{ h: number; w?: number; d?: number; color: string; x: num
       <div style={{ position: "absolute", left: 0, top: -hh - d / 2, width: w, height: d, background: `${color}`, filter: "brightness(1.35)", transform: `translateY(${d / 2}px) rotateX(90deg)`, transformOrigin: "50% 50%" }} />
       <div style={{ position: "absolute", left: -60, width: w + 120, top: -hh - 150, textAlign: "center", opacity: on, transform: `translateZ(${d / 2}px)` }}>
         <div style={{ fontFamily: F.hiDisplay, fontSize: 80, color: C.ink, lineHeight: 1 }}>{value}</div>
-        <div style={{ fontFamily: F.hiBody, fontSize: 28, color: C.inkDim }}>करोड़</div>
+        <div style={{ fontFamily: F.hiBody, fontSize: 28, color: C.inkDim }}>{t("करोड़", "crore")}</div>
       </div>
       <div style={{ position: "absolute", left: -40, width: w + 80, top: 26, textAlign: "center", fontFamily: F.mono, fontSize: 26, letterSpacing: "0.15em", color: C.inkDim, transform: `translateZ(${d / 2}px)` }}>{label}</div>
     </div>
@@ -199,6 +205,8 @@ const Bar3D: React.FC<{ h: number; w?: number; d?: number; color: string; x: num
 
 export const S22_Subsidy: React.FC<SceneProps> = ({ seg }) => {
   const frame = useCurrentFrame();
+  const t = useT();
+  const lang = useLang();
   const L = relLines(seg);
   const chartIn = prog(frame, L.c2_07.at, 24, ease.cam);
   const v = [1389, 2210, 3631];
@@ -220,20 +228,20 @@ export const S22_Subsidy: React.FC<SceneProps> = ({ seg }) => {
             <div style={{ textAlign: "center" }}>
               <div style={{ display: "flex", gap: 6 }}>
                 {[0, 1, 2].map((i) => (
-                  <Icon key={i} name="person" start={L.c2_06.at + Math.round(L.c2_06.len * 0.5) + i * 4} size={110} color={C.ink} width={9} />
+                  <Icon key={i} name="person" start={L.c2_06.at + Math.round(L.c2_06.len * L.c2_06.fr(0.5)) + i * 4} size={110} color={C.ink} width={9} />
                 ))}
               </div>
-              <div style={{ fontFamily: F.mono, fontSize: 24, letterSpacing: "0.25em", color: C.inkDim }}>TAXPAYERS · करदाता</div>
+              <div style={{ fontFamily: F.mono, fontSize: 24, letterSpacing: "0.25em", color: C.inkDim }}>{t("TAXPAYERS · करदाता", "TAXPAYERS")}</div>
             </div>
-            <div style={{ fontFamily: F.hiDisplay, fontSize: 90, color: C.amber, opacity: prog(frame, L.c2_06.at + Math.round(L.c2_06.len * 0.6), 10) }}>→</div>
+            <div style={{ fontFamily: F.hiDisplay, fontSize: 90, color: C.amber, opacity: prog(frame, L.c2_06.at + Math.round(L.c2_06.len * L.c2_06.fr(0.6)), 10) }}>→</div>
             <div style={{ textAlign: "center" }}>
               <Icon name="govt" start={L.c2_06.at + 4} size={240} color={C.amber} />
-              <div style={{ fontFamily: F.hiDisplay, fontSize: 64, color: C.ink }}>सरकार</div>
+              <div style={{ fontFamily: F.hiDisplay, fontSize: 64, color: C.ink }}>{t("सरकार", "GOVERNMENT")}</div>
             </div>
           </div>
         </AbsoluteFill>
         <AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "center", paddingBottom: 150, opacity: 1 - chartIn }}>
-          <Words text="पहला जवाब — *सरकार।* यानी, taxpayer का पैसा।" start={L.c2_06.at} size={54} />
+          <Words text={t("पहला जवाब — *सरकार।* यानी, taxpayer का पैसा।", "Answer one — *the government.* In other words, taxpayers.")} start={L.c2_06.at} size={54} />
         </AbsoluteFill>
       </Sequence>
       {/* c2_07: the incentive bars */}
@@ -251,7 +259,7 @@ export const S22_Subsidy: React.FC<SceneProps> = ({ seg }) => {
           </ParallaxWorld>
           <div style={{ position: "absolute", left: 150, top: 120 }}>
             <div style={{ fontFamily: F.mono, fontSize: 24, letterSpacing: "0.3em", color: C.amber }}>GOVERNMENT INCENTIVE PAID</div>
-            <div style={{ fontFamily: F.hiBody, fontSize: 40, color: C.ink, fontWeight: 600 }}>UPI + RuPay के लिए बैंकों को incentive</div>
+            <div style={{ fontFamily: F.hiBody, fontSize: 40, color: C.ink, fontWeight: 600 }}>{t("UPI + RuPay के लिए बैंकों को incentive", "Incentives paid to banks for UPI + RuPay")}</div>
           </div>
         </AbsoluteFill>
       </Sequence>
@@ -265,10 +273,12 @@ export const S22_Subsidy: React.FC<SceneProps> = ({ seg }) => {
 /* ---------------------------------------------------------------- S23 */
 export const S23_Gap: React.FC<SceneProps> = ({ seg }) => {
   const frame = useCurrentFrame();
+  const t = useT();
+  const lang = useLang();
   const L = relLines(seg);
-  const tankAt = L.c2_08.at + Math.round(L.c2_08.len * 0.3);
-  const costAt = L.c2_08.at + Math.round(L.c2_08.len * 0.55);
-  const fillAt = L.c2_08.at + Math.round(L.c2_08.len * 0.82);
+  const tankAt = L.c2_08.at + Math.round(L.c2_08.len * L.c2_08.fr(0.3));
+  const costAt = L.c2_08.at + Math.round(L.c2_08.len * L.c2_08.fr(0.55));
+  const fillAt = L.c2_08.at + Math.round(L.c2_08.len * L.c2_08.fr(0.82));
   const tank = prog(frame, tankAt, 26, ease.cam);
   const fill = prog(frame, fillAt, 30, ease.out) * 0.15;
   const gapOn = prog(frame, fillAt + 30, 20);
@@ -277,17 +287,17 @@ export const S23_Gap: React.FC<SceneProps> = ({ seg }) => {
     <AbsoluteFill>
       <Backdrop hue="red" light={0.55} />
       <AbsoluteFill style={{ padding: "180px 0 0 150px" }}>
-        <Words text="लेकिन industry कहती रही —|*ये काफ़ी नहीं।*" start={L.c2_08.at} size={76} font={F.hiDisplay} weight={500} align="left" lineHeight={1.05} />
+        <Words text={t("लेकिन industry कहती रही —|*ये काफ़ी नहीं।*", "But the industry kept saying —|*it's not enough.*")} start={L.c2_08.at} size={76} font={F.hiDisplay} weight={500} align="left" lineHeight={1.05} />
         <div style={{ marginTop: 50, fontFamily: F.mono, fontSize: 24, letterSpacing: "0.25em", color: C.inkDim, opacity: prog(frame, tankAt, 14) }}>
           PAYMENTS COUNCIL OF INDIA · MAR 2025
         </div>
         <div style={{ marginTop: 30, opacity: prog(frame, costAt, 14) }}>
-          <div style={{ fontFamily: F.hiBody, fontSize: 34, color: C.inkDim }}>UPI चलाने का सालाना ख़र्च</div>
-          <div style={{ fontFamily: F.hiDisplay, fontSize: 110, color: C.ink, lineHeight: 1 }}>~₹10,000 करोड़</div>
+          <div style={{ fontFamily: F.hiBody, fontSize: 34, color: C.inkDim }}>{t("UPI चलाने का सालाना ख़र्च", "Annual cost of running UPI")}</div>
+          <div style={{ fontFamily: F.hiDisplay, fontSize: 110, color: C.ink, lineHeight: 1 }}>{t("~₹10,000 करोड़", "~₹10,000 crore")}</div>
         </div>
         <div style={{ marginTop: 24, opacity: prog(frame, fillAt, 14) }}>
-          <div style={{ fontFamily: F.hiBody, fontSize: 34, color: C.inkDim }}>सरकारी मदद</div>
-          <div style={{ fontFamily: F.hiDisplay, fontSize: 110, color: C.amber, lineHeight: 1 }}>₹1,500 करोड़</div>
+          <div style={{ fontFamily: F.hiBody, fontSize: 34, color: C.inkDim }}>{t("सरकारी मदद", "Government support")}</div>
+          <div style={{ fontFamily: F.hiDisplay, fontSize: 110, color: C.amber, lineHeight: 1 }}>{t("₹1,500 करोड़", "₹1,500 crore")}</div>
         </div>
       </AbsoluteFill>
       {/* the tank */}
@@ -309,7 +319,7 @@ export const S23_Gap: React.FC<SceneProps> = ({ seg }) => {
         <div style={{ position: "absolute", left: 10, right: 10, bottom: 10, height: (TH - 20) * fill, borderRadius: 16, background: `linear-gradient(${C.amber}, #b3560f)`, boxShadow: `0 0 40px ${C.amber}` }} />
         <div style={{ position: "absolute", left: 0, right: 0, top: TH * 0.38, textAlign: "center", opacity: gapOn }}>
           <div style={{ fontFamily: F.hiDisplay, fontSize: 96, color: C.red, lineHeight: 1 }}>~₹8,500</div>
-          <div style={{ fontFamily: F.hiBody, fontSize: 32, color: C.ink }}>करोड़ का अंतर</div>
+          <div style={{ fontFamily: F.hiBody, fontSize: 32, color: C.ink }}>{t("करोड़ का अंतर", "crore gap")}</div>
           <div style={{ fontFamily: F.mono, fontSize: 18, letterSpacing: "0.15em", color: C.inkDim, marginTop: 6 }}>INDUSTRY ESTIMATE</div>
         </div>
       </div>
@@ -352,6 +362,8 @@ const EVIDENCE = [
 
 export const S24_Memory: React.FC<SceneProps> = ({ seg }) => {
   const frame = useCurrentFrame();
+  const t = useT();
+  const lang = useLang();
   const L = relLines(seg);
   const starts = [L.c2_12.at, L.c2_13.at, L.c2_14.at];
   // camera visits each card, then pulls back on the last beat
@@ -362,14 +374,14 @@ export const S24_Memory: React.FC<SceneProps> = ({ seg }) => {
     [starts[1] + 10, EVIDENCE[1].x],
     [starts[2] - 10, EVIDENCE[1].x],
     [starts[2] + 10, EVIDENCE[2].x * 0.85],
-    [L.c2_14.at + Math.round(L.c2_14.len * 0.75), EVIDENCE[2].x * 0.85],
+    [L.c2_14.at + Math.round(L.c2_14.len * L.c2_14.fr(0.75)), EVIDENCE[2].x * 0.85],
     [seg.frames, 0],
   ]);
   const cz = keys(frame, [
     [0, -700],
     [starts[0], 380],
     [starts[2] + 10, 380],
-    [L.c2_14.at + Math.round(L.c2_14.len * 0.75), 420],
+    [L.c2_14.at + Math.round(L.c2_14.len * L.c2_14.fr(0.75)), 420],
     [seg.frames, -260],
   ]);
   const cam = { x: cx, y: drift(frame, 3, 10), z: cz, ry: keys(frame, [[0, 0], [seg.frames, -3]]) };
@@ -418,7 +430,7 @@ export const S24_Memory: React.FC<SceneProps> = ({ seg }) => {
                 >
                   <div style={{ position: "absolute", top: -16, left: "50%", marginLeft: -16, width: 32, height: 32, borderRadius: "50%", background: "radial-gradient(circle at 35% 30%, #ff7b6b, #a3140c)", boxShadow: "0 6px 10px rgba(0,0,0,0.5)" }} />
                   <div style={{ fontFamily: F.mono, fontSize: 30, fontWeight: 600, letterSpacing: "0.2em" }}>{e.date}</div>
-                  <div style={{ fontFamily: F.mono, fontSize: 17, letterSpacing: "0.12em", opacity: 0.65, marginTop: 6 }}>{e.who}</div>
+                  <div style={{ fontFamily: F.mono, fontSize: 17, letterSpacing: "0.12em", opacity: 0.65, marginTop: 6 }}>{t(e.who, e.who.split(" · ")[0])}</div>
                   <div style={{ fontFamily: F.serif, fontSize: 38, lineHeight: 1.22, marginTop: 18, minHeight: 190, fontWeight: 500 }}>{e.quote.slice(0, typed)}</div>
                   <div style={{ fontFamily: F.mono, fontSize: 15, letterSpacing: "0.1em", opacity: 0.55, marginTop: 12 }}>{e.via}</div>
                 </div>
@@ -428,16 +440,16 @@ export const S24_Memory: React.FC<SceneProps> = ({ seg }) => {
         })}
       </ParallaxWorld>
       {/* the 6-week gap */}
-      <Sequence from={L.c2_14.at + Math.round(L.c2_14.len * 0.75)} layout="none">
+      <Sequence from={L.c2_14.at + Math.round(L.c2_14.len * L.c2_14.fr(0.75))} layout="none">
         <AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "center", paddingBottom: 150 }}>
-          <div style={{ fontFamily: F.mono, fontSize: 30, letterSpacing: "0.3em", color: C.amber, opacity: prog(frame - L.c2_14.at - Math.round(L.c2_14.len * 0.75), 6, 12) }}>
-            11 JUN → 25 JUL 2025 · सिर्फ़ 6 हफ़्ते
+          <div style={{ fontFamily: F.mono, fontSize: 30, letterSpacing: "0.3em", color: C.amber, opacity: prog(frame - L.c2_14.at - Math.round(L.c2_14.len * L.c2_14.fr(0.75)), 6, 12) }}>
+            {t("11 JUN → 25 JUL 2025 · सिर्फ़ 6 हफ़्ते", "11 JUN → 25 JUL 2025 · JUST 6 WEEKS")}
           </div>
         </AbsoluteFill>
       </Sequence>
       <Sequence durationInFrames={starts[0]} layout="none">
         <AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "center", paddingBottom: 150 }}>
-          <Words text="और इस पूरे वक़्त, सरकार का जवाब... *एक ही था।*" start={L.c2_11.at} size={56} />
+          <Words text={t("और इस पूरे वक़्त, सरकार का जवाब... *एक ही था।*", "And all this time, the answer... *was the same.*")} start={L.c2_11.at} size={56} />
         </AbsoluteFill>
       </Sequence>
       <LightLeak start={starts[2]} dur={120} strength={0.3} />
@@ -450,8 +462,10 @@ export const S24_Memory: React.FC<SceneProps> = ({ seg }) => {
 /* ---------------------------------------------------------------- S25 */
 export const S25_Budget: React.FC<SceneProps> = ({ seg }) => {
   const frame = useCurrentFrame();
+  const t = useT();
+  const lang = useLang();
   const L = relLines(seg);
-  const drop = prog(frame, L.c2_15.at + Math.round(L.c2_15.len * 0.55), 30, ease.cam);
+  const drop = prog(frame, L.c2_15.at + Math.round(L.c2_15.len * L.c2_15.fr(0.55)), 30, ease.cam);
   const ghost = prog(frame, L.c2_16.at, 40, ease.soft);
   const flicker = 0.75 + 0.25 * Math.sin(frame * 0.9) * Math.sin(frame * 0.37);
   return (
@@ -460,7 +474,7 @@ export const S25_Budget: React.FC<SceneProps> = ({ seg }) => {
       {/* the ghost bill — present all along, only now visible */}
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", opacity: ghost * 0.55 * flicker }}>
         <div style={{ width: 620, height: 860, border: "2px dashed rgba(255,165,58,0.7)", borderRadius: 6, padding: 40, transform: `rotate(-4deg) scale(${1 + ghost * 0.05})`, boxShadow: "0 0 80px rgba(255,165,58,0.25)" }}>
-          <div style={{ fontFamily: F.hiDisplay, fontSize: 90, color: C.amber, textAlign: "center", letterSpacing: "0.1em" }}>BILL · बिल</div>
+          <div style={{ fontFamily: F.hiDisplay, fontSize: 90, color: C.amber, textAlign: "center", letterSpacing: "0.1em" }}>{t("BILL · बिल", "THE BILL")}</div>
           {Array.from({ length: 14 }).map((_, i) => (
             <div key={i} style={{ height: 14, marginTop: 30, width: `${60 + rand(i) * 40}%`, background: "rgba(255,165,58,0.35)", borderRadius: 4 }} />
           ))}
@@ -472,19 +486,19 @@ export const S25_Budget: React.FC<SceneProps> = ({ seg }) => {
         <div style={{ display: "flex", alignItems: "center", gap: 70 }}>
           <div style={{ textAlign: "center" }}>
             <div style={{ fontFamily: F.hiDisplay, fontSize: 150, color: C.ink, lineHeight: 1 }}>₹2,196</div>
-            <div style={{ fontFamily: F.mono, fontSize: 22, letterSpacing: "0.2em", color: C.inkDim }}>FY26 (REVISED) · करोड़</div>
+            <div style={{ fontFamily: F.mono, fontSize: 22, letterSpacing: "0.2em", color: C.inkDim }}>{t("FY26 (REVISED) · करोड़", "FY26 (REVISED) · CRORE")}</div>
           </div>
           <div style={{ fontFamily: F.hiDisplay, fontSize: 120, color: C.red, transform: `translateY(${drop * 30}px)`, opacity: prog(frame, L.c2_15.at + 20, 10) }}>↘</div>
-          <div style={{ textAlign: "center", opacity: prog(frame, L.c2_15.at + Math.round(L.c2_15.len * 0.5), 14), transform: `translateY(${drop * 40}px)` }}>
-            <Counter from={2196} to={2000} start={L.c2_15.at + Math.round(L.c2_15.len * 0.55)} dur={30} size={150} color={C.amber} prefix="₹" indian={false} />
-            <div style={{ fontFamily: F.mono, fontSize: 22, letterSpacing: "0.2em", color: C.inkDim }}>FY27 (BUDGET) · करोड़</div>
+          <div style={{ textAlign: "center", opacity: prog(frame, L.c2_15.at + Math.round(L.c2_15.len * L.c2_15.fr(0.5)), 14), transform: `translateY(${drop * 40}px)` }}>
+            <Counter from={2196} to={2000} start={L.c2_15.at + Math.round(L.c2_15.len * L.c2_15.fr(0.55))} dur={30} size={150} color={C.amber} prefix="₹" indian={false} />
+            <div style={{ fontFamily: F.mono, fontSize: 22, letterSpacing: "0.2em", color: C.inkDim }}>{t("FY27 (BUDGET) · करोड़", "FY27 (BUDGET) · CRORE")}</div>
           </div>
         </div>
-        <div style={{ marginTop: 40, fontFamily: F.hiDisplay, fontSize: 70, color: C.red, opacity: drop }}>~10% कम</div>
+        <div style={{ marginTop: 40, fontFamily: F.hiDisplay, fontSize: 70, color: C.red, opacity: drop }}>{t("~10% कम", "~10% LESS")}</div>
       </AbsoluteFill>
       <AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "center", paddingBottom: 150 }}>
         <Sequence from={L.c2_16.at} layout="none">
-          <Words text="बिल ग़ायब नहीं हुआ था। बस... *किसी को दिख नहीं रहा था।*" start={2} size={54} />
+          <Words text={t("बिल ग़ायब नहीं हुआ था। बस... *किसी को दिख नहीं रहा था।*", "The bill hadn't vanished. It just... *wasn't visible.*")} start={2} size={54} />
         </Sequence>
       </AbsoluteFill>
       <Source text="BW Businessworld · Finance Outlook India" start={L.c2_15.at + 20} out={L.c2_16.at} y={970} />

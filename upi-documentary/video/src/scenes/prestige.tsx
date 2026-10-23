@@ -1,6 +1,7 @@
 import React from "react";
 import { AbsoluteFill, Sequence, interpolate, useCurrentFrame } from "remotion";
-import { SceneProps, relLines, TL } from "../timeline";
+import { useLang, useT } from "../lang";
+import { SceneProps, relLines, useTL } from "../timeline";
 import { C, F } from "../theme";
 import { clamp, drift, ease, keys, prog, rand } from "../lib/anim";
 import { Backdrop, Dust } from "../components/Backdrop";
@@ -12,7 +13,9 @@ import { PhotoPlate } from "../components/Media";
 import { CamRig, Coin, Halo, RupeeField, Stage } from "../three/kit";
 
 /* The bill, as a physical object. Line items are revealed as the story names them. */
-const BillCard: React.FC<{ t: number; items: { label: string; sub: string; on: number; color: string }[]; stamp?: number }> = ({ t, items, stamp = 0 }) => (
+const BillCard: React.FC<{ t: number; items: { label: string; sub: string; on: number; color: string }[]; stamp?: number }> = ({ t, items, stamp = 0 }) => {
+  const tr = useT();
+  return (
   <div
     style={{
       width: 640,
@@ -26,7 +29,7 @@ const BillCard: React.FC<{ t: number; items: { label: string; sub: string; on: n
       position: "relative",
     }}
   >
-    <div style={{ fontFamily: F.hiDisplay, fontSize: 86, textAlign: "center", letterSpacing: "0.1em", lineHeight: 1 }}>BILL · बिल</div>
+    <div style={{ fontFamily: F.hiDisplay, fontSize: 86, textAlign: "center", letterSpacing: "0.1em", lineHeight: 1 }}>{tr("BILL · बिल", "THE BILL")}</div>
     <div style={{ fontFamily: F.mono, fontSize: 18, textAlign: "center", letterSpacing: "0.3em", opacity: 0.6 }}>UPI · 2020 → 2026</div>
     <div style={{ borderTop: "2px dashed rgba(0,0,0,0.25)", margin: "22px 0 10px" }} />
     {items.map((it) => (
@@ -38,23 +41,26 @@ const BillCard: React.FC<{ t: number; items: { label: string; sub: string; on: n
     ))}
     {stamp > 0 && (
       <div style={{ position: "absolute", right: 30, bottom: 30 }}>
-        <Stamp text="NOW DUE" at={0} color={C.red} size={56} rotate={-10} sub="MERCHANT · दुकानदार" blend="multiply" />
+        <Stamp text="NOW DUE" at={0} color={C.red} size={56} rotate={-10} sub={tr("MERCHANT · दुकानदार", "MERCHANT")} blend="multiply" />
       </div>
     )}
   </div>
 );
+};
 
 /* ---------------------------------------------------------------- S40 */
 export const S40_Return: React.FC<SceneProps> = ({ seg }) => {
   const frame = useCurrentFrame();
+  const t = useT();
+  const lang = useLang();
   const L = relLines(seg);
   const cardIn = prog(frame, L.c4_01.at, 30, ease.cam);
   const cardOut = prog(frame, L.c4_02.at - 6, 20, ease.in);
-  const billT = prog(frame, L.c4_02.at + Math.round(L.c4_02.len * 0.2), 40, ease.soft);
+  const billT = prog(frame, L.c4_02.at + Math.round(L.c4_02.len * L.c4_02.fr(0.2)), 40, ease.soft);
   const item1 = prog(frame, L.c4_03.at + 10, 18);
-  const item2 = prog(frame, L.c4_03.at + Math.round(L.c4_03.len * 0.62), 18);
+  const item2 = prog(frame, L.c4_03.at + Math.round(L.c4_03.len * L.c4_03.fr(0.62)), 18);
   const toShop = prog(frame, L.c4_04.at, 34, ease.cam);
-  const stampOn = frame >= L.c4_04.at + Math.round(L.c4_04.len * 0.6);
+  const stampOn = frame >= L.c4_04.at + Math.round(L.c4_04.len * L.c4_04.fr(0.6));
   const cam = {
     x: drift(frame, 2, 14) + toShop * 120,
     y: toShop * 60,
@@ -73,7 +79,7 @@ export const S40_Return: React.FC<SceneProps> = ({ seg }) => {
             <div style={{ fontFamily: F.serif, fontSize: 80, color: C.amber, lineHeight: 1 }}>III</div>
             <div style={{ fontSize: 140, color: C.amber, lineHeight: 1, textShadow: "0 0 50px rgba(255,165,58,0.8)" }}>◉</div>
             <div style={{ fontFamily: F.wide, fontWeight: 300, fontSize: 36, letterSpacing: "0.32em", paddingLeft: "0.32em", color: C.ink }}>THE PRESTIGE</div>
-            <div style={{ fontFamily: F.hiSerif, fontSize: 56, color: C.inkDim }}>वापसी</div>
+            <div style={{ fontFamily: F.hiSerif, fontSize: 56, color: C.inkDim }}>{t("वापसी", "The return")}</div>
           </div>
         </AbsoluteFill>
       </Sequence>
@@ -125,8 +131,8 @@ export const S40_Return: React.FC<SceneProps> = ({ seg }) => {
                 t={billT}
                 stamp={stampOn ? 1 : 0}
                 items={[
-                  { label: "Taxpayers — सरकारी incentive", sub: "₹1,389 → ₹3,631 करोड़ / साल (FY22–24)", on: item1, color: C.amberDeep },
-                  { label: "बैंक और payment companies", sub: "बाक़ी ख़र्च — industry के मुताबिक़", on: item2, color: C.amberDeep },
+                  { label: t("Taxpayers — सरकारी incentive", "Taxpayers — government incentives"), sub: t("₹1,389 → ₹3,631 करोड़ / साल (FY22–24)", "₹1,389 → ₹3,631 crore a year (FY22–24)"), on: item1, color: C.amberDeep },
+                  { label: t("बैंक और payment companies", "Banks and payment companies"), sub: t("बाक़ी ख़र्च — industry के मुताबिक़", "the rest of the cost — per the industry"), on: item2, color: C.amberDeep },
                 ]}
               />
             </AbsoluteFill>
@@ -135,19 +141,19 @@ export const S40_Return: React.FC<SceneProps> = ({ seg }) => {
       </Sequence>
       <AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "center", paddingBottom: 140 }}>
         <Sequence durationInFrames={L.c4_02.at} layout="none">
-          <Words text="तीसरा हिस्सा — *The Prestige।*|जब ग़ायब हुई चीज़... वापस आती है।" start={L.c4_01.at + 10} size={54} />
+          <Words text={t("तीसरा हिस्सा — *The Prestige।*|जब ग़ायब हुई चीज़... वापस आती है।", "Part three — *the Prestige.*|When the vanished thing... comes back.")} start={L.c4_01.at + 10} size={54} />
         </Sequence>
       </AbsoluteFill>
       <AbsoluteFill style={{ background: "linear-gradient(rgba(4,6,11,0.9) 0%, rgba(4,6,11,0.55) 16%, rgba(4,6,11,0) 30%)", opacity: toShop }} />
       <AbsoluteFill style={{ justifyContent: "flex-start", alignItems: "center", paddingTop: 100 }}>
         <Sequence from={L.c4_02.at} durationInFrames={L.c4_03.at - L.c4_02.at} layout="none">
-          <Words text="वो बिल... *कभी ग़ायब हुआ ही नहीं।*" start={4} size={58} />
+          <Words text={t("वो बिल... *कभी ग़ायब हुआ ही नहीं।*", "The bill... *never really disappeared.*")} start={4} size={58} />
         </Sequence>
         <Sequence from={L.c4_04.at} layout="none">
-          <Words text="अब वो बिल लौट आया है — *दुकानदार के counter पर।*" start={4} size={54} />
+          <Words text={t("अब वो बिल लौट आया है — *दुकानदार के counter पर।*", "Now the bill is back — *on the shopkeeper's counter.*")} start={4} size={54} />
         </Sequence>
       </AbsoluteFill>
-      <Flash at={L.c4_02.at + Math.round(L.c4_02.len * 0.2) + 20} peak={0.3} color="255,200,140" />
+      <Flash at={L.c4_02.at + Math.round(L.c4_02.len * L.c4_02.fr(0.2)) + 20} peak={0.3} color="255,200,140" />
       <Source text="PIB (incentives) · Payments Council of India (costs)" start={L.c4_03.at + 10} out={L.c4_04.at} />
       <Dust count={50} />
       <Letterbox amount={0.45} />
@@ -157,19 +163,21 @@ export const S40_Return: React.FC<SceneProps> = ({ seg }) => {
 
 /* ---------------------------------------------------------------- S41 */
 const WHO = [
-  { role: "TAXPAYER", hi: "Taxpayer के रूप में", ans: "आप", color: C.amber },
-  { role: "CUSTOMER", hi: "Customer के रूप में", ans: "शायद आप", color: C.amber },
-  { role: "IF THE SYSTEM WEAKENS", hi: "System कमज़ोर पड़ा, तो", ans: "नुक़सान — आपका", color: C.red },
+  { role: "TAXPAYER", hi: "Taxpayer के रूप में", ans: "आप", en: "As a taxpayer", ansEn: "YOU", color: C.amber },
+  { role: "CUSTOMER", hi: "Customer के रूप में", ans: "शायद आप", en: "As a customer", ansEn: "MAYBE YOU", color: C.amber },
+  { role: "IF THE SYSTEM WEAKENS", hi: "System कमज़ोर पड़ा, तो", ans: "नुक़सान — आपका", en: "If the system weakens", ansEn: "YOUR LOSS", color: C.red },
 ];
 
 export const S41_WhoPays: React.FC<SceneProps> = ({ seg }) => {
   const frame = useCurrentFrame();
+  const t = useT();
+  const lang = useLang();
   const L = relLines(seg);
-  const econAt = L.c4_05.at + Math.round(L.c4_05.len * 0.45);
+  const econAt = L.c4_05.at + Math.round(L.c4_05.len * L.c4_05.fr(0.45));
   const split = prog(frame, L.c4_05.at, 20, ease.cam);
   const triIn = prog(frame, L.c4_06.at, 20, ease.cam);
   const q = L.c4_06;
-  const beats = [0.3, 0.55, 0.8].map((k) => q.at + Math.round(q.len * k));
+  const beats = [0.3, 0.55, 0.8].map((k) => q.at + Math.round(q.len * q.fr(k)));
   const mirror = prog(frame, q.end + 4, 30, ease.cam);
   return (
     <AbsoluteFill>
@@ -179,9 +187,9 @@ export const S41_WhoPays: React.FC<SceneProps> = ({ seg }) => {
         <AbsoluteFill style={{ flexDirection: "row", opacity: split * (1 - triIn) }}>
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", borderRight: `1px solid ${C.inkFaint}` }}>
             <Icon name="gavel" start={L.c4_05.at} size={190} color={C.teal} />
-            <div style={{ fontFamily: F.mono, fontSize: 26, letterSpacing: "0.35em", color: C.teal }}>THE LAW · क़ानून</div>
+            <div style={{ fontFamily: F.mono, fontSize: 26, letterSpacing: "0.35em", color: C.teal }}>{t("THE LAW · क़ानून", "THE LAW")}</div>
             <div style={{ fontFamily: F.hiDisplay, fontSize: 110, color: C.ink, lineHeight: 1.05, marginTop: 10 }}>Customer: ₹0</div>
-            <div style={{ fontFamily: F.hiBody, fontSize: 34, color: C.inkDim }}>charge आप पर नहीं डाला जा सकता</div>
+            <div style={{ fontFamily: F.hiBody, fontSize: 34, color: C.inkDim }}>{t("charge आप पर नहीं डाला जा सकता", "the charge can't be passed on to you")}</div>
           </div>
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", opacity: prog(frame, econAt, 16) }}>
             <svg width={230} height={190} viewBox="0 0 230 190" style={{ overflow: "visible" }}>
@@ -190,8 +198,8 @@ export const S41_WhoPays: React.FC<SceneProps> = ({ seg }) => {
               <text x={128} y={130} fill={C.amber} fontFamily="Teko" fontSize={72} textAnchor="middle">₹?</text>
             </svg>
             <div style={{ fontFamily: F.mono, fontSize: 26, letterSpacing: "0.35em", color: C.amber, marginTop: 10 }}>ECONOMICS</div>
-            <div style={{ fontFamily: F.hiDisplay, fontSize: 80, color: C.ink, lineHeight: 1.05, marginTop: 10, textAlign: "center" }}>हर ख़र्च → क़ीमत में?</div>
-            <div style={{ fontFamily: F.hiBody, fontSize: 34, color: C.inkDim }}>आख़िर में कहीं न कहीं दिख ही जाता है</div>
+            <div style={{ fontFamily: F.hiDisplay, fontSize: 80, color: C.ink, lineHeight: 1.05, marginTop: 10, textAlign: "center" }}>{t("हर ख़र्च → क़ीमत में?", "Every cost → in prices?")}</div>
+            <div style={{ fontFamily: F.hiBody, fontSize: 34, color: C.inkDim }}>{t("आख़िर में कहीं न कहीं दिख ही जाता है", "it shows up somewhere, eventually")}</div>
           </div>
         </AbsoluteFill>
       </Sequence>
@@ -199,7 +207,7 @@ export const S41_WhoPays: React.FC<SceneProps> = ({ seg }) => {
       <Sequence from={L.c4_06.at} layout="none">
         <AbsoluteFill style={{ opacity: triIn * (1 - mirror) }}>
           <AbsoluteFill style={{ justifyContent: "flex-start", alignItems: "center", paddingTop: 120 }}>
-            <Words text="तो *free UPI* का बिल कौन भरता है?" start={2} size={60} />
+            <Words text={t("तो *free UPI* का बिल कौन भरता है?", "So who pays for *free UPI?*")} start={2} size={60} />
           </AbsoluteFill>
           <AbsoluteFill style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 50, paddingTop: 80 }}>
             {WHO.map((w, i) => {
@@ -208,8 +216,8 @@ export const S41_WhoPays: React.FC<SceneProps> = ({ seg }) => {
                 <div key={w.role} style={{ width: 470, height: 520, borderRadius: 16, border: `1px solid ${on > 0.5 ? w.color : C.inkFaint}`, background: "rgba(8,12,20,0.8)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", boxShadow: `0 0 ${70 * on}px ${w.color}44`, opacity: 0.35 + on * 0.65 }}>
                   <Icon name="person" start={beats[i] - 20} size={170} color={on > 0.5 ? w.color : C.inkDim} width={8} />
                   <div style={{ fontFamily: F.mono, fontSize: 20, letterSpacing: "0.25em", color: C.inkDim, marginTop: 10 }}>{w.role}</div>
-                  <div style={{ fontFamily: F.hiBody, fontSize: 34, color: C.ink, marginTop: 6 }}>{w.hi}</div>
-                  <div style={{ fontFamily: F.hiDisplay, fontSize: 96, color: w.color, lineHeight: 1.05, opacity: on, transform: `scale(${interpolate(on, [0, 1], [1.4, 1])})` }}>{w.ans}</div>
+                  <div style={{ fontFamily: F.hiBody, fontSize: 34, color: C.ink, marginTop: 6 }}>{t(w.hi, w.en)}</div>
+                  <div style={{ fontFamily: F.hiDisplay, fontSize: 96, color: w.color, lineHeight: 1.05, opacity: on, transform: `scale(${interpolate(on, [0, 1], [1.4, 1])})` }}>{t(w.ans, w.ansEn)}</div>
                 </div>
               );
             })}
@@ -217,8 +225,8 @@ export const S41_WhoPays: React.FC<SceneProps> = ({ seg }) => {
         </AbsoluteFill>
         {/* the mirror: it was always you */}
         <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", opacity: mirror }}>
-          <div style={{ fontFamily: F.hiDisplay, fontSize: 420, color: C.amber, lineHeight: 0.9, textShadow: "0 0 120px rgba(255,165,58,0.6)", transform: `scale(${0.9 + mirror * 0.1})` }}>आप</div>
-          <div style={{ fontFamily: F.wide, fontWeight: 300, fontSize: 34, letterSpacing: "0.8em", paddingLeft: "0.8em", color: C.inkDim }}>YOU</div>
+          <div style={{ fontFamily: F.hiDisplay, fontSize: 420, color: C.amber, lineHeight: 0.9, textShadow: "0 0 120px rgba(255,165,58,0.6)", transform: `scale(${0.9 + mirror * 0.1})` }}>{t("आप", "YOU")}</div>
+          <div style={{ fontFamily: F.wide, fontWeight: 300, fontSize: 34, letterSpacing: "0.8em", paddingLeft: "0.8em", color: C.inkDim }}>{t("YOU", "IT WAS ALWAYS YOU")}</div>
         </AbsoluteFill>
       </Sequence>
       {beats.map((b, i) => (
@@ -245,13 +253,15 @@ const Plate: React.FC<{ x: number; y: number; title: string; sub: string; icons:
 
 export const S42_Question: React.FC<SceneProps> = ({ seg }) => {
   const frame = useCurrentFrame();
+  const t = useT();
+  const lang = useLang();
   const L = relLines(seg);
-  const strikeAt = L.c4_07.at + Math.round(L.c4_07.len * 0.3);
+  const strikeAt = L.c4_07.at + Math.round(L.c4_07.len * L.c4_07.fr(0.3));
   const strike = prog(frame, strikeAt, 14, ease.out);
-  const realQ = prog(frame, L.c4_07.at + Math.round(L.c4_07.len * 0.5), 16);
+  const realQ = prog(frame, L.c4_07.at + Math.round(L.c4_07.len * L.c4_07.fr(0.5)), 16);
   const scaleIn = prog(frame, L.c4_08.at, 24, ease.cam);
   const leftOn = prog(frame, L.c4_08.at + 10, 16);
-  const rightOn = prog(frame, L.c4_08.at + Math.round(L.c4_08.len * 0.45), 16);
+  const rightOn = prog(frame, L.c4_08.at + Math.round(L.c4_08.len * L.c4_08.fr(0.45)), 16);
   // the beam never settles
   const tilt = (Math.sin((frame - L.c4_08.at) * 0.045) * 9 + Math.sin((frame - L.c4_08.at) * 0.019) * 4) * scaleIn;
   const rad = (tilt * Math.PI) / 180;
@@ -264,12 +274,12 @@ export const S42_Question: React.FC<SceneProps> = ({ seg }) => {
       <Sequence durationInFrames={L.c4_08.at + 10} layout="none">
         <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", opacity: 1 - scaleIn }}>
           <div style={{ position: "relative", fontFamily: F.hiDisplay, fontSize: 96, color: C.inkDim, opacity: prog(frame, L.c4_07.at, 14) }}>
-            UPI फ़्री रहे या नहीं?
+            {t("UPI फ़्री रहे या नहीं?", "Should UPI stay free?")}
             <div style={{ position: "absolute", left: 0, top: "52%", height: 8, width: `${strike * 100}%`, background: C.red, boxShadow: `0 0 20px ${C.red}` }} />
           </div>
           <div style={{ marginTop: 50, opacity: realQ, transform: `translateY(${(1 - realQ) * 30}px)`, textAlign: "center" }}>
-            <div style={{ fontFamily: F.mono, fontSize: 26, letterSpacing: "0.35em", color: C.amber }}>THE REAL QUESTION · असली सवाल</div>
-            <div style={{ fontFamily: F.hiDisplay, fontSize: 120, color: C.ink, lineHeight: 1.05 }}>क़ीमत कौन चुकाए — और कैसे?</div>
+            <div style={{ fontFamily: F.mono, fontSize: 26, letterSpacing: "0.35em", color: C.amber }}>{t("THE REAL QUESTION · असली सवाल", "THE REAL QUESTION")}</div>
+            <div style={{ fontFamily: F.hiDisplay, fontSize: 120, color: C.ink, lineHeight: 1.05 }}>{t("क़ीमत कौन चुकाए — और कैसे?", "Who should pay — and how?")}</div>
           </div>
         </AbsoluteFill>
       </Sequence>
@@ -289,8 +299,8 @@ export const S42_Question: React.FC<SceneProps> = ({ seg }) => {
               </g>
             ))}
           </svg>
-          <Plate x={960 - Math.cos(rad) * arm} y={ly + 210} title="System को पैसा चाहिए" sub="security · servers · uptime" icons={["server", "shield"]} color={C.teal} t={leftOn} />
-          <Plate x={960 + Math.cos(rad) * arm} y={ry + 210} title="करोड़ों छोटे दुकानदार" sub="और cash की वापसी का ख़तरा" icons={["shop"]} color={C.amber} t={rightOn} />
+          <Plate x={960 - Math.cos(rad) * arm} y={ly + 210} title={t("System को पैसा चाहिए", "The system needs money")} sub="security · servers · uptime" icons={["server", "shield"]} color={C.teal} t={leftOn} />
+          <Plate x={960 + Math.cos(rad) * arm} y={ry + 210} title={t("करोड़ों छोटे दुकानदार", "Millions of small shops")} sub={t("और cash की वापसी का ख़तरा", "and the risk of a return to cash")} icons={["shop"]} color={C.amber} t={rightOn} />
         </AbsoluteFill>
       </Sequence>
       <Dust count={40} />
@@ -302,6 +312,8 @@ export const S42_Question: React.FC<SceneProps> = ({ seg }) => {
 /* ---------------------------------------------------------------- S43 */
 export const S43_Coin: React.FC<SceneProps> = ({ seg }) => {
   const frame = useCurrentFrame();
+  const t = useT();
+  const lang = useLang();
   const L = relLines(seg);
   // spin slows very slightly and the wobble grows — but it never falls on screen
   const angle = frame * 0.42 - frame * frame * 0.00012;
@@ -329,10 +341,10 @@ export const S43_Coin: React.FC<SceneProps> = ({ seg }) => {
       </Stage>
       <AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "center", paddingBottom: 140 }}>
         <Sequence durationInFrames={L.c4_10.at} layout="none">
-          <Words text="फ़िलहाल — नई तारीख़ का इंतज़ार।|Supreme Court में मामला *अभी बाक़ी* है।" start={L.c4_09.at} size={52} />
+          <Words text={t("फ़िलहाल — नई तारीख़ का इंतज़ार।|Supreme Court में मामला *अभी बाक़ी* है।", "For now — waiting for a new date.|The Supreme Court case is *still pending.*")} start={L.c4_09.at} size={52} />
         </Sequence>
         <Sequence from={L.c4_10.at} layout="none">
-          <Words text="सिक्का... *अभी घूम रहा है।*" start={2} size={72} font={F.hiDisplay} weight={500} stagger={6} />
+          <Words text={t("सिक्का... *अभी घूम रहा है।*", "The coin... *is still spinning.*")} start={2} size={72} font={F.hiDisplay} weight={500} stagger={6} />
         </Sequence>
       </AbsoluteFill>
       <Letterbox amount={1} />
@@ -357,6 +369,9 @@ const KEY_SOURCES = [
 
 export const S50_Outro: React.FC<SceneProps> = ({ seg }) => {
   const frame = useCurrentFrame();
+  const TL = useTL();
+  const t = useT();
+  const lang = useLang();
   const L = relLines(seg);
   const endAt = L.c5_01.end + 10;
   const end = prog(frame, endAt, 24, ease.cam);
@@ -366,18 +381,18 @@ export const S50_Outro: React.FC<SceneProps> = ({ seg }) => {
       <Backdrop hue="amber" light={0.6} />
       {/* CTA */}
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", opacity: 1 - end, transform: `scale(${1 - end * 0.1})` }}>
-        <Words text="आपको क्या लगता है?" start={L.c5_01.at} size={70} color={C.inkDim} weight={500} />
-        <div style={{ fontFamily: F.hiDisplay, fontSize: 110, color: C.ink, lineHeight: 1.05, marginTop: 10, opacity: vote(0.15) }}>₹2,000+ पर ये fee —</div>
+        <Words text={t("आपको क्या लगता है?", "What do you think?")} start={L.c5_01.at} size={70} color={C.inkDim} weight={500} />
+        <div style={{ fontFamily: F.hiDisplay, fontSize: 110, color: C.ink, lineHeight: 1.05, marginTop: 10, opacity: vote(0.15) }}>{t("₹2,000+ पर ये fee —", "This fee on ₹2,000+ payments —")}</div>
         <div style={{ display: "flex", gap: 60, marginTop: 40 }}>
-          <div style={{ padding: "14px 60px", border: `3px solid ${C.green}`, borderRadius: 60, fontFamily: F.hiDisplay, fontSize: 90, color: C.green, opacity: vote(0.28), transform: `scale(${interpolate(vote(0.28), [0, 1], [1.3, 1])})` }}>सही ✓</div>
-          <div style={{ padding: "14px 60px", border: `3px solid ${C.red}`, borderRadius: 60, fontFamily: F.hiDisplay, fontSize: 90, color: C.red, opacity: vote(0.36), transform: `scale(${interpolate(vote(0.36), [0, 1], [1.3, 1])})` }}>ग़लत ✕</div>
+          <div style={{ padding: "14px 60px", border: `3px solid ${C.green}`, borderRadius: 60, fontFamily: F.hiDisplay, fontSize: 90, color: C.green, opacity: vote(0.28), transform: `scale(${interpolate(vote(0.28), [0, 1], [1.3, 1])})` }}>{t("सही ✓", "FAIR ✓")}</div>
+          <div style={{ padding: "14px 60px", border: `3px solid ${C.red}`, borderRadius: 60, fontFamily: F.hiDisplay, fontSize: 90, color: C.red, opacity: vote(0.36), transform: `scale(${interpolate(vote(0.36), [0, 1], [1.3, 1])})` }}>{t("ग़लत ✕", "UNFAIR ✕")}</div>
         </div>
-        <div style={{ fontFamily: F.hiBody, fontSize: 40, color: C.ink, marginTop: 40, opacity: vote(0.55) }}>Comments में बताइए · Sources description में</div>
+        <div style={{ fontFamily: F.hiBody, fontSize: 40, color: C.ink, marginTop: 40, opacity: vote(0.55) }}>{t("Comments में बताइए · Sources description में", "Tell us in the comments · Sources in the description")}</div>
       </AbsoluteFill>
       {/* end screen: room for YouTube's end-screen elements on the right, sources on the left */}
       <AbsoluteFill style={{ opacity: end }}>
         <div style={{ position: "absolute", left: 140, top: 150, width: 820 }}>
-          <div style={{ fontFamily: F.hiDisplay, fontSize: 64, color: C.ink, lineHeight: 1 }}>{TL.title_hi}</div>
+          <div style={{ fontFamily: F.hiDisplay, fontSize: 64, color: C.ink, lineHeight: 1 }}>{t(TL.title_hi, "WHO REALLY PAYS FOR YOUR 'FREE' UPI?")}</div>
           <div style={{ fontFamily: F.mono, fontSize: 20, letterSpacing: "0.3em", color: C.amber, margin: "24px 0 18px" }}>KEY SOURCES</div>
           {KEY_SOURCES.map((s, i) => (
             <div key={s} style={{ fontFamily: F.mono, fontSize: 21, color: C.inkDim, lineHeight: 1.75, opacity: prog(frame, endAt + 10 + i * 3, 10) }}>

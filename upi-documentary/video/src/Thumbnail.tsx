@@ -4,6 +4,7 @@ import { C, F } from "./theme";
 import { Backdrop } from "./components/Backdrop";
 import { CamRig, Coin, Halo, Phone, QR_TEXT, Stage, drawPayScreen, qrMatrix, useCanvasTexture } from "./three/kit";
 import { loadFonts } from "./fonts";
+import type { Lang } from "./lang";
 
 loadFonts();
 
@@ -25,7 +26,7 @@ const PhoneShot: React.FC = () => {
 };
 
 /** 1280×720 thumbnail: phone + coin on the left, three-word headline on the right. */
-export const Thumbnail: React.FC = () => (
+export const Thumbnail: React.FC<{ lang?: Lang }> = ({ lang = "hi" }) => (
   <AbsoluteFill style={{ background: C.bg }}>
     <Backdrop hue="amber" light={1.4} />
     <Stage res={1}>
@@ -37,8 +38,17 @@ export const Thumbnail: React.FC = () => (
           FREE
           <span style={{ position: "absolute", right: -88, top: -26, fontSize: 240, color: C.red, transform: "rotate(12deg)", textShadow: "0 0 40px rgba(255,59,59,0.6)" }}>?</span>
         </div>
-        <div style={{ fontSize: 138, marginTop: 10 }}>UPI का बिल</div>
-        <div style={{ fontSize: 138, color: C.amber }}>कौन भरता है?</div>
+        {lang === "en" ? (
+          <>
+            <div style={{ fontSize: 138, marginTop: 10 }}>WHO PAYS</div>
+            <div style={{ fontSize: 138, color: C.amber }}>FOR UPI?</div>
+          </>
+        ) : (
+          <>
+            <div style={{ fontSize: 138, marginTop: 10 }}>UPI का बिल</div>
+            <div style={{ fontSize: 138, color: C.amber }}>कौन भरता है?</div>
+          </>
+        )}
       </div>
       <div style={{ marginTop: 26, display: "inline-flex", alignSelf: "flex-start", padding: "6px 22px", background: C.red, borderRadius: 8, fontFamily: F.wide, fontWeight: 800, fontSize: 40, color: "#fff", letterSpacing: "0.06em" }}>
         0.4% MDR · ₹2,000+

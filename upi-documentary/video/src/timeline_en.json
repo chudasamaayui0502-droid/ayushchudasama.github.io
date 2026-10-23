@@ -1,0 +1,984 @@
+{
+ "lang": "en",
+ "fps": 30,
+ "seconds": 436.131,
+ "frames": 13084,
+ "voDir": "vo_scratch_en",
+ "disclaimer": {
+  "hi": "For educational and informational purposes only. This is not financial or legal advice. Facts are based on public sources as of 23 October 2026; rules may change. Some visuals are illustrative.",
+  "en": ""
+ },
+ "facts_as_of": "23 October 2026",
+ "title_hi": "FREE UPI का बिल कौन भरता है?",
+ "title_en": "WHO REALLY PAYS FOR YOUR 'FREE' UPI?",
+ "segments": [
+  {
+   "kind": "scene",
+   "id": "S00_ColdOpen",
+   "chapter": "c0",
+   "t": 0.0,
+   "dur": 27.961,
+   "lines": [
+    {
+     "id": "c0_01",
+     "display": "Every day... 800 million times.",
+     "en": "Every day... 800 million times.",
+     "src": "2.2",
+     "from": 36,
+     "frames": 74,
+     "t": 1.2,
+     "dur": 2.475
+    },
+    {
+     "id": "c0_02",
+     "display": "Someone buys a cup of tea. Someone fills up on petrol. Someone sends the rent.",
+     "en": "Someone buys a cup of tea. Someone fills up on petrol. Someone sends the rent.",
+     "src": "",
+     "from": 117,
+     "frames": 156,
+     "t": 3.895,
+     "dur": 5.184
+    },
+    {
+     "id": "c0_03",
+     "display": "One QR code. One scan. And in 2 seconds, the money is there.",
+     "en": "One QR code. One scan. And in 2 seconds, the money is there.",
+     "src": "",
+     "from": 279,
+     "frames": 134,
+     "t": 9.299,
+     "dur": 4.48
+    },
+    {
+     "id": "c0_04",
+     "display": "No fee. No charge. Completely free.",
+     "en": "No fee. No charge. Completely free.",
+     "src": "1.4",
+     "from": 420,
+     "frames": 81,
+     "t": 13.999,
+     "dur": 2.688
+    },
+    {
+     "id": "c0_05",
+     "display": "But the world's largest real-time payment system... does not run for free.",
+     "en": "But the world's largest real-time payment system... does not run for free.",
+     "src": "2.4",
+     "from": 511,
+     "frames": 140,
+     "t": 17.037,
+     "dur": 4.672
+    },
+    {
+     "id": "c0_06",
+     "display": "Someone is paying its bill. Every single day.",
+     "en": "Someone is paying its bill. Every single day.",
+     "src": "3.1",
+     "from": 665,
+     "frames": 84,
+     "t": 22.159,
+     "dur": 2.816
+    },
+    {
+     "id": "c0_07",
+     "display": "The question is... who?",
+     "en": "The question is... who?",
+     "src": "",
+     "from": 776,
+     "frames": 46,
+     "t": 25.875,
+     "dur": 1.536
+    }
+   ],
+   "from": 0,
+   "frames": 839
+  },
+  {
+   "kind": "title",
+   "id": "S01_Title",
+   "t": 28.0,
+   "dur": 4.0,
+   "from": 840,
+   "frames": 120
+  },
+  {
+   "kind": "disclaimer",
+   "id": "S02_Disclaimer",
+   "t": 32.0,
+   "dur": 3.0,
+   "from": 960,
+   "frames": 90
+  },
+  {
+   "kind": "chapter",
+   "id": "CH_c1",
+   "t": 35.0,
+   "dur": 3.0,
+   "chapter": "c1",
+   "num": 1,
+   "name_en": "THE PLEDGE",
+   "name_hi": "The Promise",
+   "from": 1050,
+   "frames": 90
+  },
+  {
+   "kind": "scene",
+   "id": "S11_ThreeParts",
+   "chapter": "c1",
+   "t": 38.0,
+   "dur": 8.135,
+   "lines": [
+    {
+     "id": "c1_01",
+     "display": "Every magic trick has three parts.",
+     "en": "Every magic trick has three parts.",
+     "src": "",
+     "from": 1154,
+     "frames": 67,
+     "t": 38.45,
+     "dur": 2.219
+    },
+    {
+     "id": "c1_02",
+     "display": "Part one: the Pledge. The magician shows you something ordinary.",
+     "en": "Part one: the Pledge. The magician shows you something ordinary.",
+     "src": "",
+     "from": 1230,
+     "frames": 123,
+     "t": 40.989,
+     "dur": 4.096
+    }
+   ],
+   "from": 1140,
+   "frames": 244
+  },
+  {
+   "kind": "scene",
+   "id": "S12_QR",
+   "chapter": "c1",
+   "t": 46.5,
+   "dur": 5.415,
+   "lines": [
+    {
+     "id": "c1_03",
+     "display": "In our story, that ordinary thing is... this.",
+     "en": "In our story, that ordinary thing is... this.",
+     "src": "",
+     "from": 1408,
+     "frames": 93,
+     "t": 46.95,
+     "dur": 3.115
+    }
+   ],
+   "from": 1395,
+   "frames": 162
+  },
+  {
+   "kind": "scene",
+   "id": "S13_Launch",
+   "chapter": "c1",
+   "t": 52.0,
+   "dur": 13.077,
+   "lines": [
+    {
+     "id": "c1_04",
+     "display": "August 2016. NPCI's new system, UPI, goes live for the public with 21 banks.",
+     "en": "August 2016. NPCI's new system, UPI, goes live for the public with 21 banks.",
+     "src": "1.1, 1.2",
+     "from": 1574,
+     "frames": 207,
+     "t": 52.45,
+     "dur": 6.912
+    },
+    {
+     "id": "c1_05",
+     "display": "In its first full month, it doesn't even reach 1 million transactions.",
+     "en": "In its first full month, it doesn't even reach 1 million transactions.",
+     "src": "1.2",
+     "from": 1790,
+     "frames": 127,
+     "t": 59.682,
+     "dur": 4.245
+    }
+   ],
+   "from": 1560,
+   "frames": 392
+  },
+  {
+   "kind": "scene",
+   "id": "S14_ZeroMDR",
+   "chapter": "c1",
+   "t": 65.5,
+   "dur": 20.392,
+   "lines": [
+    {
+     "id": "c1_06",
+     "display": "Then comes 1 January 2020. The government sets the MDR on UPI and RuPay debit cards to zero.",
+     "en": "Then comes 1 January 2020. The government sets the MDR on UPI and RuPay debit cards to zero.",
+     "src": "1.4",
+     "from": 1978,
+     "frames": 261,
+     "t": 65.95,
+     "dur": 8.704
+    },
+    {
+     "id": "c1_07",
+     "display": "MDR, the merchant discount rate, is the small fee a shop pays to accept a digital payment. On UPI, it used to be up to 0.30%.",
+     "en": "MDR, the merchant discount rate, is the small fee a shop pays to accept a digital payment. On UPI, it used to be up to 0.30%.",
+     "src": "1.3",
+     "from": 2249,
+     "frames": 311,
+     "t": 74.974,
+     "dur": 10.368
+    }
+   ],
+   "from": 1965,
+   "frames": 612
+  },
+  {
+   "kind": "scene",
+   "id": "S15_Explosion",
+   "chapter": "c1",
+   "t": 86.0,
+   "dur": 19.304,
+   "lines": [
+    {
+     "id": "c1_09",
+     "display": "And then... UPI explodes.",
+     "en": "And then... UPI explodes.",
+     "src": "",
+     "from": 2594,
+     "frames": 61,
+     "t": 86.45,
+     "dur": 2.048
+    },
+    {
+     "id": "c1_10",
+     "display": "September 2026: 24 billion transactions in a single month. More than 800 million, every day.",
+     "en": "September 2026: 24 billion transactions in a single month. More than 800 million, every day.",
+     "src": "2.1, 2.2",
+     "from": 2685,
+     "frames": 237,
+     "t": 89.498,
+     "dur": 7.893
+    },
+    {
+     "id": "c1_11",
+     "display": "According to ACI Worldwide, almost half of the world's real-time payments happen in India.",
+     "en": "According to ACI Worldwide, almost half of the world's real-time payments happen in India.",
+     "src": "2.4",
+     "from": 2931,
+     "frames": 193,
+     "t": 97.711,
+     "dur": 6.443
+    }
+   ],
+   "from": 2580,
+   "frames": 579
+  },
+  {
+   "kind": "scene",
+   "id": "S16_PledgeEnd",
+   "chapter": "c1",
+   "t": 105.5,
+   "dur": 9.347,
+   "lines": [
+    {
+     "id": "c1_12",
+     "display": "The pledge was kept. UPI was free. Fast. Everywhere.",
+     "en": "The pledge was kept. UPI was free. Fast. Everywhere.",
+     "src": "",
+     "from": 3178,
+     "frames": 107,
+     "t": 105.95,
+     "dur": 3.563
+    },
+    {
+     "id": "c1_13",
+     "display": "But in magic, what you see... is never the whole truth.",
+     "en": "But in magic, what you see... is never the whole truth.",
+     "src": "",
+     "from": 3295,
+     "frames": 98,
+     "t": 109.833,
+     "dur": 3.264
+    }
+   ],
+   "from": 3165,
+   "frames": 280
+  },
+  {
+   "kind": "chapter",
+   "id": "CH_c2",
+   "t": 115.0,
+   "dur": 3.0,
+   "chapter": "c2",
+   "num": 2,
+   "name_en": "THE TURN",
+   "name_hi": "The Vanishing Bill",
+   "from": 3450,
+   "frames": 90
+  },
+  {
+   "kind": "scene",
+   "id": "S20_Vanish",
+   "chapter": "c2",
+   "t": 118.0,
+   "dur": 9.345,
+   "lines": [
+    {
+     "id": "c2_01",
+     "display": "Part two: the Turn. The magician makes the ordinary thing... disappear.",
+     "en": "Part two: the Turn. The magician makes the ordinary thing... disappear.",
+     "src": "",
+     "from": 3554,
+     "frames": 135,
+     "t": 118.45,
+     "dur": 4.501
+    },
+    {
+     "id": "c2_02",
+     "display": "In UPI, what disappeared... was the bill.",
+     "en": "In UPI, what disappeared... was the bill.",
+     "src": "",
+     "from": 3698,
+     "frames": 79,
+     "t": 123.271,
+     "dur": 2.624
+    }
+   ],
+   "from": 3540,
+   "frames": 280
+  },
+  {
+   "kind": "scene",
+   "id": "S21_Machine",
+   "chapter": "c2",
+   "t": 127.5,
+   "dur": 16.541,
+   "lines": [
+    {
+     "id": "c2_03",
+     "display": "Behind every scan runs an entire machine: your app, your bank, NPCI, and the shop's bank.",
+     "en": "Behind every scan runs an entire machine: your app, your bank, NPCI, and the shop's bank.",
+     "src": "3.3",
+     "from": 3838,
+     "frames": 196,
+     "t": 127.95,
+     "dur": 6.549
+    },
+    {
+     "id": "c2_04",
+     "display": "Servers. Security. Fraud checks. Around the clock.",
+     "en": "Servers. Security. Fraud checks. Around the clock.",
+     "src": "",
+     "from": 4045,
+     "frames": 99,
+     "t": 134.819,
+     "dur": 3.307
+    },
+    {
+     "id": "c2_05",
+     "display": "None of it is free. So when the fee went to zero... where did the cost go?",
+     "en": "None of it is free. So when the fee went to zero... where did the cost go?",
+     "src": "",
+     "from": 4153,
+     "frames": 127,
+     "t": 138.446,
+     "dur": 4.245
+    }
+   ],
+   "from": 3825,
+   "frames": 496
+  },
+  {
+   "kind": "scene",
+   "id": "S22_Subsidy",
+   "chapter": "c2",
+   "t": 144.5,
+   "dur": 20.096,
+   "lines": [
+    {
+     "id": "c2_06",
+     "display": "Answer number one: the government. In other words, taxpayers.",
+     "en": "Answer number one: the government. In other words, taxpayers.",
+     "src": "3.1",
+     "from": 4348,
+     "frames": 111,
+     "t": 144.95,
+     "dur": 3.712
+    },
+    {
+     "id": "c2_07",
+     "display": "According to PIB, the government paid banks incentives of ₹1,389 crore in FY22, rising to ₹3,631 crore by FY24.",
+     "en": "According to PIB, the government paid banks incentives of ₹1,389 crore in FY22, rising to ₹3,631 crore by FY24.",
+     "src": "3.1",
+     "from": 4469,
+     "frames": 434,
+     "t": 148.982,
+     "dur": 14.464
+    }
+   ],
+   "from": 4335,
+   "frames": 603
+  },
+  {
+   "kind": "scene",
+   "id": "S23_Gap",
+   "chapter": "c2",
+   "t": 165.0,
+   "dur": 14.099,
+   "lines": [
+    {
+     "id": "c2_08",
+     "display": "But the industry kept saying it wasn't enough. The Payments Council of India said running UPI costs about ₹10,000 crore a year, against government support of just ₹1,500 crore.",
+     "en": "But the industry kept saying it wasn't enough. The Payments Council of India said running UPI costs about ₹10,000 crore a year, against government support of just ₹1,500 crore.",
+     "src": "3.4, 3.2",
+     "from": 4964,
+     "frames": 393,
+     "t": 165.45,
+     "dur": 13.099
+    }
+   ],
+   "from": 4950,
+   "frames": 423
+  },
+  {
+   "kind": "scene",
+   "id": "S24_Memory",
+   "chapter": "c2",
+   "t": 179.5,
+   "dur": 31.755,
+   "lines": [
+    {
+     "id": "c2_11",
+     "display": "And all this time, the government's answer was the same.",
+     "en": "And all this time, the government's answer was the same.",
+     "src": "",
+     "from": 5398,
+     "frames": 95,
+     "t": 179.95,
+     "dur": 3.179
+    },
+    {
+     "id": "c2_12",
+     "display": "August 2022. The Finance Ministry: “UPI is a digital public good… There is no consideration in Government to levy any charges.”",
+     "en": "August 2022. The Finance Ministry: “UPI is a digital public good… There is no consideration in Government to levy any charges.”",
+     "src": "4.1",
+     "from": 5512,
+     "frames": 301,
+     "t": 183.729,
+     "dur": 10.048
+    },
+    {
+     "id": "c2_13",
+     "display": "June 2025. Reports of MDR on UPI? “Completely false, baseless and misleading.”",
+     "en": "June 2025. Reports of MDR on UPI? “Completely false, baseless and misleading.”",
+     "src": "4.2",
+     "from": 5828,
+     "frames": 218,
+     "t": 194.277,
+     "dur": 7.253
+    },
+    {
+     "id": "c2_14",
+     "display": "Then, just six weeks later, the RBI Governor said: “Costs will have to be paid. Someone will have to bear the cost.”",
+     "en": "Then, just six weeks later, the RBI Governor said: “Costs will have to be paid. Someone will have to bear the cost.”",
+     "src": "4.3",
+     "from": 6067,
+     "frames": 218,
+     "t": 202.23,
+     "dur": 7.275
+    }
+   ],
+   "from": 5385,
+   "frames": 953
+  },
+  {
+   "kind": "scene",
+   "id": "S25_Budget",
+   "chapter": "c2",
+   "t": 211.5,
+   "dur": 10.008,
+   "lines": [
+    {
+     "id": "c2_15",
+     "display": "And in the latest Union Budget, that support was cut by about 10%.",
+     "en": "And in the latest Union Budget, that support was cut by about 10%.",
+     "src": "3.5",
+     "from": 6358,
+     "frames": 134,
+     "t": 211.95,
+     "dur": 4.48
+    },
+    {
+     "id": "c2_16",
+     "display": "The bill hadn't vanished. It just wasn't visible.",
+     "en": "The bill hadn't vanished. It just wasn't visible.",
+     "src": "",
+     "from": 6502,
+     "frames": 90,
+     "t": 216.75,
+     "dur": 3.008
+    }
+   ],
+   "from": 6345,
+   "frames": 300
+  },
+  {
+   "kind": "chapter",
+   "id": "CH_c3",
+   "t": 222.0,
+   "dur": 3.0,
+   "chapter": "c3",
+   "num": 3,
+   "name_en": "THE BILL",
+   "name_hi": "14 September",
+   "from": 6660,
+   "frames": 90
+  },
+  {
+   "kind": "scene",
+   "id": "S30_Law",
+   "chapter": "c3",
+   "t": 225.0,
+   "dur": 5.288,
+   "lines": [
+    {
+     "id": "c3_01",
+     "display": "August 2026. Parliament amends India's payments law.",
+     "en": "August 2026. Parliament amends India's payments law.",
+     "src": "5.1",
+     "from": 6764,
+     "frames": 129,
+     "t": 225.45,
+     "dur": 4.288
+    }
+   ],
+   "from": 6750,
+   "frames": 159
+  },
+  {
+   "kind": "scene",
+   "id": "S31_Notification",
+   "chapter": "c3",
+   "t": 230.5,
+   "dur": 7.507,
+   "lines": [
+    {
+     "id": "c3_02",
+     "display": "14 September: the Finance Ministry's notification. The next day, NPCI's circular.",
+     "en": "14 September: the Finance Ministry's notification. The next day, NPCI's circular.",
+     "src": "5.2",
+     "from": 6928,
+     "frames": 195,
+     "t": 230.95,
+     "dur": 6.507
+    }
+   ],
+   "from": 6915,
+   "frames": 225
+  },
+  {
+   "kind": "scene",
+   "id": "S32_Rules",
+   "chapter": "c3",
+   "t": 238.5,
+   "dur": 31.611,
+   "lines": [
+    {
+     "id": "c3_03",
+     "display": "The rule is simple.",
+     "en": "The rule is simple.",
+     "src": "",
+     "from": 7168,
+     "frames": 43,
+     "t": 238.95,
+     "dur": 1.429
+    },
+    {
+     "id": "c3_04",
+     "display": "Merchant payments above ₹2,000 carry a 0.4% MDR.",
+     "en": "Merchant payments above ₹2,000 carry a 0.4% MDR.",
+     "src": "5.3",
+     "from": 7217,
+     "frames": 172,
+     "t": 240.579,
+     "dur": 5.739
+    },
+    {
+     "id": "c3_05",
+     "display": "Even the biggest payment pays no more than ₹300.",
+     "en": "Even the biggest payment pays no more than ₹300.",
+     "src": "5.3",
+     "from": 7399,
+     "frames": 119,
+     "t": 246.638,
+     "dur": 3.968
+    },
+    {
+     "id": "c3_06",
+     "display": "Railways, telecom, insurance and fuel: a flat ₹5.",
+     "en": "Railways, telecom, insurance and fuel: a flat ₹5.",
+     "src": "5.4",
+     "from": 7528,
+     "frames": 131,
+     "t": 250.926,
+     "dur": 4.352
+    },
+    {
+     "id": "c3_07",
+     "display": "Person-to-person transfers stay free. And small shops receiving up to ₹1 lakh a month through UPI pay nothing.",
+     "en": "Person-to-person transfers stay free. And small shops receiving up to ₹1 lakh a month through UPI pay nothing.",
+     "src": "5.5, 5.6",
+     "from": 7668,
+     "frames": 244,
+     "t": 255.598,
+     "dur": 8.128
+    },
+    {
+     "id": "c3_08",
+     "display": "And the key point: the fee cannot be charged to the customer. The shop pays it.",
+     "en": "And the key point: the fee cannot be charged to the customer. The shop pays it.",
+     "src": "5.6",
+     "from": 7921,
+     "frames": 141,
+     "t": 264.046,
+     "dur": 4.715
+    }
+   ],
+   "from": 7155,
+   "frames": 948
+  },
+  {
+   "kind": "scene",
+   "id": "S33_Revenue",
+   "chapter": "c3",
+   "t": 270.5,
+   "dur": 7.211,
+   "lines": [
+    {
+     "id": "c3_09",
+     "display": "NPCI estimates it could raise up to ₹20,600 crore a year.",
+     "en": "NPCI estimates it could raise up to ₹20,600 crore a year.",
+     "src": "5.7",
+     "from": 8128,
+     "frames": 168,
+     "t": 270.95,
+     "dur": 5.611
+    }
+   ],
+   "from": 8115,
+   "frames": 216
+  },
+  {
+   "kind": "scene",
+   "id": "S34_Countdown",
+   "chapter": "c3",
+   "t": 278.0,
+   "dur": 21.165,
+   "lines": [
+    {
+     "id": "c3_10",
+     "display": "And then... the countdown began.",
+     "en": "And then... the countdown began.",
+     "src": "",
+     "from": 8354,
+     "frames": 57,
+     "t": 278.45,
+     "dur": 1.899
+    },
+    {
+     "id": "c3_11",
+     "display": "In a LocalCircles survey of 32,000+ merchants, only 17% said they would absorb the fee themselves.",
+     "en": "In a LocalCircles survey of 32,000+ merchants, only 17% said they would absorb the fee themselves.",
+     "src": "6.1",
+     "from": 8428,
+     "frames": 252,
+     "t": 280.949,
+     "dur": 8.384
+    },
+    {
+     "id": "c3_12",
+     "display": "And of 67,000+ users, only 14% said they would stick with UPI if the fee were passed on to them.",
+     "en": "And of 67,000+ users, only 14% said they would stick with UPI if the fee were passed on to them.",
+     "src": "6.2",
+     "from": 8690,
+     "frames": 251,
+     "t": 289.653,
+     "dur": 8.363
+    }
+   ],
+   "from": 8340,
+   "frames": 635
+  },
+  {
+   "kind": "scene",
+   "id": "S35_Map",
+   "chapter": "c3",
+   "t": 299.5,
+   "dur": 13.416,
+   "lines": [
+    {
+     "id": "c3_13",
+     "display": "Petrol pump dealers in Madhya Pradesh announced that from 16 October, they would stop taking UPI above ₹2,000. Dealers in Punjab and Haryana said the same.",
+     "en": "Petrol pump dealers in Madhya Pradesh announced that from 16 October, they would stop taking UPI above ₹2,000. Dealers in Punjab and Haryana said the same.",
+     "src": "6.3",
+     "from": 8998,
+     "frames": 372,
+     "t": 299.95,
+     "dur": 12.416
+    }
+   ],
+   "from": 8985,
+   "frames": 402
+  },
+  {
+   "kind": "scene",
+   "id": "S36_Court",
+   "chapter": "c3",
+   "t": 313.0,
+   "dur": 15.361,
+   "lines": [
+    {
+     "id": "c3_14",
+     "display": "The case reached the Supreme Court. It refused to pause the fee, and asked the government, the RBI and NPCI to respond.",
+     "en": "The case reached the Supreme Court. It refused to pause the fee, and asked the government, the RBI and NPCI to respond.",
+     "src": "6.4",
+     "from": 9404,
+     "frames": 261,
+     "t": 313.45,
+     "dur": 8.704
+    },
+    {
+     "id": "c3_15",
+     "display": "And the government's counsel told the court: “It is neither a tax nor a fee.”",
+     "en": "And the government's counsel told the court: “It is neither a tax nor a fee.”",
+     "src": "6.5",
+     "from": 9674,
+     "frames": 133,
+     "t": 322.474,
+     "dur": 4.437
+    }
+   ],
+   "from": 9390,
+   "frames": 461
+  },
+  {
+   "kind": "scene",
+   "id": "S37_Deferral",
+   "chapter": "c3",
+   "t": 328.5,
+   "dur": 12.252,
+   "lines": [
+    {
+     "id": "c3_16",
+     "display": "Then, just two days before the deadline, NPCI announced:",
+     "en": "Then, just two days before the deadline, NPCI announced:",
+     "src": "6.6",
+     "from": 9868,
+     "frames": 115,
+     "t": 328.95,
+     "dur": 3.84
+    },
+    {
+     "id": "c3_17",
+     "display": "The MDR would wait until after Diwali. The new date? Not yet decided.",
+     "en": "The MDR would wait until after Diwali. The new date? Not yet decided.",
+     "src": "6.6",
+     "from": 9999,
+     "frames": 159,
+     "t": 333.29,
+     "dur": 5.312
+    }
+   ],
+   "from": 9855,
+   "frames": 368
+  },
+  {
+   "kind": "chapter",
+   "id": "CH_c4",
+   "t": 341.0,
+   "dur": 3.0,
+   "chapter": "c4",
+   "num": 4,
+   "name_en": "THE PRESTIGE",
+   "name_hi": "The Real Cost",
+   "from": 10230,
+   "frames": 90
+  },
+  {
+   "kind": "scene",
+   "id": "S40_Return",
+   "chapter": "c4",
+   "t": 344.0,
+   "dur": 22.664,
+   "lines": [
+    {
+     "id": "c4_01",
+     "display": "Part three: the Prestige. The moment the vanished thing comes back.",
+     "en": "Part three: the Prestige. The moment the vanished thing comes back.",
+     "src": "",
+     "from": 10334,
+     "frames": 124,
+     "t": 344.45,
+     "dur": 4.117
+    },
+    {
+     "id": "c4_02",
+     "display": "The bill that disappeared in 2020... never really disappeared.",
+     "en": "The bill that disappeared in 2020... never really disappeared.",
+     "src": "",
+     "from": 10481,
+     "frames": 116,
+     "t": 349.367,
+     "dur": 3.861
+    },
+    {
+     "id": "c4_03",
+     "display": "Part of it was paid with taxpayers' money — in other words, your money. The rest was carried by banks and payment companies.",
+     "en": "Part of it was paid with taxpayers' money — in other words, your money. The rest was carried by banks and payment companies.",
+     "src": "3.1, 3.4",
+     "from": 10621,
+     "frames": 220,
+     "t": 354.029,
+     "dur": 7.339
+    },
+    {
+     "id": "c4_04",
+     "display": "And now, the bill has come back — to the shopkeeper's counter.",
+     "en": "And now, the bill has come back — to the shopkeeper's counter.",
+     "src": "5.3",
+     "from": 10851,
+     "frames": 109,
+     "t": 361.687,
+     "dur": 3.627
+    }
+   ],
+   "from": 10320,
+   "frames": 680
+  },
+  {
+   "kind": "scene",
+   "id": "S41_WhoPays",
+   "chapter": "c4",
+   "t": 367.0,
+   "dur": 19.387,
+   "lines": [
+    {
+     "id": "c4_05",
+     "display": "The law says the charge cannot be passed on to you. But every cost a business carries shows up somewhere, eventually, in prices.",
+     "en": "The law says the charge cannot be passed on to you. But every cost a business carries shows up somewhere, eventually, in prices.",
+     "src": "5.6",
+     "from": 11024,
+     "frames": 248,
+     "t": 367.45,
+     "dur": 8.277
+    },
+    {
+     "id": "c4_06",
+     "display": "So, who pays for free UPI? As a taxpayer: you. As a customer: maybe you. And if the system weakens, the loss is yours too.",
+     "en": "So, who pays for free UPI? As a taxpayer: you. As a customer: maybe you. And if the system weakens, the loss is yours too.",
+     "src": "",
+     "from": 11281,
+     "frames": 264,
+     "t": 376.047,
+     "dur": 8.789
+    }
+   ],
+   "from": 11010,
+   "frames": 582
+  },
+  {
+   "kind": "scene",
+   "id": "S42_Question",
+   "chapter": "c4",
+   "t": 386.5,
+   "dur": 16.797,
+   "lines": [
+    {
+     "id": "c4_07",
+     "display": "The real question isn't whether UPI should stay free. It's who should pay for this system, and how.",
+     "en": "The real question isn't whether UPI should stay free. It's who should pay for this system, and how.",
+     "src": "",
+     "from": 11608,
+     "frames": 192,
+     "t": 386.95,
+     "dur": 6.4
+    },
+    {
+     "id": "c4_08",
+     "display": "On one side, a system that needs money to run. On the other, millions of small shopkeepers, and the risk of a return to cash.",
+     "en": "On one side, a system that needs money to run. On the other, millions of small shopkeepers, and the risk of a return to cash.",
+     "src": "6.1, 6.2",
+     "from": 11810,
+     "frames": 248,
+     "t": 393.67,
+     "dur": 8.277
+    }
+   ],
+   "from": 11595,
+   "frames": 504
+  },
+  {
+   "kind": "scene",
+   "id": "S43_Coin",
+   "chapter": "c4",
+   "t": 403.5,
+   "dur": 10.64,
+   "lines": [
+    {
+     "id": "c4_09",
+     "display": "For now, we wait for the new date. And the case is still pending in the Supreme Court.",
+     "en": "For now, we wait for the new date. And the case is still pending in the Supreme Court.",
+     "src": "6.4, 6.6",
+     "from": 12118,
+     "frames": 150,
+     "t": 403.95,
+     "dur": 4.992
+    },
+    {
+     "id": "c4_10",
+     "display": "The coin... is still spinning.",
+     "en": "The coin... is still spinning.",
+     "src": "",
+     "from": 12278,
+     "frames": 52,
+     "t": 409.262,
+     "dur": 1.728
+    }
+   ],
+   "from": 12105,
+   "frames": 319
+  },
+  {
+   "kind": "black",
+   "id": "BLACK",
+   "t": 414.5,
+   "dur": 1.2,
+   "from": 12435,
+   "frames": 36
+  },
+  {
+   "kind": "scene",
+   "id": "S50_Outro",
+   "chapter": "c5",
+   "t": 416.0,
+   "dur": 20.131,
+   "lines": [
+    {
+     "id": "c5_01",
+     "display": "What do you think? Is this fee on payments above ₹2,000 fair, or not? Tell us in the comments. All the sources are in the description.",
+     "en": "What do you think? Is this fee on payments above ₹2,000 fair, or not? Tell us in the comments. All the sources are in the description.",
+     "src": "",
+     "from": 12494,
+     "frames": 274,
+     "t": 416.45,
+     "dur": 9.131
+    }
+   ],
+   "from": 12480,
+   "frames": 604
+  }
+ ]
+}

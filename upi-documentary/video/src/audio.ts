@@ -1,7 +1,8 @@
 import { getStaticFiles, staticFile } from "remotion";
+import type { Lang } from "./lang";
 
-/** The final mix lives at public/audio/mix.wav (built by tools/mix.py). */
-export const getAudioUrl = (): string | null => {
-  const has = getStaticFiles().some((f) => f.name === "audio/mix.wav");
-  return has ? staticFile("audio/mix.wav") : null;
+/** The final mix lives at public/audio/mix.wav (Hindi) / mix_en.wav (English), built by tools/mix.py. */
+export const getAudioUrl = (lang: Lang = "hi"): string | null => {
+  const name = lang === "en" ? "audio/mix_en.wav" : "audio/mix.wav";
+  return getStaticFiles().some((f) => f.name === name) ? staticFile(name) : null;
 };

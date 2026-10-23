@@ -5,11 +5,12 @@
 - Music and SFX duck automatically under speech (sidechain envelope from the VO timeline).
 - Master is normalised to -14 LUFS integrated with a -1 dBTP ceiling (YouTube's target).
 
-usage: <musicenv>/bin/python -I tools/mix.py
+usage: <musicenv>/bin/python -I tools/mix.py [--lang en]
 """
 import json
 import math
 import pathlib
+import sys
 
 import numpy as np
 import pedalboard as pb
@@ -20,7 +21,9 @@ from scipy.signal import resample_poly
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SR = 48000
-cues = json.loads((ROOT / "music" / "cues.json").read_text())
+LANG = "en" if "--lang" in sys.argv and sys.argv[sys.argv.index("--lang") + 1] == "en" else "hi"
+SFX = "" if LANG == "hi" else "_en"
+cues = json.loads((ROOT / "music" / f"cues{SFX}.json").read_text())
 vo_dir = ROOT / "assets" / cues["voDir"]
 N = int(math.ceil(cues["seconds"] * SR))
 meter = pyln.Meter(SR)
@@ -78,8 +81,8 @@ for i in range(N):  # one-pole follower
     v = att * v + (1 - att) * t if t > v else rel * v + (1 - rel) * t
     env[i] = v
 
-music = fit(sf.read(str(ROOT / "music" / "render" / "score.wav"), dtype="float32", always_2d=True)[0], N)
-fx = fit(sf.read(str(ROOT / "music" / "render" / "sfx.wav"), dtype="float32", always_2d=True)[0], N)
+music = fit(sf.read(str(ROOT / "music" / "render" / f"score{SFX}.wav"), dtype="float32", always_2d=True)[0], N)
+fx = fit(sf.read(str(ROOT / "music" / "render" / f"sfx{SFX}.wav"), dtype="float32", always_2d=True)[0], N)
 
 music_gain = 10 ** (-9.0 / 20) * (1 - 0.70 * env)  # ≈ -10.5 dB extra under speech
 fx_gain = 10 ** (-10.0 / 20) * (1 - 0.45 * env)
@@ -110,6 +113,6 @@ for _ in range(4):
 print(f"mix: {len(mix) / SR:.1f}s, {meter.integrated_loudness(mix):.1f} LUFS, peak {20 * np.log10(np.abs(mix).max()):.1f} dBFS")
 out = ROOT / "video" / "public" / "audio"
 out.mkdir(parents=True, exist_ok=True)
-sf.write(out / "mix.wav", mix.astype(np.float32), SR, subtype="PCM_24")
-sf.write(ROOT / "music" / "render" / "vo_only.wav", vo, SR, subtype="PCM_24")
-print("wrote", out / "mix.wav")
+sf.write(out / f"mix{SFX}.wav", mix.astype(np.float32), SR, subtype="PCM_24")
+sf.write(ROOT / "music" / "render" / f"vo_only{SFX}.wav", vo, SR, subtype="PCM_24")
+print("wrote", out / f"mix{SFX}.wav")

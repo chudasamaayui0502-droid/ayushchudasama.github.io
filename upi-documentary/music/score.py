@@ -4,7 +4,7 @@ Style brief: Zimmer-inspired *techniques* (ticking clock, Shepard tone, ostinato
 low brass "braams", organ), all original material. Key: D minor, 120 BPM grid.
 
 Writes music/render/score.wav (music) and music/render/sfx.wav (sound design).
-usage: python -I music/score.py [VSCO_DIR]
+usage: python -I music/score.py [VSCO_DIR] [--lang en]
 """
 from __future__ import annotations
 
@@ -24,9 +24,12 @@ from engine import (  # noqa: E402
 )
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-VSCO = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else os.environ.get("VSCO_DIR", "/home/user/sgossner/vsco-2-ce"))
+LANG = "en" if "--lang" in sys.argv and sys.argv[sys.argv.index("--lang") + 1] == "en" else "hi"
+SFX = "" if LANG == "hi" else "_en"
+_pos = [a for a in sys.argv[1:] if not a.startswith("--") and a not in ("en", "hi")]
+VSCO = pathlib.Path(_pos[0] if _pos else os.environ.get("VSCO_DIR", "/home/user/sgossner/vsco-2-ce"))
 FPS = 30
-cues = json.loads((ROOT / "music" / "cues.json").read_text())
+cues = json.loads((ROOT / "music" / f"cues{SFX}.json").read_text())
 T = cues["seconds"] + 4
 SEG = {s["id"]: s for s in cues["segments"]}
 LINE = {l["id"]: l for s in cues["segments"] for l in s["lines"]}
@@ -40,10 +43,18 @@ def end(seg: str) -> float:
     return SEG[seg]["t"] + SEG[seg]["dur"]
 
 
+BEATS_EN = json.loads((ROOT / "script" / "beats_en.json").read_text()) if LANG == "en" else {}
+
+
+def fr(lid: str, frac: float) -> float:
+    """Word-position fraction, with the English override table in the English edition (same as the video)."""
+    return BEATS_EN.get(lid, {}).get(str(frac), frac) if isinstance(BEATS_EN.get(lid), dict) else frac
+
+
 def lt(lid: str, frac: float = 0.0, frames: float = 0.0) -> float:
     """Time of a line (+ fraction of its duration, + frames) — mirrors the TSX timing formulas."""
     l = LINE[lid]
-    return round(l["t"] + l["dur"] * frac + frames / FPS, 4)
+    return round(l["t"] + l["dur"] * fr(lid, frac) + frames / FPS, 4)
 
 
 def lend(lid: str) -> float:
@@ -206,14 +217,14 @@ def cold_open():
     hit(b, 0.45, cym=False)
     hit(c, 0.5, cym=False, timp="A1" if False else "D2")
     whoosh_at(c, 0.4)
-    paid = c + (lend("c0_03") - c) * 0.72
+    paid = c + (lend("c0_03") - c) * fr("c0_03", 0.72)
     play(keys, "Glockenspiel", "A5", paid, 1.2, 100, 0.55)
     play(keys, "Glockenspiel", "D6", paid + 0.09, 1.2, 100, 0.55)
     # FREE
     hit(d, 0.7, cym=True)
     chord(brass, "FHornSus", ["D3", "F3", "A3"], d, 0.6, 115, 0.9)
     sfx.add(d + 8 / FPS, stamp_thud(), 0.5)
-    sfx.add(d + (lend("c0_04") - d) * 0.45, stamp_thud(), 0.5)
+    sfx.add(d + (lend("c0_04") - d) * fr("c0_04", 0.45), stamp_thud(), 0.5)
     # "लेकिन..." — the floor drops out
     synth.add(e, sub_boom(4.0, 60, 28), 0.8)
     synth.add(e, braam(["D1", "A1"], 4.0, bright=0.4), 0.35)
@@ -272,7 +283,7 @@ def chapter1():
     synth.add(rv, sub_boom(2.0, 70, 35), 0.4)
     # 21 banks: ascending glock pings
     lit0 = lt("c1_04", 0.45)
-    lit_len = LINE["c1_04"]["dur"] * 0.5
+    lit_len = LINE["c1_04"]["dur"] * fr("c1_04", 0.5)
     scale = ["D5", "E5", "F5", "G5", "A5", "Bb5", "C6"]
     for k in range(21):
         play(keys, "Glockenspiel" if k % 3 else "Harp", scale[k % 7], lit0 + k * lit_len / 21, 0.6, 70, 0.18, (k / 21 - 0.5))
@@ -466,7 +477,7 @@ def chapter4():
     # S41: the build
     a41 = at("S41_WhoPays")
     q = LINE["c4_06"]
-    beats = [q["t"] + q["dur"] * k for k in (0.3, 0.55, 0.8)]
+    beats = [q["t"] + q["dur"] * fr("c4_06", k) for k in (0.3, 0.55, 0.8)]
     mirror = q["t"] + q["dur"] + 4 / FPS
     ostinato(lt("c4_05"), q["t"], ["Dm", "Bb"], step=0.25, bar=4.0, vel=78, gain=0.7, shape=(0, 12, 7, 12))
     string_pad(a41, mirror, ["Dm", "Bb", "Gm", "A"], bar=4.0, vel=65, gain=0.7)
@@ -556,9 +567,9 @@ def main():
     n = secs(cues["seconds"])
     out = ROOT / "music" / "render"
     out.mkdir(exist_ok=True)
-    sf.write(out / "score.wav", fade(music[:n], 0.0, 1.5), SR, subtype="PCM_24")
-    sf.write(out / "sfx.wav", fx[:n], SR, subtype="PCM_24")
-    print("wrote", out / "score.wav", out / "sfx.wav")
+    sf.write(out / f"score{SFX}.wav", fade(music[:n], 0.0, 1.5), SR, subtype="PCM_24")
+    sf.write(out / f"sfx{SFX}.wav", fx[:n], SR, subtype="PCM_24")
+    print("wrote", out / f"score{SFX}.wav", out / f"sfx{SFX}.wav")
 
 
 if __name__ == "__main__":

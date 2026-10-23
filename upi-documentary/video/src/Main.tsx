@@ -1,6 +1,7 @@
 import React from "react";
 import { AbsoluteFill, Audio, Sequence, interpolate, useCurrentFrame } from "remotion";
-import { TL, Seg } from "./timeline";
+import { TLS, Seg } from "./timeline";
+import { Lang, LangCtx } from "./lang";
 import { SCENES } from "./scenes";
 import { ChapterCard, Disclaimer } from "./components/Cards";
 import { Film, Flash } from "./components/Film";
@@ -35,9 +36,11 @@ const renderSeg = (seg: Seg) => {
   return <Comp seg={seg} />;
 };
 
-export const Main: React.FC = () => {
-  const mix = getAudioUrl();
+export const Main: React.FC<{ lang?: Lang }> = ({ lang = "hi" }) => {
+  const TL = TLS[lang];
+  const mix = getAudioUrl(lang);
   return (
+    <LangCtx.Provider value={lang}>
     <AbsoluteFill style={{ background: "#000" }}>
       {TL.segments.map((seg, i) => {
         // Hard cuts (no dissolve) into: title, disclaimer, black, chapter cards.
@@ -63,23 +66,26 @@ export const Main: React.FC = () => {
       <Film />
       {mix && <Audio src={mix} />}
     </AbsoluteFill>
+    </LangCtx.Provider>
   );
 };
 
 /** Render a single segment on its own (for previews / stills). */
-export const SegmentPreview: React.FC<{ id: string }> = ({ id }) => {
-  const seg = TL.segments.find((s) => s.id === id)!;
+export const SegmentPreview: React.FC<{ id: string; lang?: Lang }> = ({ id, lang = "hi" }) => {
+  const seg = TLS[lang].segments.find((s) => s.id === id)!;
   return (
-    <AbsoluteFill style={{ background: "#000" }}>
-      {renderSeg(seg)}
-      <Film />
-      <PreviewAudio seg={seg} />
-    </AbsoluteFill>
+    <LangCtx.Provider value={lang}>
+      <AbsoluteFill style={{ background: "#000" }}>
+        {renderSeg(seg)}
+        <Film />
+        <PreviewAudio seg={seg} lang={lang} />
+      </AbsoluteFill>
+    </LangCtx.Provider>
   );
 };
 
-const PreviewAudio: React.FC<{ seg: Seg }> = ({ seg }) => {
-  const mix = getAudioUrl();
+const PreviewAudio: React.FC<{ seg: Seg; lang: Lang }> = ({ seg, lang }) => {
+  const mix = getAudioUrl(lang);
   if (!mix) return null;
   return <Audio src={mix} trimBefore={seg.from} />;
 };

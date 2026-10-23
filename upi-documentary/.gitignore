@@ -5,3 +5,6 @@ assets/vo_scratch/
 assets/vo/*.wav
 music/render/
 *.miff
+assets/vo_scratch_en/
+assets/vo_en/*.wav
+assets/vo_audition*/

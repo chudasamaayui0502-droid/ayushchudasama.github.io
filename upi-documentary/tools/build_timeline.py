@@ -1,8 +1,10 @@
 """Build the master timeline from the script + measured voiceover durations.
 
-Reads  script/lines.json and assets/vo/<id>.wav (falls back to assets/vo_scratch/).
-Writes video/src/timeline.json  (frames, used by Remotion)
-       music/cues.json          (seconds, used by the score + mixer)
+Reads  script/lines.json and assets/vo[_en]/<id>.wav (falls back to assets/vo_scratch[_en]/).
+Writes video/src/timeline[_en].json  (frames, used by Remotion)
+       music/cues[_en].json          (seconds, used by the score + mixer)
+
+usage: python3 tools/build_timeline.py [--lang en]
 
 Re-run this every time the voiceover changes; video, music and mix all follow it.
 """
@@ -49,11 +51,13 @@ def snap(t: float) -> float:
 
 
 def main():
+    lang = "en" if "--lang" in sys.argv and sys.argv[sys.argv.index("--lang") + 1] == "en" else "hi"
+    sfx = "" if lang == "hi" else "_en"
     script = json.loads((ROOT / "script" / "lines.json").read_text())
-    vo_dir = ROOT / "assets" / "vo"
+    vo_dir = ROOT / "assets" / f"vo{sfx}"
     if not vo_dir.exists() or not any(vo_dir.glob("*.wav")):
-        vo_dir = ROOT / "assets" / "vo_scratch"
-    print("voiceover from", vo_dir.relative_to(ROOT), file=sys.stderr)
+        vo_dir = ROOT / "assets" / f"vo_scratch{sfx}"
+    print(f"[{lang}] voiceover from", vo_dir.relative_to(ROOT), file=sys.stderr)
 
     segments, cues = [], []
     t = 0.0
@@ -81,7 +85,7 @@ def main():
     for ci, ch in enumerate(script["chapters"]):
         if ch["id"] not in ("c0", "c5"):
             add_fixed("chapter", f"CH_{ch['id']}", CHAPTER_DUR, chapter=ch["id"], num=ci,
-                      name_en=ch["name_en"], name_hi=ch["name_hi"])
+                      name_en=ch["name_en"], name_hi=ch["name_hi"] if lang == "hi" else ch.get("sub_en", ""))
         # group consecutive lines by scene
         groups = []
         for ln in ch["lines"]:
@@ -106,26 +110,29 @@ def main():
 
     total = round(t, 3)
     # frames
-    tl = {"fps": FPS, "seconds": total, "frames": int(round(total * FPS)), "voDir": vo_dir.name,
-          "disclaimer": script["disclaimer"], "facts_as_of": script["facts_as_of"], "title_hi": script["title_hi"], "title_en": script["title_en"],
+    tl = {"lang": lang, "fps": FPS, "seconds": total, "frames": int(round(total * FPS)), "voDir": vo_dir.name,
+          "disclaimer": script["disclaimer"] if lang == "hi" else {"hi": script["disclaimer_en_card"], "en": ""},
+          "facts_as_of": script["facts_as_of"], "title_hi": script["title_hi"], "title_en": script["title_en"],
           "segments": []}
     for s in segments:
         f = dict(s)
         f["from"] = int(round(s["t"] * FPS))
         f["frames"] = int(round(s["dur"] * FPS))
         if "lines" in s:
-            f["lines"] = [{"id": l["id"], "display": l["display"], "en": l["en"], "src": l["src"],
+            f["lines"] = [{"id": l["id"], "display": l["display"] if lang == "hi" else l["display_en"], "en": l["en"] if lang == "hi" else l["display_en"], "src": l["src"],
                            "from": int(round(l["t"] * FPS)), "frames": int(round(l["dur"] * FPS)),
                            "t": l["t"], "dur": l["dur"]} for l in s["lines"]]
         tl["segments"].append(f)
-    (ROOT / "video" / "src" / "timeline.json").write_text(json.dumps(tl, ensure_ascii=False, indent=1))
+    (ROOT / "video" / "src" / f"timeline{sfx}.json").write_text(json.dumps(tl, ensure_ascii=False, indent=1))
+    # the video reads the English word-position overrides from its own copy; keep it in sync
+    (ROOT / "video" / "src" / "data" / "beats_en.json").write_text((ROOT / "script" / "beats_en.json").read_text())
 
     # music/mix cues (seconds)
     for s in segments:
         cues.append({"kind": s["kind"], "id": s["id"], "chapter": s.get("chapter"), "t": s["t"], "dur": s["dur"],
                      "lines": [{"id": l["id"], "t": l["t"], "dur": l["dur"]} for l in s.get("lines", [])]})
     (ROOT / "music").mkdir(exist_ok=True)
-    (ROOT / "music" / "cues.json").write_text(json.dumps({"seconds": total, "voDir": vo_dir.name, "segments": cues},
+    (ROOT / "music" / f"cues{sfx}.json").write_text(json.dumps({"lang": lang, "seconds": total, "voDir": vo_dir.name, "segments": cues},
                                                         ensure_ascii=False, indent=1))
     m, sec = divmod(total, 60)
     print(f"total {int(m)}:{sec:05.2f}  ({tl['frames']} frames, {len(segments)} segments)", file=sys.stderr)

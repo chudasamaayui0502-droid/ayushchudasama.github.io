@@ -1,15 +1,18 @@
 import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
+import { useLang, useT } from "../lang";
 import { C, F } from "../theme";
 import { clamp, ease, prog } from "../lib/anim";
 import { Backdrop, Dust } from "./Backdrop";
 import { Letterbox, LightLeak } from "./Film";
-import { TL } from "../timeline";
+import { useTL } from "../timeline";
 
 const ROMAN = ["", "I", "II", "III", "IV"];
 
 /** Chapter card: wide-tracked title that tightens as a light sweeps across it. */
 export const ChapterCard: React.FC<{ num: number; en: string; hi: string; dur: number }> = ({ num, en, hi, dur }) => {
   const frame = useCurrentFrame();
+  const t = useT();
+  const lang = useLang();
   const inP = prog(frame, 0, 26, ease.out);
   const outP = prog(frame, dur - 12, 12, ease.in);
   const track = interpolate(frame, [0, dur], [0.62, 0.38], { ...clamp, easing: ease.soft });
@@ -63,14 +66,21 @@ export const ChapterCard: React.FC<{ num: number; en: string; hi: string; dur: n
 /** 3-second disclaimer card, right after the title. */
 export const Disclaimer: React.FC<{ dur: number }> = ({ dur }) => {
   const frame = useCurrentFrame();
+  const TL = useTL();
+  const t = useT();
+  const lang = useLang();
   const op = Math.min(prog(frame, 0, 8), 1 - prog(frame, dur - 8, 8, ease.in));
   return (
     <AbsoluteFill style={{ background: "#020305", alignItems: "center", justifyContent: "center", opacity: op }}>
       <div style={{ width: 1360, textAlign: "center" }}>
-        <div style={{ fontFamily: F.mono, fontSize: 24, letterSpacing: "0.5em", color: C.amber, marginBottom: 30 }}>DISCLAIMER · अस्वीकरण</div>
+        <div style={{ fontFamily: F.mono, fontSize: 24, letterSpacing: "0.5em", color: C.amber, marginBottom: 30 }}>{t("DISCLAIMER · अस्वीकरण", "DISCLAIMER")}</div>
         <div style={{ fontFamily: F.hiBody, fontWeight: 500, fontSize: 40, lineHeight: 1.45, color: C.ink }}>{TL.disclaimer.hi}</div>
-        <div style={{ height: 1, width: 300, margin: "30px auto", background: C.inkFaint }} />
-        <div style={{ fontFamily: F.wide, fontWeight: 400, fontSize: 24, lineHeight: 1.55, color: C.inkDim, letterSpacing: "0.02em" }}>{TL.disclaimer.en}</div>
+        {TL.disclaimer.en && (
+          <>
+            <div style={{ height: 1, width: 300, margin: "30px auto", background: C.inkFaint }} />
+            <div style={{ fontFamily: F.wide, fontWeight: 400, fontSize: 24, lineHeight: 1.55, color: C.inkDim, letterSpacing: "0.02em" }}>{TL.disclaimer.en}</div>
+          </>
+        )}
       </div>
     </AbsoluteFill>
   );

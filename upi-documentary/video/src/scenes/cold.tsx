@@ -1,7 +1,8 @@
 import React, { useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { AbsoluteFill, Sequence, interpolate, useCurrentFrame } from "remotion";
-import { SceneProps, relLines, TL } from "../timeline";
+import { useLang, useT } from "../lang";
+import { SceneProps, relLines, useTL } from "../timeline";
 import { C, F } from "../theme";
 import { clamp, drift, ease, keys, prog, rand } from "../lib/anim";
 import { Backdrop, Dust } from "../components/Backdrop";
@@ -14,6 +15,8 @@ import { CamRig, Phone, QR_TEXT, RupeeField, Stage, drawPayScreen, qrMatrix, use
 const N_SEA = 46;
 const QRSeaMesh: React.FC = () => {
   const frame = useCurrentFrame();
+  const t = useT();
+  const lang = useLang();
   const cells = useMemo(() => qrMatrix(QR_TEXT), []);
   const tex = useCanvasTexture(256, 256, (ctx) => {
     ctx.fillStyle = "#f2efe8";
@@ -57,6 +60,8 @@ const QRSeaMesh: React.FC = () => {
 
 const QRSea: React.FC<{ len: number }> = ({ len }) => {
   const frame = useCurrentFrame();
+  const t = useT();
+  const lang = useLang();
   // camera: starts on one tile, pulls way back while tilting up
   const z = keys(frame, [[0, 2.2], [len, 40]], ease.cam);
   const tilt = interpolate(frame / Math.max(1, len), [0, 1], [0, 0.55], clamp);
@@ -72,6 +77,8 @@ const QRSea: React.FC<{ len: number }> = ({ len }) => {
 /* Three everyday payments, one per beat. */
 const Vignette: React.FC<{ icon: IconName; label: string; amount: string; start: number; end: number }> = ({ icon, label, amount, start, end }) => {
   const frame = useCurrentFrame();
+  const t = useT();
+  const lang = useLang();
   if (frame < start - 2 || frame > end + 2) return null;
   const p = prog(frame, start, 8, ease.out);
   const zoom = interpolate(frame, [start, end], [1.08, 1], clamp);
@@ -90,6 +97,8 @@ const Vignette: React.FC<{ icon: IconName; label: string; amount: string; start:
 /* The scan: phone sweeps in, scan beam, 2-second timer, paid. */
 const ScanShot: React.FC<{ len: number; paidAt: number }> = ({ len, paidAt }) => {
   const frame = useCurrentFrame();
+  const t = useT();
+  const lang = useLang();
   const cells = useMemo(() => qrMatrix(QR_TEXT), []);
   const scan = useCanvasTexture(780, 1650, (ctx) => drawPayScreen(ctx, cells, "₹ 2,500", "scan"), []);
   const done = useCanvasTexture(780, 1650, (ctx) => drawPayScreen(ctx, cells, "₹ 2,500", "done"), []);
@@ -119,6 +128,8 @@ const ScanShot: React.FC<{ len: number; paidAt: number }> = ({ len, paidAt }) =>
 /* "FREE" — then it cracks. */
 const FreeWord: React.FC<{ start: number; crackAt: number }> = ({ start, crackAt }) => {
   const frame = useCurrentFrame();
+  const t = useT();
+  const lang = useLang();
   const cracked = frame >= crackAt;
   const g = cracked ? Math.max(0, 1 - (frame - crackAt) / 18) : 0;
   const jitter = cracked && frame - crackAt < 14 ? (rand(frame) - 0.5) * 40 : 0;
@@ -155,6 +166,7 @@ const FreeWord: React.FC<{ start: number; crackAt: number }> = ({ start, crackAt
 /* An endless bill unrolling out of the dark. Rows are abstract (no fake document). */
 const EndlessBill: React.FC<{ start: number; len: number }> = ({ start, len }) => {
   const frame = useCurrentFrame() - start;
+  const t = useT();
   const y = interpolate(frame, [0, len], [700, -900], { ...clamp, easing: ease.soft });
   return (
     <AbsoluteFill style={{ perspective: 1200 }}>
@@ -173,7 +185,7 @@ const EndlessBill: React.FC<{ start: number; len: number }> = ({ start, len }) =
           color: C.paperInk,
         }}
       >
-        <div style={{ fontFamily: F.hiDisplay, fontSize: 74, textAlign: "center", letterSpacing: "0.1em" }}>BILL · बिल</div>
+        <div style={{ fontFamily: F.hiDisplay, fontSize: 74, textAlign: "center", letterSpacing: "0.1em" }}>{t("BILL · बिल", "THE BILL")}</div>
         <div style={{ fontSize: 20, textAlign: "center", letterSpacing: "0.3em", opacity: 0.6, marginBottom: 18 }}>PAYABLE BY: ?</div>
         {Array.from({ length: 42 }).map((_, i) => (
           <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 24, padding: "7px 0", borderBottom: "1px dashed rgba(0,0,0,0.2)" }}>
@@ -189,6 +201,8 @@ const EndlessBill: React.FC<{ start: number; len: number }> = ({ start, len }) =
 
 export const S00_ColdOpen: React.FC<SceneProps> = ({ seg }) => {
   const frame = useCurrentFrame();
+  const t = useT();
+  const lang = useLang();
   const L = relLines(seg);
   const a = L.c0_01, b = L.c0_02, c = L.c0_03, d = L.c0_04, e = L.c0_05, f = L.c0_06, g = L.c0_07;
   const third = (b.end - b.at) / 3;
@@ -215,20 +229,20 @@ export const S00_ColdOpen: React.FC<SceneProps> = ({ seg }) => {
         <QRSea len={b.at - a.at + 10} />
         <AbsoluteFill style={{ background: "linear-gradient(rgba(4,6,11,0) 45%, rgba(4,6,11,0.92) 85%)" }} />
         <AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "center", paddingBottom: 150 }}>
-          <Words text="हर दिन... *80 करोड़* बार।" start={6} size={92} font={F.hiDisplay} weight={500} stagger={5} />
+          <Words text={t("हर दिन... *80 करोड़* बार।", "Every day... *800 million* times.")} start={6} size={92} font={F.hiDisplay} weight={500} stagger={5} />
         </AbsoluteFill>
       </Sequence>
 
       {/* B — chai, petrol, rent */}
       <Sequence from={b.at} durationInFrames={c.at - b.at} layout="none">
-        <Vignette icon="chai" label="चाय" amount="₹ 20" start={0} end={third} />
-        <Vignette icon="fuel" label="पेट्रोल" amount="₹ 2,500" start={third} end={third * 2} />
-        <Vignette icon="rent" label="किराया" amount="₹ 15,000" start={third * 2} end={c.at - b.at} />
+        <Vignette icon="chai" label={t("चाय", "TEA")} amount="₹ 20" start={0} end={third} />
+        <Vignette icon="fuel" label={t("पेट्रोल", "PETROL")} amount="₹ 2,500" start={third} end={third * 2} />
+        <Vignette icon="rent" label={t("किराया", "RENT")} amount="₹ 15,000" start={third * 2} end={c.at - b.at} />
       </Sequence>
 
       {/* C — one scan, two seconds */}
       <Sequence from={c.at} durationInFrames={d.at - c.at} layout="none">
-        <ScanShot len={d.at - c.at} paidAt={Math.round((c.end - c.at) * 0.72)} />
+        <ScanShot len={d.at - c.at} paidAt={Math.round((c.end - c.at) * c.fr(0.72))} />
       </Sequence>
 
       {/* D/E — FREE ... cracks */}
@@ -239,10 +253,10 @@ export const S00_ColdOpen: React.FC<SceneProps> = ({ seg }) => {
           {frame < e.at ? (
             <div style={{ display: "flex", gap: 60 }}>
               <Stamp text="FEE ₹0" at={8} color={C.teal} rotate={-6} size={90} />
-              <Stamp text="CHARGE ₹0" at={Math.round((d.end - d.at) * 0.45)} color={C.teal} rotate={5} size={90} />
+              <Stamp text="CHARGE ₹0" at={Math.round((d.end - d.at) * d.fr(0.45))} color={C.teal} rotate={5} size={90} />
             </div>
           ) : (
-            <Words text="दुनिया का सबसे बड़ा real-time payment system...|*फ़्री में नहीं चलता।*" start={e.at - d.at + 4} size={64} accent={C.red} stagger={3} />
+            <Words text={t("दुनिया का सबसे बड़ा real-time payment system...|*फ़्री में नहीं चलता।*", "The world's largest real-time payment system...|*does not run for free.*")} start={e.at - d.at + 4} size={64} accent={C.red} stagger={3} />
           )}
         </AbsoluteFill>
       </Sequence>
@@ -252,26 +266,26 @@ export const S00_ColdOpen: React.FC<SceneProps> = ({ seg }) => {
         <Backdrop hue="amber" light={0.7} />
         <EndlessBill start={0} len={g.at - f.at} />
         <AbsoluteFill style={{ justifyContent: "center", alignItems: "flex-start", paddingLeft: 160 }}>
-          <Words text="कोई तो है...|जो *हर दिन*|इसका बिल|भर रहा है।" start={4} size={96} font={F.hiDisplay} weight={500} align="left" lineHeight={1.0} stagger={4} />
+          <Words text={t("कोई तो है...|जो *हर दिन*|इसका बिल|भर रहा है।", "Someone...|is paying|its bill|*every day.*")} start={4} size={96} font={F.hiDisplay} weight={500} align="left" lineHeight={1.0} stagger={4} />
         </AbsoluteFill>
       </Sequence>
 
       {/* G — WHO? */}
       <Sequence from={g.at} layout="none">
         <AbsoluteFill style={{ background: "#020305", alignItems: "center", justifyContent: "center" }}>
-          <Words text="सवाल ये है —" start={0} size={56} color={C.inkDim} weight={500} style={{ marginBottom: 60 }} />
+          <Words text={t("सवाल ये है —", "The question is —")} start={0} size={56} color={C.inkDim} weight={500} style={{ marginBottom: 60 }} />
           <div
             style={{
               fontFamily: F.hiDisplay,
               fontSize: 380,
               lineHeight: 0.9,
               color: C.ink,
-              opacity: prog(frame - g.at, Math.round((g.end - g.at) * 0.45), 4, ease.out),
-              transform: `scale(${interpolate(prog(frame - g.at, Math.round((g.end - g.at) * 0.45), 8, ease.out), [0, 1], [1.5, 1])})`,
+              opacity: prog(frame - g.at, Math.round((g.end - g.at) * g.fr(0.45)), 4, ease.out),
+              transform: `scale(${interpolate(prog(frame - g.at, Math.round((g.end - g.at) * g.fr(0.45)), 8, ease.out), [0, 1], [1.5, 1])})`,
               textShadow: "0 0 90px rgba(255,165,58,0.35)",
             }}
           >
-            कौन?
+            {t("कौन?", "WHO?")}
           </div>
         </AbsoluteFill>
       </Sequence>
@@ -283,6 +297,9 @@ export const S00_ColdOpen: React.FC<SceneProps> = ({ seg }) => {
 /* TITLE — 3D rupee storm + slammed title. */
 export const S01_Title: React.FC<SceneProps> = ({ seg }) => {
   const frame = useCurrentFrame();
+  const TL = useTL();
+  const t = useT();
+  const lang = useLang();
   const p = prog(frame, 0, 10, ease.out);
   const push = interpolate(frame, [0, seg.frames], [1.0, 1.08], clamp);
   const track = interpolate(frame, [0, seg.frames], [0.5, 0.34], { ...clamp, easing: ease.soft });
@@ -307,9 +324,19 @@ export const S01_Title: React.FC<SceneProps> = ({ seg }) => {
             textShadow: "0 0 70px rgba(255,165,58,0.35), 0 10px 40px rgba(0,0,0,0.8)",
           }}
         >
-          <span style={{ color: C.amber }}>FREE</span> UPI का बिल
-          <br />
-          कौन भरता है?
+          {lang === "en" ? (
+            <>
+              WHO REALLY PAYS
+              <br />
+              FOR <span style={{ color: C.amber }}>FREE</span> UPI?
+            </>
+          ) : (
+            <>
+              <span style={{ color: C.amber }}>FREE</span> UPI का बिल
+              <br />
+              कौन भरता है?
+            </>
+          )}
         </div>
         <div
           style={{
@@ -323,7 +350,7 @@ export const S01_Title: React.FC<SceneProps> = ({ seg }) => {
             opacity: prog(frame, 14, 16),
           }}
         >
-          {TL.title_en}
+          {t(TL.title_en, "THE HIDDEN COST OF INDIA'S DIGITAL PAYMENTS")}
         </div>
       </AbsoluteFill>
       <LightLeak start={0} dur={seg.frames} strength={0.5} />

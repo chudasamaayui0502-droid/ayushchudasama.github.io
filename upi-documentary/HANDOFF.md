@@ -1,7 +1,9 @@
 # UPI documentary — handoff
 
 **Film:** "FREE UPI का बिल कौन भरता है? / Who really pays for your 'free' UPI?"
-16:9 · 1920×1080 · 30 fps · Hinglish · target runtime 6:30–7:00 · YouTube-ready (−14 LUFS).
+16:9 · 1920×1080 · 30 fps · target runtime 6:30–7:00 · YouTube-ready (−14 LUFS).
+**Two editions from one project:** Hindi (Hinglish) = composition `Main`; English (Indian English) = composition `Main-EN`.
+Every tool takes `--lang en` for the English edition (files get an `_en` suffix; the upload kit goes to `publish/en/`).
 
 ## Where things stand
 
@@ -13,7 +15,8 @@
 | Animation | ✅ all 33 segments built (3D camera, 2.5D parallax, kinetic type, charts, map, coin) | `video/src/scenes/*.tsx` |
 | Score | ✅ original, Zimmer-*style* (ticking clock, Shepard tone, ostinato strings, braams, organ), real orchestral samples (VSCO-2-CE, CC0) | `music/score.py`, `music/engine.py` |
 | Mix | ✅ ducking under VO, −14 LUFS / −1 dBTP | `tools/mix.py` |
-| Voiceover | ⏳ **scratch only** (offline Kokoro, for timing). Final = Sarvam | `tools/tts_sarvam.py` |
+| Voiceover | ⏳ **scratch only** (offline Kokoro, for timing) for both editions. Final = Sarvam hi-IN / en-IN | `tools/tts_sarvam.py [--lang en]` |
+| English edition | ✅ English narration (`tts_en`) + on-screen text in every scene (`useT()`), English timing overrides, thumbnail, kit | `script/lines.json`, `script/beats_en.json`, `video/src/lang.ts` |
 | Official documents | ⏳ placeholders (clearly labelled, unreadable) until real PDF pages are added | `video/public/docs/` |
 | Photos | ⏳ stylised fallbacks until real photos are added | `video/public/photos/` |
 | Upload kit | ✅ description with chapters + sources, Hindi & English subtitles (regenerate after re-timing) | `tools/youtube_meta.py` → `publish/` |
@@ -36,6 +39,15 @@ python3 tools/build_timeline.py                 # prints total; if > 7:00 re-run
 # 3. pronunciation pass: if a Latin-script term is misread, use the Devanagari spelling from
 #    lines.json → pronunciation, edit that line's `tts`, and re-run with --only <id>
 ```
+
+### 3b. English edition (same steps, `--lang en`)
+```bash
+python3 tools/tts_sarvam.py --lang en --audition          # assets/vo_audition_en/ — Indian English (en-IN) voices
+python3 tools/tts_sarvam.py --lang en --speaker <chosen>  # assets/vo_en/
+python3 tools/build_timeline.py --lang en                 # video/src/timeline_en.json, music/cues_en.json
+```
+English-only timing: `script/beats_en.json` moves visual hits (e.g. "this.", "zero", "the bill") to where the word lands in the English
+sentence; video **and** score read it. After the real English VO, spot-check those moments and nudge the fractions if needed.
 
 ### 4. Official documents (shown as real pages in S31; also verify the **C** facts)
 Render page 1 of each PDF at ~150 dpi (`pdftoppm -png -r 150 -f 1 -l 1`), crop to A4 and save as:
@@ -61,10 +73,14 @@ Replace the illustrative growth curve in `S15_Explosion` (`video/src/scenes/pled
 /tmp/musicenv/bin/python -I music/score.py      # score.wav + sfx.wav from the new cues
 /tmp/musicenv/bin/python -I tools/mix.py        # video/public/audio/mix.wav
 python3 tools/youtube_meta.py                   # description, chapters, SRTs
+# English edition: the same three commands with --lang en  → score_en.wav, mix_en.wav, publish/en/
 cd video
 node tools/stills.mjs qc seg-S00-ColdOpen:200,700 seg-S32-Rules:300,700 seg-S41-WhoPays:600   # spot-check layouts after re-timing
-npx remotion render Main out/render.mp4                # ~45–60 min on 4 CPUs
-cd .. && tools/finish.sh video/out/render.mp4 video/out/upi_documentary_final.mp4   # grain + vignette + YouTube encode
+npx remotion render Main out/render.mp4                # Hindi, ~25 min on 4 CPUs
+npx remotion render Main-EN out/render_en.mp4         # English
+npx remotion still Thumbnail-EN ../publish/en/thumbnail.png --image-format=png
+cd .. && tools/finish.sh video/out/render.mp4 video/out/upi_documentary_final.mp4         # grain + vignette + YouTube encode
+tools/finish.sh video/out/render_en.mp4 video/out/upi_documentary_final_en.mp4
 ```
 Check: no text overlaps after re-timing, the coin cuts to black on the beat, loudness −14 LUFS.
 
