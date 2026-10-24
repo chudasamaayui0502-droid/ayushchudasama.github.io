@@ -105,6 +105,41 @@ def test_time_exit_at_close():
     assert run_exit(rows) == (0, 4, pytest.approx(103), True)
 
 
+def run_trailing(rows, trail=0.10, hold=20):
+    O, H, L, C = bars(rows)
+    tr = S.simulate_exits(np.array([0]), np.array([0]), O[[0], 0], np.array([0.0]), O, H, L, C,
+                          targets=(), stops=(), holds=(), trails=(trail,), trail_holds=(hold,))[(0.0, trail, hold)]
+    return tr.kind[0], int(tr.x[0]), float(tr.px[0]), bool(tr.complete[0])
+
+
+def test_trailing_stop_follows_highest_close():
+    rows = [(100, 101, 99, 100), (100, 111, 100, 110), (110, 121, 109, 120), (120, 131, 119, 130),
+            (130, 131, 120, 125), (125, 126, 116, 118), (118, 119, 117, 118)]
+    # stop moves up to 130 * 0.9 = 117 after the 130 close; day 5's low of 116 hits it
+    assert run_trailing(rows) == (1, 5, pytest.approx(117), True)
+
+
+def test_trailing_stop_starts_below_buy_price():
+    rows = [(100, 101, 89, 95)] + [(95, 96, 94, 95)] * 5
+    assert run_trailing(rows)[:3] == (1, 0, pytest.approx(90))
+
+
+def test_trailing_stop_gap_down_fills_at_open():
+    rows = [(100, 101, 99, 100), (100, 121, 100, 120), (100, 101, 98, 99)] + [(99, 100, 98, 99)] * 3
+    assert run_trailing(rows)[:3] == (1, 2, pytest.approx(100))  # stop was 108
+
+
+def test_trailing_time_exit():
+    rows = [(100, 101, 99, 100 + i) for i in range(5)]
+    assert run_trailing(rows, hold=5) == (0, 4, pytest.approx(104), True)
+
+
+def test_month_ends_come_from_the_calendar():
+    dates = pd.bdate_range("2024-01-26", "2024-03-05")
+    ends = [str(d.date()) for d in dates[S.month_ends(dates)]]
+    assert ends == ["2024-01-31", "2024-02-29"]
+
+
 def test_trade_running_past_data_end_is_incomplete():
     rows = [(100, 101, 99, 100)] * 3
     assert run_exit(rows)[3] is False
@@ -352,16 +387,18 @@ def test_full_backtest_on_synthetic_data_has_no_nan_in_json(tmp_path, monkeypatc
     universe = pd.DataFrame({"Symbol": p.symbols, "Name": p.symbols, "Industry": ""})
     S.write_json(tmp_path / "b.json", bt)
     S.write_json(tmp_path / "t.json", S.today_payload(p, signals, universe))
-    assert bt["combos_tested"] == len(signals) * len(S.TARGETS) * len(S.STOPS) * len(S.HOLDS)
+    assert bt["combos_tested"] == len(signals) * (len(S.TARGETS) * len(S.STOPS) * len(S.HOLDS)
+                                                 + len(S.TRAILS) * len(S.TRAIL_HOLDS))
     assert bt["pattern_rules"], "the daily list needs each pattern's rule"
     for vid, by_cap in bt["pattern_rules"].items():
         for cap, r in by_cap.items():
             assert f"{vid}|{r['rule']}" in {f"{v.id}|{k}" for v in [x for x, _ in signals]
                                             for k in [f"{round(a*100)}|{round(b*100)}|{c}"
-                                                      for a in S.TARGETS for b in S.STOPS for c in S.HOLDS]}
+                                                      for a in S.TARGETS for b in S.STOPS for c in S.HOLDS]
+                                            + [f"0|{round(b*100)}|{c}" for b in S.TRAILS for c in S.TRAIL_HOLDS]}
             if r["ends"]:
                 assert abs(sum(r["ends"].values()) - 1) < 1e-9
             if r["target_days"]:
                 lo, mid, hi = r["target_days"]
-                assert 1 <= lo <= mid <= hi <= max(S.HOLDS)
+                assert 1 <= lo <= mid <= hi <= max(S.HOLDS + S.TRAIL_HOLDS)
     assert len(bt["buckets"]) == len(S.CAPITALS)

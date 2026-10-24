@@ -46,7 +46,7 @@
     <label>Buy date<input name="date" type="date" required /></label>
     <label>Buy price (₹)<input name="price" type="number" inputmode="decimal" step="any" min="0.01" required /></label>
     <label>Shares<input name="qty" type="number" step="1" min="1" required /></label>
-    <label>Target %<input name="tg" type="number" step="1" min="1" required /></label>
+    <label>Target % (0 = trailing stop)<input name="tg" type="number" step="1" min="0" required /></label>
     <label>Stop-loss %<input name="st" type="number" step="1" min="1" required /></label>
     <label>Sell after (trading days)<input name="hold" type="number" step="1" min="1" required /></label>
     <button type="submit" class="btn">Save trade</button>

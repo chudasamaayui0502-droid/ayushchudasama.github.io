@@ -76,6 +76,9 @@
     const [vid, tg, st, hd] = key.split('|');
     return { vid, tg: +tg / 100, st: +st / 100, hd: +hd };
   };
+  const ruleSummary = k => k.tg
+    ? `+${p100(k.tg)}% / −${p100(k.st)}% / ${k.hd} days`
+    : `trailing stop −${p100(k.st)}% / up to ${k.hd} days`;
   function bucketFor(cap) {
     let pick = BT.buckets[0];
     for (const b of BT.buckets) if (cap >= b.capital) pick = b;
@@ -181,7 +184,7 @@
       { pts: b.benchmark.test?.curve, color: 'var(--muted)', label: 'Nifty 50 ETF (buy and hold)' },
     ], fmtDate(ex.start), fmtDate(ex.end));
     const log = (ex.trades_log || []).map(([sym, bd, bp, sd, sp, sh, pnl, kind]) => {
-      const [label, kc] = KIND[kind] || ['', ''];
+      const [label, kc] = kind === 1 && !k.tg ? ['Trailing stop', ''] : KIND[kind] || ['', ''];
       return `<tr><td><b>${esc(sym)}</b></td><td>${fmtDate(bd)}</td><td class="r num">${inr(bp, 2)}</td>
         <td>${fmtDate(sd)}</td><td class="r num">${inr(sp, 2)}</td><td class="r num">${sh}</td>
         <td class="r num ${cls(pnl)}">${signedInr(pnl, 2)}</td><td class="${kc}">${label}</td></tr>`;
@@ -189,7 +192,7 @@
     const yearly = x => `<span class="${cls(x)}">${signedPct(x)}</span>`;
     const cands = b.candidates.map(o => {
       const ok = parseKey(o.key), ov = BT.variants[ok.vid], t = o.spread.test;
-      return `<tr><td>${o.key === b.chosen ? '★ ' : ''}${esc(ov.name)}<br><small>+${p100(ok.tg)}% / −${p100(ok.st)}% / ${ok.hd} days</small></td>
+      return `<tr><td>${o.key === b.chosen ? '★ ' : ''}${esc(ov.name)}<br><small>${ruleSummary(ok)}</small></td>
         <td class="r num">${yearly(o.train_est)}</td><td class="r num">${yearly(o.validate_est)}</td>
         <td class="r num ${cls(t.final - b.capital)}">${inr(t.final)}</td></tr>`;
     }).join('');
@@ -198,10 +201,13 @@
       <span class="label">The tested plan for ${inr(cap)}</span>
       <h2>${esc(v.name)}</h2>
       <p>${esc(v.desc)}</p>
-      <div class="rules">
+      <div class="rules">${k.tg ? `
         <div class="rule"><b class="up">+${p100(k.tg)}%</b><span>Target: sell when up ${p100(k.tg)}%</span></div>
         <div class="rule"><b class="down">−${p100(k.st)}%</b><span>Stop-loss: sell when down ${p100(k.st)}%</span></div>
-        <div class="rule"><b>${k.hd} days</b><span>Otherwise sell after ${k.hd} trading days</span></div>
+        <div class="rule"><b>${k.hd} days</b><span>Otherwise sell after ${k.hd} trading days</span></div>` : `
+        <div class="rule"><b class="up">No cap</b><span>No fixed target: let winners run</span></div>
+        <div class="rule"><b class="down">−${p100(k.st)}%</b><span>Sell if it falls ${p100(k.st)}% below its highest close since buying</span></div>
+        <div class="rule"><b>${k.hd} days</b><span>Or sell after ${k.hd} trading days at most</span></div>`}
       </div>
       <p>Hold <b>${b.slots} stock${b.slots > 1 ? 's' : ''}</b> at a time (about ${inr(per)} each).
         Each buy + sell of ${inr(per)} costs about <b>${inr(cost, 2)}</b> in Groww charges
@@ -218,8 +224,8 @@
       ${randomLine}
       <h3>One example run</h3>
       ${chart}
-      <p class="muted">Starting ${fmtDate(ex.start)}: ${inr(b.capital)} became ${inr(ex.final)}. ${ex.targets_hit} targets hit, ${ex.stops_hit} stop-losses hit,
-        ${timeExits} sold on time. Charges paid: ${inr(ex.charges)}. Income tax on profits (20% short-term capital gains) is not included.</p>
+      <p class="muted">Starting ${fmtDate(ex.start)}: ${inr(b.capital)} became ${inr(ex.final)}. ${k.tg ? `${ex.targets_hit} targets hit, ${ex.stops_hit} stop-losses hit, ${timeExits} sold on time.`
+          : `${ex.stops_hit} sold by the trailing stop, ${timeExits} at the time limit.`} Charges paid: ${inr(ex.charges)}. Income tax on profits (20% short-term capital gains) is not included.</p>
       <details><summary>See all ${ex.trades} trades from this example run</summary>
         <div class="table-wrap"><table>
           <thead><tr><th>Stock</th><th>Bought</th><th class="r">Price</th><th>Sold</th><th class="r">Price</th><th class="r">Shares</th><th class="r">Profit after charges</th><th>Why sold</th></tr></thead>
@@ -307,18 +313,22 @@
       <div class="pick-grid">
         <div><span>Last close</span><b class="num">${inr(price, 2)}</b> <small class="${cls(x.st.chg)}">${x.st.chg == null ? '' : (x.st.chg > 0 ? '+' : '') + pct(x.st.chg, 1)}</small></div>
         <div><span>Buy</span><b class="num">${x.shares} share${x.shares > 1 ? 's' : ''}</b> <small>≈ ${inr(invest)} with charges</small></div>
-        <div><span>Target +${p100(k.tg)}% (sell)</span><b class="num up">${inr(target, 2)}</b> <small class="${cls(win)}">${signedInr(win)} after charges</small></div>
-        <div><span>Stop-loss −${p100(k.st)}% (sell)</span><b class="num down">${inr(stop, 2)}</b> <small class="down">${signedInr(loss)} after charges</small></div>
+        ${k.tg ? `<div><span>Target +${p100(k.tg)}% (sell)</span><b class="num up">${inr(target, 2)}</b> <small class="${cls(win)}">${signedInr(win)} after charges</small></div>
+        <div><span>Stop-loss −${p100(k.st)}% (sell)</span><b class="num down">${inr(stop, 2)}</b> <small class="down">${signedInr(loss)} after charges</small></div>`
+        : `<div><span>Target</span><b class="num up">None</b> <small>let it run while it keeps rising</small></div>
+        <div><span>Starting stop −${p100(k.st)}%</span><b class="num down">${inr(stop, 2)}</b> <small class="down">${signedInr(loss)} after charges; rises with the price</small></div>`}
       </div>
-      <p class="rule-line">Otherwise sell after ${k.hd} trading days · Pattern: <b>${esc(v.name)}</b>${also.length ? ` <small>(also: ${esc(also.join(', '))})</small>` : ''}</p>
+      <p class="rule-line">${k.tg ? `Otherwise sell after ${k.hd} trading days`
+        : `Sell when it falls ${p100(k.st)}% below its highest close since you bought, or after ${k.hd} trading days`} · Pattern: <b>${esc(v.name)}</b>${also.length ? ` <small>(also: ${esc(also.join(', '))})</small>` : ''}</p>
       <div class="history ${avg > 0 ? 'good' : 'bad'}">
         <b>How trades like this went at ${inr(b.capital)}</b>
-        <p>${pct(r.ends.target)} reached the target${r.target_days ? `, usually after ${weeksText(r.target_days)}` : ''} ·
-          ${pct(r.ends.stop)} hit the stop-loss · ${pct(r.ends.time)} were sold at the time limit.</p>
+        <p>${k.tg ? `${pct(r.ends.target)} reached the target${r.target_days ? `, usually after ${weeksText(r.target_days)}` : ''} ·
+          ${pct(r.ends.stop)} hit the stop-loss · ${pct(r.ends.time)} were sold at the time limit.`
+          : `${pct(r.ends.stop)} were sold by the trailing stop · ${pct(r.ends.time)} at the time limit.`}</p>
         <p>Final test (${periodRange('test')}): average <b class="${cls(avg)}">${avg > 0 ? '+' : ''}${pct(avg, 1)}</b> per trade after charges
           (about ${signedInr(avg * per)}), ${pct(r.test_win)} won, ${r.test_n} trades.</p>
       </div>
-      ${win <= 0 ? '<p class="error">Charges would eat the whole profit even if the target is hit. Skip this one.</p>' : ''}
+      ${k.tg && win <= 0 ? '<p class="error">Charges would eat the whole profit even if the target is hit. Skip this one.</p>' : ''}
       ${healthChips(x.sym)}
       <div class="btn-row"><button class="btn small ghost" data-add="${esc(x.sym)}" data-shares="${x.shares}" data-vid="${esc(x.best.vid)}">Add to My trades after buying</button>
         <span class="news">${newsLink(x.st.name)}</span></div>
@@ -384,12 +394,26 @@
   function tradeStatus(t) {
     const s = TD.stocks[t.sym];
     if (!s) return { state: 'nodata' };
-    const target = t.price * (1 + t.tg / 100), stop = t.price * (1 - t.st / 100);
-    const out = { target, stop, close: s.close };
+    const trail = !t.tg;
+    const target = trail ? null : t.price * (1 + t.tg / 100), stop = t.price * (1 - t.st / 100);
+    const out = { target, stop, close: s.close, trail };
     if (t.date > TD.data_date) return { ...out, state: 'new' };
     const first = TD.dates.findIndex(d => d >= t.date);
     out.partial = t.date < TD.dates[0];
     let held = out.partial ? null : 0;
+    if (trail) {  // the stop sits st% below the highest close since buying, and only moves up
+      let high = t.price;
+      for (let i = Math.max(first, 0); i < TD.dates.length; i++) {
+        const bar = s.bars[i];
+        if (!bar || bar[2] == null) continue;
+        if (held != null) held++;
+        const level = high * (1 - t.st / 100);
+        if (bar[2] <= level) return { ...out, state: 'stop', on: TD.dates[i], at: Math.min(level, bar[0]), stop: level };
+        high = Math.max(high, bar[3]);
+        if (held != null && held >= t.hold) return { ...out, state: 'time', on: TD.dates[i], at: bar[3] };
+      }
+      return { ...out, state: 'hold', left: held == null ? null : t.hold - held, high, stop: high * (1 - t.st / 100) };
+    }
     for (let i = Math.max(first, 0); i < TD.dates.length; i++) {
       const bar = s.bars[i];
       if (!bar || bar[2] == null) continue;
@@ -416,7 +440,10 @@
       } else if (s.state === 'stop') {
         pnl = netPnl(t.qty, t.price, s.at); card = ' sell';
         badge = '<span class="badge bad">SELL · stop-loss hit</span>';
-        note = `The price fell to ${inr(s.stop, 2)} on ${fmtDay(s.on)}. If your stop-loss order didn’t sell it, sell at the next market open. Small losses like this are part of the plan.`;
+        if (s.trail) badge = '<span class="badge bad">SELL · trailing stop hit</span>';
+        note = s.trail
+          ? `The price fell to your trailing stop (${inr(s.stop, 2)}) on ${fmtDay(s.on)}. If your stop-loss order didn’t sell it, sell at the next market open.`
+          : `The price fell to ${inr(s.stop, 2)} on ${fmtDay(s.on)}. If your stop-loss order didn’t sell it, sell at the next market open. Small losses like this are part of the plan.`;
       } else if (s.state === 'target') {
         pnl = netPnl(t.qty, t.price, s.at); card = ' sell win';
         badge = '<span class="badge good">SELL · target hit</span>';
@@ -429,14 +456,16 @@
         pnl = netPnl(t.qty, t.price, s.close);
         badge = '<span class="badge info">HOLD</span>';
         note = s.left == null ? 'Bought before the last 70 days of saved prices, so the days left can’t be counted. Keep the target and stop-loss.'
-          : `Day ${t.hold - s.left} of ${t.hold}: ${s.left} trading day${s.left === 1 ? '' : 's'} left. Keep your target and stop-loss orders in place.`
+          : `Day ${t.hold - s.left} of ${t.hold}: ${s.left} trading day${s.left === 1 ? '' : 's'} left. `
+            + (s.trail ? `Your stop-loss is now <b>${inr(s.stop, 2)}</b>, ${t.st}% below the highest close since you bought (${inr(s.high, 2)}). If you use a stop-loss or GTT order on Groww, move it up to this price.`
+              : 'Keep your target and stop-loss orders in place.')
             + (t.hint ? ` Trades like this that reached the target usually did so between day ${Math.round(t.hint[0])} and day ${Math.round(t.hint[2])}.` : '');
       }
       return `<div class="trade${card}">
         <div class="trade-top"><div><b>${esc(name)}</b> <small>${esc(t.sym)}</small></div>${badge}</div>
         <p>${note}</p>
         <p class="num"><small>Bought ${t.qty} × ${inr(t.price, 2)} on ${fmtDate(t.date)} ·
-          Target ${inr(s.target, 2)} · Stop ${inr(s.stop, 2)} · Now ${inr(s.close, 2)}</small></p>
+          ${s.trail ? `Trailing stop ${t.st}% · Stop now ${inr(s.stop, 2)}` : `Target ${inr(s.target, 2)} · Stop ${inr(s.stop, 2)}`} · Now ${inr(s.close, 2)}</small></p>
         ${pnl == null ? '' : `<p><b class="${cls(pnl)}">${signedInr(pnl, 2)}</b> <small>${s.state === 'hold' ? 'if sold at the last close' : 'at the exit price'}, after charges</small></p>`}
         <div class="btn-row"><button class="btn small ghost" data-del="${esc(t.id)}">${s.state === 'hold' || s.state === 'new' ? 'Remove' : 'I sold it — remove'}</button></div>
       </div>`;
@@ -479,7 +508,7 @@
         id: String(Date.now()), sym: f.sym.value, date: f.date.value,
         price: +f.price.value, qty: Math.round(+f.qty.value), tg: +f.tg.value, st: +f.st.value, hold: Math.round(+f.hold.value),
       };
-      if (!t.date || !(t.price > 0) || !(t.qty >= 1) || !(t.tg > 0) || !(t.st > 0) || !(t.hold >= 1)) return;
+      if (!t.date || !(t.price > 0) || !(t.qty >= 1) || !(t.tg >= 0) || !(t.st > 0) || !(t.hold >= 1)) return;
       if (prefill.hint && t.sym === prefill.sym && t.hold === prefill.hold) t.hint = prefill.hint;
       store.set(KEYS.trades, [...store.get(KEYS.trades, []), t]);
       renderMyTrades(cap);
@@ -525,7 +554,8 @@
         <li><b>${nVariants} chart patterns</b>, each on its own and with 3 market-mood filters (Nifty 50 rising, India VIX below 20,
           US S&amp;P 500 rising), × ${g.targets.length} targets (${g.targets.map(x => '+' + p100(x) + '%').join(', ')})
           × ${g.stops.length} stop-losses (${g.stops.map(x => '−' + p100(x) + '%').join(', ')}) × ${g.holds.length} holding times
-          (${g.holds.join(', ')} trading days), on ${BT.n_stocks} Nifty 100 stocks from ${fmtDate(BT.data_start)} to ${fmtDate(BT.data_end)}.</li>
+          (${g.holds.join(', ')} trading days), plus trailing stops with no fixed target (${(g.trails || []).map(x => p100(x) + '%').join(', ')}
+          below the highest close, held up to ${(g.trail_holds || []).join(' or ')} trading days), on ${BT.n_stocks} Nifty 100 stocks from ${fmtDate(BT.data_start)} to ${fmtDate(BT.data_end)}.</li>
         <li><b>Real money rules:</b> whole shares only, Groww’s delivery charges on every buy and sell (brokerage, STT, stamp duty,
           exchange fees, ₹20 DP charge, GST), and only as many stocks at once as your amount allows.</li>
         <li><b>No peeking at the future:</b> a pattern is spotted at the close and bought at the <i>next</i> day’s open. If the target and

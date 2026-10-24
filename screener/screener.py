@@ -44,6 +44,11 @@ CAPITALS = [1000, 2000, 5000, 10000, 25000, 50000, 100000]
 TARGETS = (0.05, 0.08, 0.12, 0.20)
 STOPS = (0.04, 0.07, 0.10)
 HOLDS = (10, 20, 40)  # trading days
+# Trailing stops: no fixed target; sell once the price falls this far below
+# its highest close since buying, or after the holding limit. Big winners
+# keep running, and fewer, longer trades mean charges matter less.
+TRAILS = (0.10, 0.15, 0.20)
+TRAIL_HOLDS = (60, 120)  # trading days
 STANDARD_EXIT = (0.08, 0.04, 20)  # used to compare patterns with each other
 BENCHMARK = "NIFTYBEES"  # Nifty 50 ETF
 # Big news (wars, rate changes, budgets, global crashes) shows up in these
@@ -445,7 +450,25 @@ def pattern_signals(p: Panel) -> list[tuple[Variant, pd.DataFrame]]:
             f"Trading volume is {m}x normal or more and the price rises 3% or more, above the 50-day average: "
             f"big buyers may be stepping in.",
             (V > m * vol_avg) & (C >= 1.03 * C.shift(1)) & up50)
+
+    # The strongest stocks of the last 6 months tend to keep leading (skipping
+    # the latest month, which often reverses). Picked once a month.
+    strength = (C.shift(21) / C.shift(126) - 1).where(up200)
+    rank = strength.rank(axis=1, ascending=False)
+    month_end = pd.DataFrame(np.repeat(month_ends(p.dates)[:, None], len(p.symbols), 1),
+                             index=C.index, columns=C.columns)
+    for k in (5, 10):
+        add(f"strength_top{k}", "Monthly strength", f"Top {k} strongest (monthly)",
+            f"At each month-end, the {k} stocks that rose the most over the last 6 months (not counting the latest "
+            f"month), among those above their 200-day average.",
+            (rank <= k) & month_end)
     return out
+
+
+def month_ends(dates: pd.DatetimeIndex) -> np.ndarray:
+    """Last weekday of each month. Known in advance from the calendar, so it
+    doesn't peek at future prices (an exchange holiday can shift it a day)."""
+    return np.asarray((dates + pd.offsets.BDay(1)).month != dates.month)
 
 
 def momentum_score(p: Panel) -> np.ndarray:
@@ -517,23 +540,49 @@ def entry_points(sig: pd.DataFrame, O: np.ndarray, score: np.ndarray):
     return n, e, O[e, n], score[t, n]
 
 
-def simulate_exits(n, e, pe, score, O, H, L, C, targets=TARGETS, stops=STOPS, holds=HOLDS):
-    """Exit of every entry under every (target, stop, hold) rule.
+def simulate_exits(n, e, pe, score, O, H, L, C, targets=TARGETS, stops=STOPS, holds=HOLDS,
+                   trails=TRAILS, trail_holds=TRAIL_HOLDS):
+    """Exit of every entry under every (target, stop, hold) rule, plus every
+    trailing-stop rule, keyed (0, trail, hold).
 
     Stop-loss and target are checked against each day's low and high, starting
     on the entry day. If both are touched on the same day we assume the stop
     came first. If the day opens beyond a level, the fill is at the open.
     """
     T = O.shape[0]
-    hmax = max(holds)
-    idx = e[:, None] + np.arange(hmax)[None, :]
-    inb = idx < T
-    idxc = np.minimum(idx, T - 1)
     nn = n[:, None]
-    fo, fh, fl, fc = (np.where(inb, A[idxc, nn], np.nan) for A in (O, H, L, C))
     rows = np.arange(len(e))
-    big = hmax + 1
     out = {}
+
+    def window(width, arrays):
+        idx = e[:, None] + np.arange(width)[None, :]
+        inb = idx < T
+        idxc = np.minimum(idx, T - 1)
+        return inb, [np.where(inb, A[idxc, nn], np.nan) for A in arrays]
+
+    if trails and trail_holds:
+        width = max(trail_holds)
+        inb, (fo, fl, fc) = window(width, (O, L, C))
+        # highest close known before each day; the buy price on the first day
+        prior_high = np.fmax.accumulate(np.concatenate([pe[:, None], fc[:, :-1]], axis=1), axis=1)
+        for trail in trails:
+            level = prior_high * (1 - trail)
+            hit = fl <= level
+            first = np.where(hit.any(1), hit.argmax(1), width + 1)
+            for hd in trail_holds:
+                lim = hd - 1
+                is_stop = first <= lim
+                off = np.where(is_stop, first, lim)
+                o_off, lv = fo[rows, off], level[rows, off]
+                px = np.where(is_stop, np.where(o_off < lv, o_off, lv), fc[rows, lim])
+                complete = inb[rows, off] & np.isfinite(px)
+                out[(0.0, trail, hd)] = Trades(n, e, e + off, pe, px, np.where(is_stop, 1, 0), complete, score)
+
+    if not (targets and stops and holds):
+        return out
+    hmax = max(holds)
+    inb, (fo, fh, fl, fc) = window(hmax, (O, H, L, C))
+    big = hmax + 1
     for tg in targets:
         tp = pe * (1 + tg)
         hit_t = fh >= tp[:, None]
@@ -699,6 +748,14 @@ def buy_and_hold(O: np.ndarray, C: np.ndarray, capital: float, start: int, end: 
             "max_dd": float(np.max(1 - equity / peak)), "curve": downsample_curve(equity, dates[start:end + 1])}
 
 
+def exits_for(rule) -> dict:
+    """simulate_exits arguments that produce just this one rule."""
+    tg, st, hd = rule
+    if tg == 0:
+        return {"targets": (), "stops": (), "holds": (), "trails": (st,), "trail_holds": (hd,)}
+    return {"targets": (tg,), "stops": (st,), "holds": (hd,), "trails": (), "trail_holds": ()}
+
+
 def random_baseline(O, H, L, C, Cf, dates, rule, n_entries, cap, start, end,
                     runs=RANDOM_RUNS, seed=7) -> list[float]:
     """Same exit rule, capital and number of buy signals, but the buy days and
@@ -710,12 +767,11 @@ def random_baseline(O, H, L, C, Cf, dates, rule, n_entries, cap, start, end,
         return []
     t_idx = t_idx + lo - 1
     rng = np.random.default_rng(seed)
-    tg, st, hd = rule
     finals = []
     for _ in range(runs):
         k = rng.choice(len(t_idx), size=min(n_entries, len(t_idx)), replace=False)
         n, e = n_idx[k], t_idx[k] + 1
-        tr = simulate_exits(n, e, O[e, n], rng.random(len(k)), O, H, L, C, (tg,), (st,), (hd,))[rule]
+        tr = simulate_exits(n, e, O[e, n], rng.random(len(k)), O, H, L, C, **exits_for(rule))[rule]
         finals.append(portfolio_sim(tr, cap, slots_for(cap), start, end, Cf, dates)["final"])
     return finals
 
@@ -915,7 +971,8 @@ def run_backtest(p: Panel, signals, bench: pd.DataFrame | None, log=print, previ
         "n_stocks": len(p.symbols), "combos_tested": combos_tested, "data_fixes": p.fixes,
         "periods": [{"name": name, "start": str(p.dates[s].date()), "end": str(p.dates[e].date())}
                     for name, (s, e) in bounds.items()],
-        "grid": {"targets": TARGETS, "stops": STOPS, "holds": HOLDS, "capitals": CAPITALS},
+        "grid": {"targets": TARGETS, "stops": STOPS, "holds": HOLDS, "trails": TRAILS, "trail_holds": TRAIL_HOLDS,
+                 "capitals": CAPITALS},
         "start_offsets": START_OFFSETS, "switch_margin": SWITCH_MARGIN,
         "variants": {vid: v.__dict__ for vid, v in variants.items()},
         "pattern_stats": pattern_stats, "pattern_rules": pattern_rules,
