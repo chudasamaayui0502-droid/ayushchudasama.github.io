@@ -36,6 +36,7 @@
   const inr = (x, d = 0) => x == null || !isFinite(x) ? '–'
     : '₹' + Number(x).toLocaleString('en-IN', { maximumFractionDigits: d, minimumFractionDigits: d });
   const signedInr = (x, d = 0) => !isFinite(x) ? '–' : (x > 0 ? '+' : x < 0 ? '−' : '') + inr(Math.abs(x), d);
+  const p100 = x => Math.round(x * 100);  // 0.07 * 100 is 7.000000000000001
   const pct = (x, d = 0) => x == null || !isFinite(x) ? '–' : (x * 100).toFixed(d) + '%';
   const cls = x => x > 0 ? 'up' : x < 0 ? 'down' : '';
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -64,10 +65,10 @@
       'It made money in the final test, but random stock picks with the same target and stop-loss often did about as well. The profit may have come from the market rising, not from the pattern.'],
     below_index: ['warn', 'Made less than the Nifty 50 ETF',
       'It made money in the final test, but simply buying the Nifty 50 ETF (NIFTYBEES) and holding it did better, with no work and fewer charges.'],
-    unproven: ['bad', 'Did not pass the earlier tests',
-      'No strategy made money in both the training and checking periods at this amount. Treat these signals as practice only.'],
+    unproven: ['bad', 'No strategy passed at this amount',
+      'None of the {combos} combinations made money after charges in both training and checking at this amount. The plan shown is only the least bad one, so treat its signals as practice.'],
     loss: ['bad', 'Lost money in the final test',
-      'Even the best strategy for this amount lost money in the final test, mostly because charges are large compared with small trades. Practise on paper or add more money first.'],
+      'Following the best plan for this amount lost money in the final test (middle of several start dates), mostly because charges are large compared with small trades. Practise on paper or add more money first.'],
     none: ['bad', 'Not enough data', 'No strategy had enough trades to test at this amount.'],
   };
 
@@ -141,37 +142,50 @@
     const k = parseKey(b.chosen), v = BT.variants[k.vid];
     const per = cap / b.slots;
     const cost = buyCharges(per) + sellCharges(per);
-    const [vcls, vtitle, vtext] = VERDICTS[b.verdict] || VERDICTS.none;
+    const [vcls, vtitle, vtextRaw] = VERDICTS[b.verdict] || VERDICTS.none;
+    const vtext = vtextRaw.replace('{combos}', BT.combos_tested);
     const tested = b.capital === cap ? '' :
       `<p class="muted">Test results below are for ${inr(b.capital)}, the closest tested amount at or below yours.</p>`;
+    const signedPct = x => (x > 0 ? '+' : x < 0 ? '−' : '') + pct(Math.abs(x), 1);
+    const avgTrade = name => {
+      const q = c.avg_trade[name];
+      return q && q.n ? `${q.n} signals, average <span class="${cls(q.avg)}">${signedPct(q.avg)}</span> per trade after charges, ${pct(q.win)} won`
+        : 'not enough signals';
+    };
     const rows = ['train', 'validate', 'test'].map(name => {
-      const r = c[name], bench = b.benchmark[name];
+      const r = c.spread[name], bench = b.benchmark[name];
+      const range = name === 'test' ? ` (range ${inr(r.low)} – ${inr(r.high)})` : '';
       return `<div class="period${name === 'test' ? ' final' : ''}">
         <div><b>${PERIOD_LABEL[name][0]}</b><small>${periodRange(name)} · ${PERIOD_LABEL[name][1]}</small></div>
-        <div class="period-value"><small>${inr(b.capital)} became</small><b class="num ${cls(r.profit)}">${inr(r.final)}</b></div>
-        <p class="period-meta num">${r.trades} trades · ${pct(r.win_rate)} won · worst fall −${pct(r.max_dd)}
-          · Nifty 50 ETF: ${bench ? inr(bench.final) : '–'}</p>
+        <div class="period-value"><small>${inr(b.capital)} became</small><b class="num ${cls(r.final - b.capital)}">${inr(r.final)}</b></div>
+        <p class="period-meta num">With your money: about ${Math.round(r.trades)} trades, ${pct(r.win_rate)} won,
+          worst fall −${pct(r.max_dd)}${range} · Nifty 50 ETF: ${bench ? inr(bench.final) : '–'}</p>
+        <p class="period-meta num">Every signal: ${avgTrade(name)}</p>
       </div>`;
     }).join('');
-    const t = c.test, rnd = b.random;
+    const ex = c.example, rnd = b.random;
     const randomLine = rnd ? `<p>With the same target, stop-loss and amount, <b>random</b> stock picks turned ${inr(b.capital)} into
-      <b>${inr(rnd.median)}</b> (middle result of ${rnd.runs} random runs). This strategy did better than <b>${pct(rnd.beat_pct)}</b> of them.</p>` : '';
-    const timeExits = t.trades - t.targets_hit - t.stops_hit;
+      <b>${inr(rnd.median)}</b> (middle of ${rnd.runs} random runs). This plan did better than <b>${pct(rnd.beat_pct)}</b> of them.</p>` : '';
+    const passed = b.passed_train_and_validate;
+    const passedLine = `<p><b>${passed} of ${BT.combos_tested}</b> combinations made money after charges in both training and checking
+      at ${inr(b.capital)}.${passed === 0 ? ' <b>None did.</b> At this amount, charges eat more than the patterns earn.' : ''}</p>`;
+    const timeExits = ex.trades - ex.targets_hit - ex.stops_hit;
     const chart = lineChart([
-      { pts: t.curve, color: 'var(--accent)', label: 'This strategy' },
+      { pts: ex.curve, color: 'var(--accent)', label: 'This plan (example run)' },
       { pts: b.benchmark.test?.curve, color: 'var(--muted)', label: 'Nifty 50 ETF (buy and hold)' },
-    ], fmtDate(t.start), fmtDate(t.end));
-    const log = (t.trades_log || []).map(([sym, bd, bp, sd, sp, sh, pnl, kind]) => {
+    ], fmtDate(ex.start), fmtDate(ex.end));
+    const log = (ex.trades_log || []).map(([sym, bd, bp, sd, sp, sh, pnl, kind]) => {
       const [label, kc] = KIND[kind] || ['', ''];
       return `<tr><td><b>${esc(sym)}</b></td><td>${fmtDate(bd)}</td><td class="r num">${inr(bp, 2)}</td>
         <td>${fmtDate(sd)}</td><td class="r num">${inr(sp, 2)}</td><td class="r num">${sh}</td>
         <td class="r num ${cls(pnl)}">${signedInr(pnl, 2)}</td><td class="${kc}">${label}</td></tr>`;
     }).join('');
+    const yearly = x => `<span class="${cls(x)}">${signedPct(x)}</span>`;
     const cands = b.candidates.map(o => {
-      const ok = parseKey(o.key), ov = BT.variants[ok.vid];
-      const cell = r => `<td class="r num ${cls(r.profit)}">${inr(r.final)}</td>`;
-      return `<tr><td>${o.key === b.chosen ? '★ ' : ''}${esc(ov.name)}</td>
-        <td class="num">+${ok.tg * 100}% / −${ok.st * 100}% / ${ok.hd}d</td>${cell(o.train)}${cell(o.validate)}${cell(o.test)}</tr>`;
+      const ok = parseKey(o.key), ov = BT.variants[ok.vid], t = o.spread.test;
+      return `<tr><td>${o.key === b.chosen ? '★ ' : ''}${esc(ov.name)}<br><small>+${p100(ok.tg)}% / −${p100(ok.st)}% / ${ok.hd} days</small></td>
+        <td class="r num">${yearly(o.train_est)}</td><td class="r num">${yearly(o.validate_est)}</td>
+        <td class="r num ${cls(t.final - b.capital)}">${inr(t.final)}</td></tr>`;
     }).join('');
 
     $('#plan').innerHTML = `<div class="card">
@@ -179,8 +193,8 @@
       <h2>${esc(v.name)}</h2>
       <p>${esc(v.desc)}</p>
       <div class="rules">
-        <div class="rule"><b class="up">+${k.tg * 100}%</b><span>Target: sell when up ${k.tg * 100}%</span></div>
-        <div class="rule"><b class="down">−${k.st * 100}%</b><span>Stop-loss: sell when down ${k.st * 100}%</span></div>
+        <div class="rule"><b class="up">+${p100(k.tg)}%</b><span>Target: sell when up ${p100(k.tg)}%</span></div>
+        <div class="rule"><b class="down">−${p100(k.st)}%</b><span>Stop-loss: sell when down ${p100(k.st)}%</span></div>
         <div class="rule"><b>${k.hd} days</b><span>Otherwise sell after ${k.hd} trading days</span></div>
       </div>
       <p>Hold <b>${b.slots} stock${b.slots > 1 ? 's' : ''}</b> at a time (about ${inr(per)} each).
@@ -189,19 +203,25 @@
       <div class="verdict ${vcls}"><span class="badge ${vcls}">${vtitle}</span><p>${vtext}</p></div>
       <h3>How this plan did on past prices</h3>
       ${tested}
+      ${passedLine}
+      <p class="muted">“Every signal” is the pattern’s average trade across all Nifty 100 stocks. “${inr(b.capital)} became” is what following it with
+        your money would have done: with ${b.slots === 1 ? 'one stock' : b.slots + ' stocks'} at a time you only catch some of the signals, so luck
+        matters a lot. Each ₹ figure is the middle of ${BT.start_offsets} runs started on different weeks.</p>
       <div class="periods">${rows}</div>
       ${randomLine}
+      <h3>One example run</h3>
       ${chart}
-      <p class="muted">Final test: ${t.targets_hit} targets hit, ${t.stops_hit} stop-losses hit, ${timeExits} sold on time.
-        Charges paid: ${inr(t.charges)}. Income tax on profits (20% short-term capital gains) is not included.</p>
-      <details><summary>See all ${t.trades} trades from the final test</summary>
+      <p class="muted">Starting ${fmtDate(ex.start)}: ${inr(b.capital)} became ${inr(ex.final)}. ${ex.targets_hit} targets hit, ${ex.stops_hit} stop-losses hit,
+        ${timeExits} sold on time. Charges paid: ${inr(ex.charges)}. Income tax on profits (20% short-term capital gains) is not included.</p>
+      <details><summary>See all ${ex.trades} trades from this example run</summary>
         <div class="table-wrap"><table>
           <thead><tr><th>Stock</th><th>Bought</th><th class="r">Price</th><th>Sold</th><th class="r">Price</th><th class="r">Shares</th><th class="r">Profit after charges</th><th>Why sold</th></tr></thead>
           <tbody>${log}</tbody></table></div></details>
       <details><summary>Other strategies tested for this amount</summary>
-        <p class="muted">The ${b.candidates.length} best of ${BT.combos_tested} combinations after training. ★ is the one picked on the checking period.</p>
+        <p class="muted">The ${b.candidates.length} steadiest of ${BT.combos_tested} combinations. Training and checking show the estimated
+          yearly return from the average trade, used to pick (★). The final test was never used for picking.</p>
         <div class="table-wrap"><table>
-          <thead><tr><th>Pattern</th><th>Target / stop / days</th><th class="r">Training</th><th class="r">Checking</th><th class="r">Final test</th></tr></thead>
+          <thead><tr><th>Pattern</th><th class="r">Training</th><th class="r">Checking</th><th class="r">Final test</th></tr></thead>
           <tbody>${cands}</tbody></table></div></details>
     </div>`;
   }
@@ -349,8 +369,8 @@
     form.elements.date.value = prefill.date || isoDay(new Date());
     form.elements.price.value = prefill.price ?? TD.stocks[sel.value].close;
     form.elements.qty.value = prefill.qty ?? 1;
-    form.elements.tg.value = Math.round(k.tg * 100);
-    form.elements.st.value = Math.round(k.st * 100);
+    form.elements.tg.value = Math.round(p100(k.tg));
+    form.elements.st.value = Math.round(p100(k.st));
     form.elements.hold.value = k.hd;
     sel.onchange = () => { form.elements.price.value = TD.stocks[sel.value].close; };
     form.onsubmit = e => {
@@ -381,7 +401,7 @@
     const block = ({ v, sigs, ps }) => `<div class="pattern">
       <b>${esc(v.name)}</b> <small class="muted">· ${esc(v.family)}</small>
       <p class="muted">${esc(v.desc)}</p>
-      <p><small>Final test (+${ex[0] * 100}% target, −${ex[1] * 100}% stop, ${ex[2]} days, before charges):
+      <p><small>Final test (+${p100(ex[0])}% target, −${p100(ex[1])}% stop, ${ex[2]} days, before charges):
         ${ps.n ? `${ps.n} trades, ${pct(ps.win)} won, average <span class="${cls(ps.avg)}">${ps.avg > 0 ? '+' : ''}${pct(ps.avg, 1)}</span> per trade` : 'not enough trades'}</small></p>
       <div class="stock-chips">${sigs.map(s => `<span class="stock-chip">${esc(s.s)} ${inr(TD.stocks[s.s]?.close ?? s.c)}</span>`).join('')}</div>
     </div>`;
@@ -402,17 +422,22 @@
       <span class="label">How it was tested</span>
       <h2>${BT.combos_tested} combinations, ${g.capitals.length} amounts</h2>
       <ul class="plain">
-        <li><b>${nVariants} chart patterns</b> × ${g.targets.length} targets (${g.targets.map(x => '+' + x * 100 + '%').join(', ')})
-          × ${g.stops.length} stop-losses (${g.stops.map(x => '−' + x * 100 + '%').join(', ')}) × ${g.holds.length} holding times
+        <li><b>${nVariants} chart patterns</b> × ${g.targets.length} targets (${g.targets.map(x => '+' + p100(x) + '%').join(', ')})
+          × ${g.stops.length} stop-losses (${g.stops.map(x => '−' + p100(x) + '%').join(', ')}) × ${g.holds.length} holding times
           (${g.holds.join(', ')} trading days), on ${BT.n_stocks} Nifty 100 stocks from ${fmtDate(BT.data_start)} to ${fmtDate(BT.data_end)}.</li>
         <li><b>Real money rules:</b> whole shares only, Groww’s delivery charges on every buy and sell (brokerage, STT, stamp duty,
           exchange fees, ₹20 DP charge, GST), and only as many stocks at once as your amount allows.</li>
         <li><b>No peeking at the future:</b> a pattern is spotted at the close and bought at the <i>next</i> day’s open. If the target and
           stop-loss are both touched on the same day, the test assumes the stop-loss came first.</li>
-        <li><b>Three separate periods:</b> the best ${BT.buckets[0].candidates.length} combinations are shortlisted on
-          ${periodRange('train')}, the winner is picked on ${periodRange('validate')}, and the final test on
-          ${periodRange('test')} was never used for picking, so it shows how the pick would really have done.</li>
-        <li><b>Luck check:</b> the winner is compared with 100 runs of random stock picks using the same target, stop-loss and amount.</li>
+        <li><b>Picked on the average trade:</b> every trade each combination made is averaged after charges at your amount, in training
+          (${periodRange('train')}) and checking (${periodRange('validate')}). The combination whose <i>weaker</i> period was best wins.
+          Averages over thousands of trades hardly change when a few prices do, so the pick is stable.</li>
+        <li><b>Then followed with your money:</b> the pick is run with whole shares, charges and only as many stocks as you can afford,
+          starting on ${BT.start_offsets} different weeks. The page shows the middle result and the range.</li>
+        <li><b>Final test never used for picking:</b> ${periodRange('test')} shows how the pick would really have done.</li>
+        <li><b>Luck check:</b> the plan is compared with 100 runs of random stock picks using the same target, stop-loss and amount.</li>
+        <li><b>No flip-flopping:</b> strategies are re-tested every Saturday, but a new one only replaces your plan if it is clearly better
+          (by ${pct(BT.switch_margin)} a year).</li>
       </ul>
       <h3>Limits to keep in mind</h3>
       <ul class="plain">

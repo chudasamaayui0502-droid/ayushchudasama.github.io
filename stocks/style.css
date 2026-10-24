@@ -95,6 +95,8 @@ section > .card:last-child { margin-bottom: 1.5rem; }
 .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0.5rem 0; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td small { color: var(--muted); font-size: 11px; }
+td:first-child { white-space: normal; min-width: 8.5rem; }
 th { color: var(--muted); font-weight: 500; font-size: 12px; }
 td.r, th.r { text-align: right; }
 
@@ -149,4 +151,7 @@ ul.plain li { margin: 0.25rem 0; }
   .rule b { font-size: 1rem; }
   .trade-form { grid-template-columns: 1fr 1fr; }
   .spark { width: 84px; }
+  table { font-size: 12px; }
+  th, td { padding: 6px 5px; }
+  td:first-child { min-width: 7rem; }
 }
