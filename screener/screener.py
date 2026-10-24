@@ -46,6 +46,14 @@ STOPS = (0.04, 0.07, 0.10)
 HOLDS = (10, 20, 40)  # trading days
 STANDARD_EXIT = (0.08, 0.04, 20)  # used to compare patterns with each other
 BENCHMARK = "NIFTYBEES"  # Nifty 50 ETF
+# Big news (wars, rate changes, budgets, global crashes) shows up in these
+# within days, and unlike news itself they have a long, testable history.
+MARKET_TICKERS = {"nifty": "^NSEI", "vix": "^INDIAVIX", "world": "^GSPC"}
+VIX_CALM = 20
+# Latest company numbers from Yahoo, shown next to buy signals. There is no
+# free history of past reports, so these can't be part of the backtest.
+FUNDAMENTAL_FIELDS = {"pe": "trailingPE", "pb": "priceToBook", "de": "debtToEquity", "roe": "returnOnEquity",
+                      "margin": "profitMargins", "rev_growth": "revenueGrowth", "earn_growth": "earningsGrowth"}
 MIN_TRAIN_TRADES = 30
 CANDIDATES_PER_CAPITAL = 12
 RANDOM_RUNS = 100
@@ -201,6 +209,55 @@ def download_prices(symbols, start=HISTORY_START, use_cache=False) -> dict[str, 
     return frames
 
 
+def download_market(start=HISTORY_START, use_cache=False) -> dict[str, pd.DataFrame]:
+    """Daily closes of the Nifty 50, India VIX and the US S&P 500."""
+    cache = CACHE_DIR / f"market_{start}_{dt.date.today()}.pkl"
+    if use_cache and cache.exists():
+        return pickle.loads(cache.read_bytes())
+    import yfinance as yf
+
+    out = {}
+    for name, ticker in MARKET_TICKERS.items():
+        for attempt in range(3):
+            try:
+                df = yf.download(ticker, start=start, auto_adjust=True, progress=False)
+                if isinstance(df.columns, pd.MultiIndex):
+                    df.columns = df.columns.get_level_values(0)
+                df = df[["Close"]].astype(float).dropna()
+                df = df[df["Close"] > 0]
+                idx = pd.to_datetime(df.index)
+                df.index = (idx.tz_localize(None) if idx.tz is not None else idx).normalize()
+                df = df[~df.index.duplicated(keep="last")].sort_index()
+                if len(df) > 250:
+                    out[name] = df
+                    break
+            except Exception as exc:
+                print(f"{ticker} download failed: {exc}", file=sys.stderr)
+            time.sleep(5 * (attempt + 1))
+    if use_cache:
+        CACHE_DIR.mkdir(exist_ok=True)
+        cache.write_bytes(pickle.dumps(out))
+    return out
+
+
+def fetch_fundamentals(symbols) -> dict:
+    import yfinance as yf
+
+    out = {}
+    for s in symbols:
+        try:
+            info = yf.Ticker(f"{s}.NS").info
+        except Exception as exc:
+            print(f"No company data for {s}: {exc}", file=sys.stderr)
+            continue
+        row = {k: float(info[src]) for k, src in FUNDAMENTAL_FIELDS.items()
+               if isinstance(info.get(src), (int, float)) and math.isfinite(info[src])}
+        if row:
+            out[s] = row
+        time.sleep(0.3)
+    return out
+
+
 BHAVCOPY_URL = "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_{:%Y%m%d}_F_0000.csv.zip"
 
 
@@ -299,6 +356,7 @@ class Variant:
     family: str
     name: str
     desc: str
+    filter: str = ""  # market filter id, "" for the plain pattern
 
 
 def rsi(close: pd.DataFrame, n: int) -> pd.DataFrame:
@@ -393,6 +451,42 @@ def pattern_signals(p: Panel) -> list[tuple[Variant, pd.DataFrame]]:
 def momentum_score(p: Panel) -> np.ndarray:
     """6-month return, used to rank stocks when several signal on the same day."""
     return (p.C / p.C.shift(126) - 1).fillna(-1.0).to_numpy()
+
+
+def market_filters(p: Panel, market: dict) -> dict:
+    """{id: (name, condition, True/False per trading day)}. Each day uses only
+    what was known at that day's Indian close."""
+    out = {}
+
+    def uptrend(close):
+        return close > close.rolling(200, min_periods=200).mean()
+
+    def on_panel_days(flags):
+        return flags.reindex(p.dates, method="ffill", limit=5).fillna(False).astype(bool)
+
+    if "nifty" in market:
+        out["nifty"] = ("Nifty rising", "the Nifty 50 index is above its 200-day average (the Indian market is rising)",
+                        on_panel_days(uptrend(market["nifty"]["Close"])))
+    if "vix" in market:
+        out["calm"] = ("Calm market", f"India VIX, the market's fear gauge, is below {VIX_CALM}",
+                       on_panel_days(market["vix"]["Close"] < VIX_CALM))
+    if "world" in market:
+        us = uptrend(market["world"]["Close"])
+        us.index = us.index + pd.Timedelta(days=1)  # the US closes after India: use its previous session
+        out["world"] = ("World rising", "the US S&P 500 is above its 200-day average (world markets are rising)",
+                        on_panel_days(us))
+    return out
+
+
+def with_market_filters(signals, filters: dict):
+    """Each pattern on its own, plus once per market filter."""
+    out = list(signals)
+    for v, sig in signals:
+        for fid, (fname, cond, mask) in filters.items():
+            fsig = pd.DataFrame(sig.to_numpy() & mask.to_numpy()[:, None], index=sig.index, columns=sig.columns)
+            out.append((Variant(f"{v.id}@{fid}", v.family, f"{v.name} + {fname}",
+                                f"{v.desc} Only taken when {cond}.", fid), fsig))
+    return out
 
 
 # --------------------------------------------------------------------------
@@ -807,16 +901,37 @@ def run_backtest(p: Panel, signals, bench: pd.DataFrame | None, log=print, previ
 # Today's signals and recent prices for the page
 # --------------------------------------------------------------------------
 
-def today_payload(p: Panel, signals, universe: pd.DataFrame) -> dict:
+def market_mood(market: dict, filters: dict) -> dict:
+    mood = {"vix_calm_below": VIX_CALM, "filters": {fid: bool(m.iloc[-1]) for fid, (_, _, m) in filters.items()}}
+    for name in ("nifty", "world"):
+        if name in market:
+            c = market[name]["Close"]
+            sma = c.rolling(200, min_periods=200).mean()
+            mood[name] = {"date": str(c.index[-1].date()), "close": float(c.iloc[-1]), "sma200": float(sma.iloc[-1]),
+                          "up": bool(c.iloc[-1] > sma.iloc[-1])}
+    if "vix" in market:
+        v = market["vix"]["Close"]
+        mood["vix"] = {"date": str(v.index[-1].date()), "close": float(v.iloc[-1]), "calm": bool(v.iloc[-1] < VIX_CALM)}
+    return mood
+
+
+def today_payload(p: Panel, signals, universe: pd.DataFrame, mood: dict | None = None,
+                  fundamentals: dict | None = None) -> dict:
     info = universe.set_index("Symbol")
     last = len(p.dates) - 1
     C = p.C.to_numpy()
     score = momentum_score(p)
-    out_signals = {}
+    out_signals, last_signal = {}, {}
     for v, sig in signals:
-        hits = np.nonzero(sig.to_numpy()[last])[0]
+        S_ = sig.to_numpy()
+        hits = np.nonzero(S_[last])[0]
         rows = [{"s": p.symbols[k], "c": float(C[last, k]), "m": float(score[last, k])} for k in hits]
         out_signals[v.id] = sorted(rows, key=lambda r: -r["m"])
+        days = np.nonzero(S_.any(axis=1))[0]
+        if len(days):
+            r = days[-1]
+            last_signal[v.id] = {"date": str(p.dates[r].date()),
+                                 "stocks": [{"s": p.symbols[k], "c": float(C[r, k])} for k in np.nonzero(S_[r])[0]]}
     recent = slice(max(0, last - RECENT_BARS + 1), last + 1)
     stocks = {}
     for k, sym in enumerate(p.symbols):
@@ -835,7 +950,8 @@ def today_payload(p: Panel, signals, universe: pd.DataFrame) -> dict:
         "generated_at": dt.datetime.now(IST).isoformat(timespec="minutes"),
         "data_date": str(p.dates[last].date()),
         "dates": [str(d.date()) for d in p.dates[recent]],
-        "signals": out_signals, "stocks": stocks,
+        "signals": out_signals, "last_signal": last_signal, "stocks": stocks,
+        "market": mood or {}, "fundamentals": fundamentals or {},
     }
 
 
@@ -876,8 +992,15 @@ def main(argv=None) -> int:
         print(f"Only {len(frames)} of {len(universe)} stocks downloaded; keeping the previous data.", file=sys.stderr)
         return 1
     panel = build_panel(frames)
-    signals = pattern_signals(panel)
-    print(f"{len(panel.symbols)} stocks, {panel.dates[0].date()} to {panel.dates[-1].date()}")
+    market = download_market(use_cache=args.cache)
+    if set(market) != set(MARKET_TICKERS):
+        print(f"Missing market data ({', '.join(set(MARKET_TICKERS) - set(market))}); keeping the previous data.",
+              file=sys.stderr)
+        return 1
+    filters = market_filters(panel, market)
+    signals = with_market_filters(pattern_signals(panel), filters)
+    print(f"{len(panel.symbols)} stocks, {panel.dates[0].date()} to {panel.dates[-1].date()}, "
+          f"{len(signals)} pattern versions")
 
     bt_path = OUT_DIR / "backtest.json"
     if args.mode == "full" or not bt_path.exists():
@@ -885,7 +1008,10 @@ def main(argv=None) -> int:
         if bt_path.exists():
             previous = {b["capital"]: b["chosen"] for b in json.loads(bt_path.read_text()).get("buckets", [])}
         write_json(bt_path, run_backtest(panel, signals, bench, previous=previous))
-    write_json(OUT_DIR / "today.json", today_payload(panel, signals, universe))
+    signalled = sorted({s for v, sig in signals for s in sig.columns[sig.iloc[-1].to_numpy()]})
+    fundamentals = fetch_fundamentals(signalled)
+    write_json(OUT_DIR / "today.json",
+               today_payload(panel, signals, universe, market_mood(market, filters), fundamentals))
     return 0
 
 

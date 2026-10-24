@@ -192,6 +192,68 @@ def test_entry_is_next_day_open():
     assert list(n) == [2] and list(e) == [101] and pe[0] == O[101, 2]
 
 
+# ---- market mood filters --------------------------------------------------------
+
+def market_frames(p, n_days=400):
+    idx = pd.bdate_range("2018-06-01", periods=n_days + 250)
+    up = pd.DataFrame({"Close": np.linspace(100, 200, len(idx))}, index=idx)
+    return {"nifty": up, "world": up.copy(), "vix": pd.DataFrame({"Close": 15.0}, index=idx)}
+
+
+def test_us_filter_uses_previous_us_session():
+    p = S.build_panel(make_frames(), now=dt.datetime(2030, 1, 1, tzinfo=S.IST))
+    market = market_frames(p)
+    day = p.dates[300]
+    close = market["world"]["Close"].copy()
+    close[close.index >= day] = 1.0  # US crashes on the same calendar day
+    market["world"] = close.to_frame()
+    world = S.market_filters(p, market)["world"][2]
+    assert world.loc[p.dates[299]] and world.loc[day]  # India closes before the US crash is known
+    assert not world.loc[p.dates[301]]
+
+
+def test_market_filters_use_only_past_data():
+    p = S.build_panel(make_frames(), now=dt.datetime(2030, 1, 1, tzinfo=S.IST))
+    rng = np.random.default_rng(3)
+    idx = pd.bdate_range("2018-01-01", periods=900)
+    walk = lambda: pd.DataFrame({"Close": 100 * np.exp(np.cumsum(rng.normal(0, 0.02, len(idx))))}, index=idx)
+    market = {"nifty": walk(), "world": walk(), "vix": pd.DataFrame({"Close": rng.uniform(10, 30, len(idx))}, index=idx)}
+    full = S.market_filters(p, market)
+    cut = p.dates[250]
+    part = S.market_filters(p, {k: v[v.index <= cut] for k, v in market.items()})
+    for fid in full:
+        assert full[fid][2].loc[:cut].equals(part[fid][2].loc[:cut]), fid
+
+
+def test_filtered_pattern_is_subset_of_plain_pattern():
+    p = S.build_panel(make_frames(), now=dt.datetime(2030, 1, 1, tzinfo=S.IST))
+    market = market_frames(p)
+    market["vix"] = pd.DataFrame({"Close": 35.0}, index=market["vix"].index)  # never calm
+    signals = S.pattern_signals(p)
+    allv = dict((v.id, (v, s)) for v, s in S.with_market_filters(signals, S.market_filters(p, market)))
+    assert len(allv) == len(signals) * 4
+    for v, sig in signals:
+        assert not allv[f"{v.id}@calm"][1].to_numpy().any()
+        for fid in ("nifty", "world"):
+            fv, fsig = allv[f"{v.id}@{fid}"]
+            assert fv.filter == fid and not (fsig.to_numpy() & ~sig.to_numpy()).any()
+
+
+def test_today_payload_reports_last_signal_and_mood():
+    p = S.build_panel(make_frames(), now=dt.datetime(2030, 1, 1, tzinfo=S.IST))
+    sig = pd.DataFrame(False, index=p.dates, columns=p.symbols)
+    sig.iloc[120, 1] = sig.iloc[250, 4] = True
+    v = S.Variant("x", "fam", "X", "desc")
+    market = market_frames(p)
+    filters = S.market_filters(p, market)
+    universe = pd.DataFrame({"Symbol": p.symbols, "Name": p.symbols, "Industry": ""})
+    out = S.today_payload(p, [(v, sig)], universe, S.market_mood(market, filters), {"S4": {"pe": 20.0}})
+    assert out["signals"]["x"] == []
+    assert out["last_signal"]["x"]["date"] == str(p.dates[250].date())
+    assert [r["s"] for r in out["last_signal"]["x"]["stocks"]] == ["S4"]
+    assert out["market"]["nifty"]["up"] and out["market"]["vix"]["calm"] and out["fundamentals"]["S4"]["pe"] == 20
+
+
 # ---- portfolio rules -----------------------------------------------------------
 
 def synthetic_trades(rows):

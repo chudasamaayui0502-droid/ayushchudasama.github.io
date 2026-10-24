@@ -124,6 +124,17 @@ td.r, th.r { text-align: right; }
 .trade.sell.win { border-color: var(--up); }
 .trade-top { display: flex; justify-content: space-between; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
 
+.mood-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0.6rem 0; }
+.mood { background: var(--panel-2); border-radius: 8px; padding: 0.55rem 0.6rem; border-top: 3px solid var(--line); }
+.mood.good { border-top-color: var(--up); }
+.mood.bad { border-top-color: var(--down); }
+.mood small { display: block; color: var(--muted); font-size: 11px; }
+.mood b { display: block; font-size: 1.1rem; }
+.mood span { display: block; font-size: 12px; color: var(--muted); line-height: 1.35; }
+.health { margin-top: 0.6rem; }
+.health .badge { font-weight: 500; }
+.news { font-size: 13px; align-self: center; }
+
 .pattern { border-top: 1px solid var(--line); padding: 0.75rem 0; }
 .pattern:first-of-type { border-top: 0; }
 .stock-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 0.4rem; }
@@ -151,6 +162,7 @@ ul.plain li { margin: 0.25rem 0; }
   .rule b { font-size: 1rem; }
   .trade-form { grid-template-columns: 1fr 1fr; }
   .spark { width: 84px; }
+  .mood-grid { grid-template-columns: 1fr; }
   table { font-size: 12px; }
   th, td { padding: 6px 5px; }
   td:first-child { min-width: 7rem; }
