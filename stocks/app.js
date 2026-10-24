@@ -292,11 +292,11 @@
       const st = TD.stocks[x.sym];
       if (st) rows.push({ ...x, st, shares: affordableShares(per, st.close) });
     }
-    rows.sort((a, z) => z.best.r.steady - a.best.r.steady);
+    rows.sort((a, z) => (z.best.plan - a.best.plan) || (z.best.r.steady - a.best.r.steady) || ((z.st.m ?? -1) - (a.st.m ?? -1)));
     return { b, per, planVid, ok: rows.filter(x => x.shares >= 1), dear: rows.filter(x => x.shares < 1) };
   }
 
-  function signalCard(x, b, per) {
+  function signalCard(x, b, per, rank, weak) {
     const r = x.best.r, k = ruleOf(r), v = BT.variants[x.best.vid];
     const price = x.st.close, target = price * (1 + k.tg), stop = price * (1 - k.st);
     const invest = x.shares * price + buyCharges(x.shares * price);
@@ -304,9 +304,11 @@
     const avg = r.avg.test;
     const base = n => n.split(' + ')[0];
     const also = [...new Set(x.others.map(o => base(BT.variants[o.vid].name)))].filter(n => n !== base(v.name));
-    return `<div class="pick${x.best.plan ? ' top' : ''}">
+    const rankLabel = rank === 1 ? (weak ? 'Best of today’s list' : 'Top pick') : rank <= b.slots ? 'In your slots' : '';
+    return `<div class="pick${rank === 1 ? ' top' : ''}" id="pick-${esc(x.sym)}">
       <div class="pick-head">
-        <div><div class="pick-name">${esc(x.st.name)}</div>
+        <div><div class="rank-row"><span class="rank">#${rank}</span>${rankLabel ? `<span class="badge ${rank === 1 && !weak ? 'good' : 'info'}">${rankLabel}</span>` : ''}</div>
+          <div class="pick-name">${esc(x.st.name)}</div>
           <div class="pick-sym">${esc(x.sym)} · ${esc(x.st.industry)} ${x.best.plan ? '<span class="badge info">★ Tested plan</span>' : ''}</div></div>
         ${sparkline(x.st.bars)}
       </div>
@@ -341,13 +343,27 @@
     const slotsNote = b.slots === 1
       ? `With ${inr(cap)} you can hold <b>1 stock</b> at a time, so buy one only if you don’t already hold one.`
       : `With ${inr(cap)} you can hold <b>${b.slots} stocks</b> at a time (about ${inr(per)} each).`;
-    const warn = ok.length && ok.every(x => x.best.r.avg.test <= 0)
+    const weak = ok.length > 0 && ok.every(x => x.best.r.avg.test <= 0);
+    const warn = weak
       ? `<div class="verdict bad"><span class="badge bad">Heads-up</span><p>At ${inr(b.capital)}, every one of these patterns
           <b>lost money on average</b> after charges in testing: each buy + sell of ${inr(per)} costs about ${inr(cost, 2)}.
           Some trades still win, but on average they lost. Always use the stop-loss, or paper-trade first.</p></div>` : '';
     let body;
     if (ok.length) {
-      body = ok.map(x => signalCard(x, b, per)).join('');
+      const take = Math.min(b.slots, ok.length);
+      const ranking = `<div class="table-wrap"><table class="ranking">
+          <thead><tr><th>#</th><th>Stock</th><th class="r">Price</th><th class="r">Avg trade</th></tr></thead>
+          <tbody>${ok.map((x, i) => {
+            const avg = x.best.r.avg.test;
+            return `<tr${i < take ? ' class="in-slot"' : ''}><td><b>${i + 1}</b></td>
+              <td><a href="#pick-${esc(x.sym)}">${esc(x.sym)}</a>${x.best.plan ? ' ★' : ''}<br><small>${esc(BT.variants[x.best.vid].name.split(' + ')[0])}</small></td>
+              <td class="r num">${inr(x.st.close, 2)}</td><td class="r num ${cls(avg)}">${avg > 0 ? '+' : ''}${pct(avg, 1)}</td></tr>`;
+          }).join('')}</tbody></table></div>
+        <p class="muted rank-note">Ranked by: ① the tested plan’s own signals (★), ② how steadily the pattern made money after charges
+          in training and checking at ${inr(b.capital)}, ③ 6-month strength, which is how the backtest chose between same-day signals.
+          “Avg trade” is the final-test average after charges. ${take === 1 ? 'With 1 stock at a time, take <b>#1</b> only.'
+            : `With ${b.slots} stocks at a time, take <b>#1–#${take}</b>.`}</p>`;
+      body = ranking + ok.map((x, i) => signalCard(x, b, per, i + 1, weak)).join('');
     } else {
       const last = planVid && TD.last_signal?.[planVid];
       body = `<p class="empty"><b>No signals you can afford today.</b> Do nothing and check again after the next market close.</p>`
@@ -359,7 +375,7 @@
       <span class="label">Buy signals · for ${fmtDay(nextWeekday(TD.data_date))} · ${inr(cap)}</span>
       <h2>${ok.length ? `${ok.length} stock${ok.length > 1 ? 's' : ''} you can buy` : 'Nothing to buy'}</h2>
       <p class="muted">From the close of ${fmtDay(TD.data_date)}: every stock a tested pattern signals today that fits your money,
-        best track record first. Buy at the next market open (9:15–9:30 AM) as a <b>Delivery</b> order. ${slotsNote}</p>
+        ranked below. Buy at the next market open (9:15–9:30 AM) as a <b>Delivery</b> order. ${slotsNote}</p>
       ${warn}${body}${dearLine}
     </div>`;
   }

@@ -133,6 +133,14 @@ td.r, th.r { text-align: right; }
 .mood span { display: block; font-size: 12px; color: var(--muted); line-height: 1.35; }
 .health { margin-top: 0.6rem; }
 .rule-line { font-size: 13px; margin-top: 0.5rem; }
+.rank-row { display: flex; align-items: center; gap: 8px; margin-bottom: 0.3rem; }
+.rank { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; line-height: 1; color: var(--accent); }
+.ranking a { color: var(--text); font-weight: 700; text-decoration: none; }
+.ranking tr.in-slot td { background: var(--accent-soft); }
+.ranking td:first-child { min-width: 0; width: 1.6rem; }
+.ranking td:nth-child(2) { white-space: normal; }
+.rank-note { font-size: 12px; margin-bottom: 0.4rem; }
+.pick { scroll-margin-top: 12px; }
 .history { margin-top: 0.6rem; padding: 0.5rem 0.65rem; border-radius: 8px; border-left: 3px solid var(--line); background: var(--panel); font-size: 13px; }
 .history.good { border-left-color: var(--up); }
 .history.bad { border-left-color: var(--down); }
