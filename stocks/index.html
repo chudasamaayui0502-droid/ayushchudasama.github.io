@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NSE Swing Signals</title>
+  <meta name="description" content="Chart-pattern buy and sell signals for Nifty 100 stocks, tested on 10+ years of NSE data with Groww charges." />
+  <meta name="robots" content="noindex" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<main class="wrap">
+  <header class="hero">
+    <div class="tag">NSE · Nifty 100 · Swing trading</div>
+    <h1>Swing <span>Signals</span></h1>
+    <p class="sub" id="dataLine">Loading prices…</p>
+  </header>
+
+  <p class="warn"><strong>Not financial advice.</strong> These signals come from chart patterns tested on past prices.
+    They are wrong often. Always use the stop-loss, and only use money you can afford to lose.</p>
+
+  <section class="card" id="capitalCard">
+    <label class="label" for="capital">How much money will you trade with?</label>
+    <div class="capital-row">
+      <span class="rupee">₹</span>
+      <input id="capital" type="number" inputmode="numeric" min="100" step="100" value="1000" />
+    </div>
+    <div class="chips" id="capitalChips"></div>
+  </section>
+
+  <section id="plan"></section>
+  <section id="buy"></section>
+  <section id="mytrades"></section>
+  <section id="patterns"></section>
+  <section id="method"></section>
+  <section id="howto"></section>
+
+  <footer class="foot" id="foot"></footer>
+</main>
+
+<template id="tradeForm">
+  <form class="trade-form" autocomplete="off">
+    <label>Stock<select name="sym" required></select></label>
+    <label>Buy date<input name="date" type="date" required /></label>
+    <label>Buy price (₹)<input name="price" type="number" inputmode="decimal" step="any" min="0.01" required /></label>
+    <label>Shares<input name="qty" type="number" step="1" min="1" required /></label>
+    <label>Target %<input name="tg" type="number" step="1" min="1" required /></label>
+    <label>Stop-loss %<input name="st" type="number" step="1" min="1" required /></label>
+    <label>Sell after (trading days)<input name="hold" type="number" step="1" min="1" required /></label>
+    <button type="submit" class="btn">Save trade</button>
+  </form>
+</template>
+
+<script src="app.js"></script>
+</body>
+</html>
