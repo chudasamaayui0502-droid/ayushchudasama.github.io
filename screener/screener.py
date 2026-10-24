@@ -798,6 +798,33 @@ def run_backtest(p: Panel, signals, bench: pd.DataFrame | None, log=print, previ
         busy = min(1.0, q["n"] * q["hold"] / (e - s + 1) / slots_for(cap))
         return q["score"] * busy * 250
 
+    # For the page's daily list: every pattern's steadiest target/stop rule at
+    # each amount, with how its past trades ended and how long targets took.
+    pattern_rules = {}
+    for cap in CAPITALS:
+        best = {}
+        for key, qs in stage1[cap]:
+            if qs["train"]["n"] < MIN_TRAIN_TRADES or qs["validate"]["n"] < MIN_TRAIN_TRADES // 3:
+                continue
+            steady = min(expected_yearly(qs, "train", cap), expected_yearly(qs, "validate", cap))
+            vid = key.split("|")[0]
+            if vid not in best or (steady, key) > best[vid][:2]:
+                best[vid] = (steady, key, qs)
+        for vid, (steady, key, qs) in best.items():
+            tr = trades_cache[key]
+            ok, _ = trade_net_returns(tr, cap / slots_for(cap))
+            m = ok & tr.complete
+            kind, days = tr.kind[m], (tr.x - tr.e + 1)[m]
+            hit_days = days[kind == 2]
+            pattern_rules.setdefault(vid, {})[str(cap)] = {
+                "rule": key.split("|", 1)[1], "steady": steady,
+                "avg": {name: qs[name]["avg"] for name in ("train", "validate", "test")},
+                "test_n": qs["test"]["n"], "test_win": qs["test"]["win"], "n": int(m.sum()),
+                "ends": {"target": float((kind == 2).mean()), "stop": float((kind == 1).mean()),
+                         "time": float((kind == 0).mean())} if m.any() else None,
+                "target_days": [float(np.percentile(hit_days, q)) for q in (25, 50, 75)] if len(hit_days) else None,
+            }
+
     buckets = []
     for cap in CAPITALS:
         # Pick on training + checking only, using the average of every trade:
@@ -891,7 +918,7 @@ def run_backtest(p: Panel, signals, bench: pd.DataFrame | None, log=print, previ
         "grid": {"targets": TARGETS, "stops": STOPS, "holds": HOLDS, "capitals": CAPITALS},
         "start_offsets": START_OFFSETS, "switch_margin": SWITCH_MARGIN,
         "variants": {vid: v.__dict__ for vid, v in variants.items()},
-        "pattern_stats": pattern_stats,
+        "pattern_stats": pattern_stats, "pattern_rules": pattern_rules,
         "standard_exit": STANDARD_EXIT,
         "buckets": buckets,
     }
