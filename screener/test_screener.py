@@ -353,4 +353,15 @@ def test_full_backtest_on_synthetic_data_has_no_nan_in_json(tmp_path, monkeypatc
     S.write_json(tmp_path / "b.json", bt)
     S.write_json(tmp_path / "t.json", S.today_payload(p, signals, universe))
     assert bt["combos_tested"] == len(signals) * len(S.TARGETS) * len(S.STOPS) * len(S.HOLDS)
+    assert bt["pattern_rules"], "the daily list needs each pattern's rule"
+    for vid, by_cap in bt["pattern_rules"].items():
+        for cap, r in by_cap.items():
+            assert f"{vid}|{r['rule']}" in {f"{v.id}|{k}" for v in [x for x, _ in signals]
+                                            for k in [f"{round(a*100)}|{round(b*100)}|{c}"
+                                                      for a in S.TARGETS for b in S.STOPS for c in S.HOLDS]}
+            if r["ends"]:
+                assert abs(sum(r["ends"].values()) - 1) < 1e-9
+            if r["target_days"]:
+                lo, mid, hi = r["target_days"]
+                assert 1 <= lo <= mid <= hi <= max(S.HOLDS)
     assert len(bt["buckets"]) == len(S.CAPITALS)

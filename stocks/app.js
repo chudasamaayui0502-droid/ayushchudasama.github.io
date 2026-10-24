@@ -164,6 +164,12 @@
       </div>`;
     }).join('');
     const ex = c.example, rnd = b.random;
+    const todays = TD.signals[k.vid] || [], last = TD.last_signal?.[k.vid];
+    const filterOk = v.filter ? TD.market?.filters?.[v.filter] : null;
+    const planToday = `<p>${todays.length
+        ? `Today this plan signals <b>${todays.map(s => esc(s.s)).join(', ')}</b>, marked ★ in the buy list above.`
+        : `This plan has no signal today.${last ? ` Its last one was on <b>${fmtDate(last.date)}</b> (${last.stocks.map(s => esc(s.s)).join(', ')}).` : ''}`}
+      ${v.filter ? ` It only buys when <b>${esc(v.name.split(' + ').pop())}</b>: today ${filterOk ? '<b class="up">yes</b>' : '<b class="down">no</b>'}.` : ''}</p>`;
     const randomLine = rnd ? `<p>With the same target, stop-loss and amount, <b>random</b> stock picks turned ${inr(b.capital)} into
       <b>${inr(rnd.median)}</b> (middle of ${rnd.runs} random runs). This plan did better than <b>${pct(rnd.beat_pct)}</b> of them.</p>` : '';
     const passed = b.passed_train_and_validate;
@@ -189,7 +195,7 @@
     }).join('');
 
     $('#plan').innerHTML = `<div class="card">
-      <span class="label">Your plan for ${inr(cap)}</span>
+      <span class="label">The tested plan for ${inr(cap)}</span>
       <h2>${esc(v.name)}</h2>
       <p>${esc(v.desc)}</p>
       <div class="rules">
@@ -201,6 +207,7 @@
         Each buy + sell of ${inr(per)} costs about <b>${inr(cost, 2)}</b> in Groww charges
         (<b>${pct(cost / per, 1)}</b>), so a stock must rise more than that before you make anything.</p>
       <div class="verdict ${vcls}"><span class="badge ${vcls}">${vtitle}</span><p>${vtext}</p></div>
+      ${planToday}
       <h3>How this plan did on past prices</h3>
       ${tested}
       ${passedLine}
@@ -249,78 +256,101 @@
   const newsLink = (name) =>
     `<a href="https://news.google.com/search?q=${encodeURIComponent(name + ' share')}&hl=en-IN&gl=IN&ceid=IN%3Aen" target="_blank" rel="noopener">Latest news ↗</a>`;
 
-  function renderBuy(cap) {
-    const b = bucketFor(cap);
-    if (!b.chosen) { $('#buy').innerHTML = ''; return; }
-    const k = parseKey(b.chosen), v = BT.variants[k.vid];
-    const practice = b.verdict === 'loss' || b.verdict === 'unproven';
-    const per = cap / b.slots;
-    const buyDay = nextWeekday(TD.data_date);
-    const picks = [], tooDear = [];
-    for (const s of TD.signals[k.vid] || []) {
-      const st = TD.stocks[s.s];
-      if (!st) continue;
-      const shares = affordableShares(per, st.close);
-      (shares >= 1 ? picks : tooDear).push({ sym: s.s, st, shares });
-    }
-    const freq = signalsPerMonth(k.vid);
-    const last = TD.last_signal?.[k.vid];
-    let body;
-    if (!picks.length) {
-      const lastLine = last && last.date !== TD.data_date
-        ? `<p>Last signal: <b>${fmtDate(last.date)}</b> · ${last.stocks.map(s => {
-            const now = TD.stocks[s.s]?.close;
-            return `${esc(s.s)} (${inr(s.c)} then${now ? `, ${inr(now)} now` : ''})`;
-          }).join(', ')}. Old signals are not buy signals: the plan only buys at the open right after a signal.</p>` : '';
-      body = `<p class="empty"><b>No buy signal today${tooDear.length ? ' that fits your amount' : ''}.</b> That’s normal: do nothing and check again
-        after the next market close. This pattern shows up about ${freq.toFixed(freq < 3 ? 1 : 0)} times a month across the Nifty 100.</p>${lastLine}`;
-    } else {
-      body = picks.map((p, i) => {
-        const price = p.st.close, target = price * (1 + k.tg), stop = price * (1 - k.st);
-        const invest = p.shares * price + buyCharges(p.shares * price);
-        const win = netPnl(p.shares, price, target), loss = netPnl(p.shares, price, stop);
-        const top = !practice && i < b.slots;
-        return `<div class="pick${top ? ' top' : ''}">
-          <div class="pick-head">
-            <div><div class="pick-name">${esc(p.st.name)}</div>
-              <div class="pick-sym">${esc(p.sym)} · ${esc(p.st.industry)} ${top ? `<span class="badge info">${b.slots === 1 ? 'Top pick' : 'Pick #' + (i + 1)}</span>` : ''}</div></div>
-            ${sparkline(p.st.bars)}
-          </div>
-          <div class="pick-grid">
-            <div><span>Last close</span><b class="num">${inr(price, 2)}</b> <small class="${cls(p.st.chg)}">${p.st.chg == null ? '' : (p.st.chg > 0 ? '+' : '') + pct(p.st.chg, 1)}</small></div>
-            <div><span>${practice ? 'Paper buy' : 'Buy'}</span><b class="num">${p.shares} share${p.shares > 1 ? 's' : ''}</b> <small>≈ ${inr(invest)} with charges</small></div>
-            <div><span>Target (sell)</span><b class="num up">${inr(target, 2)}</b> <small class="${cls(win)}">${signedInr(win)} after charges</small></div>
-            <div><span>Stop-loss (sell)</span><b class="num down">${inr(stop, 2)}</b> <small class="down">${signedInr(loss)} after charges</small></div>
-          </div>
-          ${win <= 0 ? '<p class="error">Charges would eat the whole profit even if the target is hit. Skip this one.</p>' : ''}
-          ${healthChips(p.sym)}
-          <div class="btn-row"><button class="btn small ghost" data-add="${esc(p.sym)}" data-shares="${p.shares}">${practice ? 'Add to My trades as practice' : 'Add to My trades after buying'}</button>
-            <span class="news">${newsLink(p.st.name)}</span></div>
-        </div>`;
-      }).join('');
-      if (!practice && picks.length > b.slots) {
-        body += `<p class="muted" style="margin-top:.6rem">You only have room for ${b.slots} stock${b.slots > 1 ? 's' : ''}. Take the highest one${b.slots > 1 ? 's' : ''} first (they are sorted by 6-month strength, like in testing) and skip the rest.</p>`;
+  const ruleOf = r => {
+    const [tg, st, hd] = r.rule.split('|').map(Number);
+    return { tg: tg / 100, st: st / 100, hd };
+  };
+  function weeksText(days) {
+    const lo = Math.max(1, Math.round(days[0] / 5)), hi = Math.max(lo, Math.round(days[2] / 5));
+    return lo === hi ? `about ${lo} week${lo > 1 ? 's' : ''}` : `${lo}–${hi} weeks`;
+  }
+
+  // Every stock any tested pattern signals today, with that pattern's rule and track record at this amount
+  function todaysSignals(cap) {
+    const b = bucketFor(cap), per = cap / b.slots;
+    const planVid = b.chosen ? parseKey(b.chosen).vid : null;
+    const byStock = new Map();
+    for (const [vid, list] of Object.entries(TD.signals)) {
+      const r = BT.pattern_rules?.[vid]?.[String(b.capital)];
+      if (!r || !r.ends || !list.length) continue;  // not enough past trades to judge
+      for (const s of list) {
+        const e = { vid, r, plan: vid === planVid };
+        const cur = byStock.get(s.s);
+        if (!cur) { byStock.set(s.s, { sym: s.s, best: e, others: [] }); continue; }
+        if (e.plan || (!cur.best.plan && e.r.steady > cur.best.r.steady)) { cur.others.push(cur.best); cur.best = e; }
+        else cur.others.push(e);
       }
     }
-    const dear = tooDear.length ? `<p class="muted" style="margin-top:.6rem">Also signalled but too expensive for ${inr(per)}:
-      ${tooDear.map(p => `${esc(p.sym)} (${inr(p.st.close)})`).join(', ')}.</p>` : '';
-    const filterLine = v.filter ? (() => {
-      const ok = TD.market?.filters?.[v.filter];
-      return `<p>Your plan only buys when <b>${esc(v.name.split(' + ').pop())}</b>. Today: ${ok ? '<b class="up">yes</b>' : '<b class="down">no, so no buys</b>'}.</p>`;
-    })() : '';
-    const title = practice ? (picks.length ? 'Practice only: don’t use real money' : 'Nothing to practise today')
-      : picks.length ? 'Buy at the market open' : 'Nothing to buy';
-    const intro = practice
-      ? `At ${inr(b.capital)} no tested plan made money reliably after charges, so these are <b>paper-trading</b> signals: write them down or
-         add them to My trades without buying, and see how they turn out.`
-      : `${b.slots === 1 ? 'Only buy if you don’t already hold a stock from this plan.' : `Only buy if you hold fewer than ${b.slots} stocks from this plan.`}
-         Target and stop-loss are worked out from the last close; after you buy, save the trade below with your real price.`;
+    const rows = [];
+    for (const x of byStock.values()) {
+      const st = TD.stocks[x.sym];
+      if (st) rows.push({ ...x, st, shares: affordableShares(per, st.close) });
+    }
+    rows.sort((a, z) => z.best.r.steady - a.best.r.steady);
+    return { b, per, planVid, ok: rows.filter(x => x.shares >= 1), dear: rows.filter(x => x.shares < 1) };
+  }
+
+  function signalCard(x, b, per) {
+    const r = x.best.r, k = ruleOf(r), v = BT.variants[x.best.vid];
+    const price = x.st.close, target = price * (1 + k.tg), stop = price * (1 - k.st);
+    const invest = x.shares * price + buyCharges(x.shares * price);
+    const win = netPnl(x.shares, price, target), loss = netPnl(x.shares, price, stop);
+    const avg = r.avg.test;
+    const base = n => n.split(' + ')[0];
+    const also = [...new Set(x.others.map(o => base(BT.variants[o.vid].name)))].filter(n => n !== base(v.name));
+    return `<div class="pick${x.best.plan ? ' top' : ''}">
+      <div class="pick-head">
+        <div><div class="pick-name">${esc(x.st.name)}</div>
+          <div class="pick-sym">${esc(x.sym)} · ${esc(x.st.industry)} ${x.best.plan ? '<span class="badge info">★ Tested plan</span>' : ''}</div></div>
+        ${sparkline(x.st.bars)}
+      </div>
+      <div class="pick-grid">
+        <div><span>Last close</span><b class="num">${inr(price, 2)}</b> <small class="${cls(x.st.chg)}">${x.st.chg == null ? '' : (x.st.chg > 0 ? '+' : '') + pct(x.st.chg, 1)}</small></div>
+        <div><span>Buy</span><b class="num">${x.shares} share${x.shares > 1 ? 's' : ''}</b> <small>≈ ${inr(invest)} with charges</small></div>
+        <div><span>Target +${p100(k.tg)}% (sell)</span><b class="num up">${inr(target, 2)}</b> <small class="${cls(win)}">${signedInr(win)} after charges</small></div>
+        <div><span>Stop-loss −${p100(k.st)}% (sell)</span><b class="num down">${inr(stop, 2)}</b> <small class="down">${signedInr(loss)} after charges</small></div>
+      </div>
+      <p class="rule-line">Otherwise sell after ${k.hd} trading days · Pattern: <b>${esc(v.name)}</b>${also.length ? ` <small>(also: ${esc(also.join(', '))})</small>` : ''}</p>
+      <div class="history ${avg > 0 ? 'good' : 'bad'}">
+        <b>How trades like this went at ${inr(b.capital)}</b>
+        <p>${pct(r.ends.target)} reached the target${r.target_days ? `, usually after ${weeksText(r.target_days)}` : ''} ·
+          ${pct(r.ends.stop)} hit the stop-loss · ${pct(r.ends.time)} were sold at the time limit.</p>
+        <p>Final test (${periodRange('test')}): average <b class="${cls(avg)}">${avg > 0 ? '+' : ''}${pct(avg, 1)}</b> per trade after charges
+          (about ${signedInr(avg * per)}), ${pct(r.test_win)} won, ${r.test_n} trades.</p>
+      </div>
+      ${win <= 0 ? '<p class="error">Charges would eat the whole profit even if the target is hit. Skip this one.</p>' : ''}
+      ${healthChips(x.sym)}
+      <div class="btn-row"><button class="btn small ghost" data-add="${esc(x.sym)}" data-shares="${x.shares}" data-vid="${esc(x.best.vid)}">Add to My trades after buying</button>
+        <span class="news">${newsLink(x.st.name)}</span></div>
+    </div>`;
+  }
+
+  function renderBuy(cap) {
+    const { b, per, ok, dear, planVid } = todaysSignals(cap);
+    const cost = buyCharges(per) + sellCharges(per);
+    const slotsNote = b.slots === 1
+      ? `With ${inr(cap)} you can hold <b>1 stock</b> at a time, so buy one only if you don’t already hold one.`
+      : `With ${inr(cap)} you can hold <b>${b.slots} stocks</b> at a time (about ${inr(per)} each).`;
+    const warn = ok.length && ok.every(x => x.best.r.avg.test <= 0)
+      ? `<div class="verdict bad"><span class="badge bad">Heads-up</span><p>At ${inr(b.capital)}, every one of these patterns
+          <b>lost money on average</b> after charges in testing: each buy + sell of ${inr(per)} costs about ${inr(cost, 2)}.
+          Some trades still win, but on average they lost. Always use the stop-loss, or paper-trade first.</p></div>` : '';
+    let body;
+    if (ok.length) {
+      body = ok.map(x => signalCard(x, b, per)).join('');
+    } else {
+      const last = planVid && TD.last_signal?.[planVid];
+      body = `<p class="empty"><b>No signals you can afford today.</b> Do nothing and check again after the next market close.</p>`
+        + (last ? `<p>The tested plan’s last signal: <b>${fmtDate(last.date)}</b> · ${last.stocks.map(s => `${esc(s.s)} (${inr(s.c)} then${TD.stocks[s.s] ? `, ${inr(TD.stocks[s.s].close)} now` : ''})`).join(', ')}.</p>` : '');
+    }
+    const dearLine = dear.length ? `<p class="muted" style="margin-top:.6rem">Also signalled but too expensive for ${inr(per)}:
+      ${dear.map(x => `${esc(x.sym)} (${inr(x.st.close)})`).join(', ')}.</p>` : '';
     $('#buy').innerHTML = `<div class="card">
-      <span class="label">${practice ? 'Practice list' : 'Buy list'} · for ${fmtDay(buyDay)} (next trading day)</span>
-      <h2>${title}</h2>
-      <p class="muted">Based on the close of ${fmtDay(TD.data_date)}. Pattern: ${esc(v.name)}. ${intro}</p>
-      ${filterLine}
-      ${body}${dear}
+      <span class="label">Buy signals · for ${fmtDay(nextWeekday(TD.data_date))} · ${inr(cap)}</span>
+      <h2>${ok.length ? `${ok.length} stock${ok.length > 1 ? 's' : ''} you can buy` : 'Nothing to buy'}</h2>
+      <p class="muted">From the close of ${fmtDay(TD.data_date)}: every stock a tested pattern signals today that fits your money,
+        best track record first. Buy at the next market open (9:15–9:30 AM) as a <b>Delivery</b> order. ${slotsNote}</p>
+      ${warn}${body}${dearLine}
     </div>`;
   }
 
@@ -399,7 +429,8 @@
         pnl = netPnl(t.qty, t.price, s.close);
         badge = '<span class="badge info">HOLD</span>';
         note = s.left == null ? 'Bought before the last 70 days of saved prices, so the days left can’t be counted. Keep the target and stop-loss.'
-          : `${s.left} trading day${s.left === 1 ? '' : 's'} left. Keep your target and stop-loss orders in place.`;
+          : `Day ${t.hold - s.left} of ${t.hold}: ${s.left} trading day${s.left === 1 ? '' : 's'} left. Keep your target and stop-loss orders in place.`
+            + (t.hint ? ` Trades like this that reached the target usually did so between day ${Math.round(t.hint[0])} and day ${Math.round(t.hint[2])}.` : '');
       }
       return `<div class="trade${card}">
         <div class="trade-top"><div><b>${esc(name)}</b> <small>${esc(t.sym)}</small></div>${badge}</div>
@@ -437,9 +468,9 @@
     form.elements.date.value = prefill.date || isoDay(new Date());
     form.elements.price.value = prefill.price ?? TD.stocks[sel.value].close;
     form.elements.qty.value = prefill.qty ?? 1;
-    form.elements.tg.value = Math.round(p100(k.tg));
-    form.elements.st.value = Math.round(p100(k.st));
-    form.elements.hold.value = k.hd;
+    form.elements.tg.value = prefill.tg ?? p100(k.tg);
+    form.elements.st.value = prefill.st ?? p100(k.st);
+    form.elements.hold.value = prefill.hold ?? k.hd;
     sel.onchange = () => { form.elements.price.value = TD.stocks[sel.value].close; };
     form.onsubmit = e => {
       e.preventDefault();
@@ -449,6 +480,7 @@
         price: +f.price.value, qty: Math.round(+f.qty.value), tg: +f.tg.value, st: +f.st.value, hold: Math.round(+f.hold.value),
       };
       if (!t.date || !(t.price > 0) || !(t.qty >= 1) || !(t.tg > 0) || !(t.st > 0) || !(t.hold >= 1)) return;
+      if (prefill.hint && t.sym === prefill.sym && t.hold === prefill.hold) t.hint = prefill.hint;
       store.set(KEYS.trades, [...store.get(KEYS.trades, []), t]);
       renderMyTrades(cap);
       $('#mytrades').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -528,8 +560,8 @@
       <ol class="steps">
         <li><b>After 7 PM on a trading day</b>, open this page. The top line shows which day’s closing prices it is using.</li>
         <li><b>Check “My trades” first.</b> If a trade says <b>SELL</b>, sell it on Groww the next morning.</li>
-        <li><b>If you have a free slot</b>, look at the Buy list. Buy the top pick at the next market open (9:15–9:30 AM) as a
-          <b>Delivery</b> order, not Intraday.</li>
+        <li><b>If you have a free slot</b>, look at Buy signals. Each stock shows how trades like it went before; the list starts with the
+          best track record. Buy at the next market open (9:15–9:30 AM) as a <b>Delivery</b> order, not Intraday.</li>
         <li><b>Right after buying</b>, tap “Add to My trades” and enter your real buy price. Then set your target and stop-loss on Groww,
           for example with a GTT (Good Till Triggered) order or a price alert, so you don’t have to watch the screen.</li>
         <li><b>Follow the rules every time.</b> Never skip the stop-loss, and never buy more stocks than your plan says.</li>
@@ -582,7 +614,10 @@
     document.body.addEventListener('click', e => {
       const add = e.target.closest('[data-add]');
       if (add) {
-        openForm({ sym: add.dataset.add, qty: +add.dataset.shares, date: nextWeekday(TD.data_date) });
+        const r = BT.pattern_rules?.[add.dataset.vid]?.[String(bucketFor(currentCapital()).capital)];
+        const k = r ? ruleOf(r) : null;
+        openForm({ sym: add.dataset.add, qty: +add.dataset.shares, date: nextWeekday(TD.data_date),
+          ...(k && { tg: p100(k.tg), st: p100(k.st), hold: k.hd, hint: r.target_days }) });
         return;
       }
       const del = e.target.closest('[data-del]');

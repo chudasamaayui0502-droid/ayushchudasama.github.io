@@ -132,6 +132,11 @@ td.r, th.r { text-align: right; }
 .mood b { display: block; font-size: 1.1rem; }
 .mood span { display: block; font-size: 12px; color: var(--muted); line-height: 1.35; }
 .health { margin-top: 0.6rem; }
+.rule-line { font-size: 13px; margin-top: 0.5rem; }
+.history { margin-top: 0.6rem; padding: 0.5rem 0.65rem; border-radius: 8px; border-left: 3px solid var(--line); background: var(--panel); font-size: 13px; }
+.history.good { border-left-color: var(--up); }
+.history.bad { border-left-color: var(--down); }
+.history p { margin-top: 0.2rem; }
 .health .badge { font-weight: 500; }
 .news { font-size: 13px; align-self: center; }
 
