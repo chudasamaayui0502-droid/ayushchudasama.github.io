@@ -1,0 +1,4 @@
+__pycache__/
+.pytest_cache/
+screener/.cache/
+stocks/data/*.tmp
