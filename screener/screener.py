@@ -49,6 +49,14 @@ BENCHMARK = "NIFTYBEES"  # Nifty 50 ETF
 MIN_TRAIN_TRADES = 30
 CANDIDATES_PER_CAPITAL = 12
 RANDOM_RUNS = 100
+# One run of a strategy depends a lot on its first few trades: start a week
+# later and every trade after that can change. So each strategy is run from
+# several start weeks and judged on the middle result.
+START_OFFSETS = 8
+OFFSET_STEP = 7  # trading days between start dates
+# Many strategies score almost the same, so tiny data differences can reorder
+# them. Keep last week's pick unless a new one is steadier by this much a year.
+SWITCH_MARGIN = 0.02
 RECENT_BARS = 70
 
 
@@ -623,7 +631,8 @@ def combo_key(vid, exit_rule):
     return f"{vid}|{round(tg * 100)}|{round(st * 100)}|{hd}"
 
 
-def run_backtest(p: Panel, signals, bench: pd.DataFrame | None, log=print) -> dict:
+def run_backtest(p: Panel, signals, bench: pd.DataFrame | None, log=print, previous: dict | None = None) -> dict:
+    """previous: {capital: combo key} picked last time, kept unless clearly beaten."""
     O, H, L, C = (df.to_numpy() for df in (p.O, p.H, p.L, p.C))
     Cf = p.C.ffill().to_numpy()
     score = momentum_score(p)
@@ -670,20 +679,60 @@ def run_backtest(p: Panel, signals, bench: pd.DataFrame | None, log=print) -> di
             sim_cache[k] = portfolio_sim(trades_cache[key], cap, slots_for(cap), s, e, Cf, p.dates)
         return sim_cache[k]
 
+    def spread(key, cap, period):
+        """Middle and range of the runs from START_OFFSETS start weeks. Final
+        values are scaled to the full period so they compare like for like."""
+        s, e = bounds[period]
+        runs = [sim(key, cap, period)] + [
+            portfolio_sim(trades_cache[key], cap, slots_for(cap), s + i * OFFSET_STEP, e, Cf, p.dates)
+            for i in range(1, START_OFFSETS) if s + i * OFFSET_STEP < e]
+        years = max((p.dates[e] - p.dates[s]).days / 365.25, 1 / 365.25)
+        cagr = np.array([r["cagr"] for r in runs])
+        equiv = cap * np.maximum(1 + cagr, 0) ** years
+        med = lambda field: float(np.median([r[field] for r in runs if r[field] is not None] or [np.nan]))
+        return {"runs": len(runs), "cagr": float(np.median(cagr)), "final": float(np.median(equiv)),
+                "low": float(equiv.min()), "high": float(equiv.max()), "trades": med("trades"),
+                "win_rate": med("win_rate"), "max_dd": med("max_dd")}
+
+    def expected_yearly(qs, period, cap):
+        """Rough yearly return from the average trade (net of charges): return
+        per day held, times the share of days the money would be in trades."""
+        q = qs[period]
+        if not q["n"]:
+            return -math.inf
+        s, e = bounds[period]
+        busy = min(1.0, q["n"] * q["hold"] / (e - s + 1) / slots_for(cap))
+        return q["score"] * busy * 250
+
     buckets = []
     for cap in CAPITALS:
-        ranked = sorted((r for r in stage1[cap] if r[1]["train"]["n"] >= MIN_TRAIN_TRADES),
-                        key=lambda r: r[1]["train"]["score"], reverse=True)
-        shortlist = ranked[:CANDIDATES_PER_CAPITAL]
-        cands = []
-        for key, qs in shortlist:
-            tr, va = sim(key, cap, "train"), sim(key, cap, "validate")
-            cands.append({"key": key, "quick": qs, "train": tr, "validate": va})
-        good = [c for c in cands if c["train"]["profit"] > 0 and c["validate"]["profit"] > 0]
-        pool = good or cands
-        chosen = max(pool, key=lambda c: c["validate"]["cagr"]) if pool else None
-        for c in cands:
-            c["test"] = sim(c["key"], cap, "test")
+        # Pick on training + checking only, using the average of every trade:
+        # thousands of trades barely move when a few prices change, unlike a
+        # single run with real money. The test period is never looked at here.
+        scored = []
+        for key, qs in stage1[cap]:
+            if qs["train"]["n"] < MIN_TRAIN_TRADES or qs["validate"]["n"] < MIN_TRAIN_TRADES // 3:
+                continue
+            tr, va = expected_yearly(qs, "train", cap), expected_yearly(qs, "validate", cap)
+            avg_trade = {name: {k: q[k] for k in ("n", "win", "avg", "hold")} for name, q in qs.items()}
+            scored.append({"key": key, "train_est": tr, "validate_est": va, "steady": min(tr, va),
+                           "avg_trade": avg_trade})
+        scored.sort(key=lambda c: (-round(c["steady"], 9), c["key"]))
+        good = [c for c in scored if c["train_est"] > 0 and c["validate_est"] > 0]
+        pool = good or scored
+        best = pool[0] if pool else None
+        prev_key = (previous or {}).get(cap)
+        kept = next((c for c in pool if c["key"] == prev_key), None)
+        if kept and kept["steady"] < best["steady"] - SWITCH_MARGIN:
+            kept = None
+        pick = kept or best
+        shown = scored[:CANDIDATES_PER_CAPITAL]
+        if pick and pick not in shown:
+            shown.append(pick)
+        # What following each one with real money would have looked like
+        cands = [{**c, "spread": {name: spread(c["key"], cap, name) for name in ("train", "validate", "test")}}
+                 for c in shown]
+        chosen = next((c for c in cands if pick and c["key"] == pick["key"]), None)
         bench_res = {}
         if bench_O is not None:
             for name, (s, e) in bounds.items():
@@ -700,11 +749,11 @@ def run_backtest(p: Panel, signals, bench: pd.DataFrame | None, log=print) -> di
                 f = np.array(finals)
                 random = {"runs": len(f), "median": float(np.median(f)), "p10": float(np.percentile(f, 10)),
                           "p90": float(np.percentile(f, 90)),
-                          "beat_pct": float((chosen["test"]["final"] > f).mean())}
+                          "beat_pct": float((chosen["spread"]["test"]["final"] > f).mean())}
         verdict = "none"
         if chosen:
-            t, b = chosen["test"], bench_res.get("test")
-            if t["profit"] <= 0:
+            t, b = chosen["spread"]["test"], bench_res.get("test")
+            if t["final"] <= cap:
                 verdict = "loss"
             elif not good:
                 verdict = "unproven"
@@ -715,27 +764,27 @@ def run_backtest(p: Panel, signals, bench: pd.DataFrame | None, log=print) -> di
             else:
                 verdict = "good"
 
-        def strip(r, keep_curve=False):
-            return {k: v for k, v in r.items() if k != "log" and (keep_curve or k != "curve")}
-
         out_cands = []
         for c in cands:
-            oc = {**c, "train": strip(c["train"]), "validate": strip(c["validate"]),
-                  "test": strip(c["test"], keep_curve=c is chosen)}
-            if c is chosen:
-                oc["test"]["trades_log"] = [
+            oc = dict(c)
+            if c is chosen:  # one example run (from the first start date) for the chart and trade list
+                run = sim(c["key"], cap, "test")
+                ex = {k: v for k, v in run.items() if k != "log"}
+                ex["trades_log"] = [
                     [p.symbols[k], str(p.dates[b_].date()), bp, str(p.dates[s2].date()), sp, sh, pnl, kind]
-                    for k, b_, bp, s2, sp, sh, pnl, kind in c["test"]["log"]]
+                    for k, b_, bp, s2, sp, sh, pnl, kind in run["log"]]
+                oc["example"] = ex
             out_cands.append(oc)
         buckets.append({
             "capital": cap, "slots": slots_for(cap), "chosen": chosen["key"] if chosen else None,
+            "kept_previous": bool(kept and best is not kept),
             "verdict": verdict, "passed_train_and_validate": len(good), "random": random,
             "candidates": out_cands, "benchmark": bench_res,
         })
         if chosen:
-            t = chosen["test"]
+            t = chosen["spread"]["test"]
             log(f"Rs {cap:>7,}: {chosen['key']:<32} test Rs {cap:,} -> Rs {t['final']:,.0f} "
-                f"({t['trades']} trades, win {t['win_rate'] or 0:.0%}) "
+                f"(range {t['low']:,.0f}-{t['high']:,.0f}, win {t['win_rate'] or 0:.0%}) "
                 f"| Nifty ETF -> Rs {(bench_res.get('test') or {}).get('final', float('nan')):,.0f} "
                 f"| beat {0 if not random else random['beat_pct']:.0%} of random | {verdict}")
 
@@ -746,6 +795,7 @@ def run_backtest(p: Panel, signals, bench: pd.DataFrame | None, log=print) -> di
         "periods": [{"name": name, "start": str(p.dates[s].date()), "end": str(p.dates[e].date())}
                     for name, (s, e) in bounds.items()],
         "grid": {"targets": TARGETS, "stops": STOPS, "holds": HOLDS, "capitals": CAPITALS},
+        "start_offsets": START_OFFSETS, "switch_margin": SWITCH_MARGIN,
         "variants": {vid: v.__dict__ for vid, v in variants.items()},
         "pattern_stats": pattern_stats,
         "standard_exit": STANDARD_EXIT,
@@ -829,8 +879,12 @@ def main(argv=None) -> int:
     signals = pattern_signals(panel)
     print(f"{len(panel.symbols)} stocks, {panel.dates[0].date()} to {panel.dates[-1].date()}")
 
-    if args.mode == "full" or not (OUT_DIR / "backtest.json").exists():
-        write_json(OUT_DIR / "backtest.json", run_backtest(panel, signals, bench))
+    bt_path = OUT_DIR / "backtest.json"
+    if args.mode == "full" or not bt_path.exists():
+        previous = None
+        if bt_path.exists():
+            previous = {b["capital"]: b["chosen"] for b in json.loads(bt_path.read_text()).get("buckets", [])}
+        write_json(bt_path, run_backtest(panel, signals, bench, previous=previous))
     write_json(OUT_DIR / "today.json", today_payload(panel, signals, universe))
     return 0
 

@@ -251,6 +251,33 @@ def test_open_trade_is_valued_at_period_end():
     assert res["final"] == pytest.approx(expected)
 
 
+def test_last_pick_is_kept_unless_clearly_beaten(monkeypatch):
+    monkeypatch.setattr(S, "PERIODS", [("train", "2019-01-01", "2019-12-31"),
+                                       ("validate", "2020-01-01", "2020-06-30"),
+                                       ("test", "2020-07-01", None)])
+    monkeypatch.setattr(S, "MIN_TRAIN_TRADES", 1)
+    monkeypatch.setattr(S, "CAPITALS", [10000])
+    monkeypatch.setattr(S, "RANDOM_RUNS", 2)
+    frames = make_frames(n_days=500, n_stocks=8)
+    p = S.build_panel(frames, now=dt.datetime(2030, 1, 1, tzinfo=S.IST))
+    signals = S.pattern_signals(p)
+    quiet = lambda *_: None
+    first = S.run_backtest(p, signals, None, log=quiet)["buckets"][0]
+    assert first["chosen"] == first["candidates"][0]["key"]  # steadiest first
+    # a weaker candidate from the same pool stays when the margin is huge...
+    pool = [c for c in first["candidates"]
+            if first["passed_train_and_validate"] == 0 or (c["train_est"] > 0 and c["validate_est"] > 0)]
+    assert len(pool) >= 2
+    other = pool[-1]["key"]
+    monkeypatch.setattr(S, "SWITCH_MARGIN", 100.0)
+    kept = S.run_backtest(p, signals, None, log=quiet, previous={10000: other})["buckets"][0]
+    assert kept["chosen"] == other and kept["kept_previous"]
+    # ...and is replaced when there is no margin
+    monkeypatch.setattr(S, "SWITCH_MARGIN", -100.0)
+    replaced = S.run_backtest(p, signals, None, log=quiet, previous={10000: other})["buckets"][0]
+    assert replaced["chosen"] == first["chosen"] and not replaced["kept_previous"]
+
+
 def test_full_backtest_on_synthetic_data_has_no_nan_in_json(tmp_path, monkeypatch):
     monkeypatch.setattr(S, "PERIODS", [("train", "2019-01-01", "2019-12-31"),
                                        ("validate", "2020-01-01", "2020-06-30"),
