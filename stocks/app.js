@@ -226,10 +226,34 @@
     </div>`;
   }
 
+  function healthChips(sym) {
+    const f = TD.fundamentals?.[sym];
+    if (!f) return '<p class="muted"><small>Company numbers not available.</small></p>';
+    const chips = [];
+    let warnings = 0;
+    const add = (label, cls) => {
+      if (cls === 'warn' || cls === 'bad') warnings++;
+      chips.push(`<span class="badge ${cls}">${label}</span>`);
+    };
+    if (f.margin != null) add(`Profit margin ${pct(f.margin, 1)}`, f.margin < 0 ? 'bad' : 'good');
+    if (f.earn_growth != null) add(`Profit growth ${f.earn_growth > 0 ? '+' : ''}${pct(f.earn_growth)}`, f.earn_growth < 0 ? 'warn' : 'good');
+    if (f.rev_growth != null) add(`Sales growth ${f.rev_growth > 0 ? '+' : ''}${pct(f.rev_growth)}`, f.rev_growth < 0 ? 'warn' : 'good');
+    if (f.de != null) add(`Debt/equity ${(f.de / 100).toFixed(2)}`, f.de > 150 ? 'warn' : 'good');
+    if (f.pe != null) add(`P/E ${f.pe.toFixed(1)}`, f.pe < 0 ? 'bad' : f.pe > 60 ? 'warn' : 'info');
+    if (f.roe != null) add(`ROE ${pct(f.roe)}`, f.roe < 0.08 ? 'warn' : 'good');
+    return `<div class="health"><small class="muted">Company check (latest numbers, not part of the test):
+      ${warnings ? `<b class="down">${warnings} warning${warnings > 1 ? 's' : ''}</b>` : '<b class="up">no warnings</b>'}</small>
+      <div class="stock-chips">${chips.join('')}</div></div>`;
+  }
+
+  const newsLink = (name) =>
+    `<a href="https://news.google.com/search?q=${encodeURIComponent(name + ' share')}&hl=en-IN&gl=IN&ceid=IN%3Aen" target="_blank" rel="noopener">Latest news ↗</a>`;
+
   function renderBuy(cap) {
     const b = bucketFor(cap);
     if (!b.chosen) { $('#buy').innerHTML = ''; return; }
     const k = parseKey(b.chosen), v = BT.variants[k.vid];
+    const practice = b.verdict === 'loss' || b.verdict === 'unproven';
     const per = cap / b.slots;
     const buyDay = nextWeekday(TD.data_date);
     const picks = [], tooDear = [];
@@ -240,16 +264,22 @@
       (shares >= 1 ? picks : tooDear).push({ sym: s.s, st, shares });
     }
     const freq = signalsPerMonth(k.vid);
+    const last = TD.last_signal?.[k.vid];
     let body;
     if (!picks.length) {
+      const lastLine = last && last.date !== TD.data_date
+        ? `<p>Last signal: <b>${fmtDate(last.date)}</b> · ${last.stocks.map(s => {
+            const now = TD.stocks[s.s]?.close;
+            return `${esc(s.s)} (${inr(s.c)} then${now ? `, ${inr(now)} now` : ''})`;
+          }).join(', ')}. Old signals are not buy signals: the plan only buys at the open right after a signal.</p>` : '';
       body = `<p class="empty"><b>No buy signal today${tooDear.length ? ' that fits your amount' : ''}.</b> That’s normal: do nothing and check again
-        after the next market close. This pattern shows up about ${freq.toFixed(freq < 3 ? 1 : 0)} times a month across the Nifty 100.</p>`;
+        after the next market close. This pattern shows up about ${freq.toFixed(freq < 3 ? 1 : 0)} times a month across the Nifty 100.</p>${lastLine}`;
     } else {
       body = picks.map((p, i) => {
         const price = p.st.close, target = price * (1 + k.tg), stop = price * (1 - k.st);
         const invest = p.shares * price + buyCharges(p.shares * price);
         const win = netPnl(p.shares, price, target), loss = netPnl(p.shares, price, stop);
-        const top = i < b.slots;
+        const top = !practice && i < b.slots;
         return `<div class="pick${top ? ' top' : ''}">
           <div class="pick-head">
             <div><div class="pick-name">${esc(p.st.name)}</div>
@@ -258,28 +288,66 @@
           </div>
           <div class="pick-grid">
             <div><span>Last close</span><b class="num">${inr(price, 2)}</b> <small class="${cls(p.st.chg)}">${p.st.chg == null ? '' : (p.st.chg > 0 ? '+' : '') + pct(p.st.chg, 1)}</small></div>
-            <div><span>Buy</span><b class="num">${p.shares} share${p.shares > 1 ? 's' : ''}</b> <small>≈ ${inr(invest)} with charges</small></div>
+            <div><span>${practice ? 'Paper buy' : 'Buy'}</span><b class="num">${p.shares} share${p.shares > 1 ? 's' : ''}</b> <small>≈ ${inr(invest)} with charges</small></div>
             <div><span>Target (sell)</span><b class="num up">${inr(target, 2)}</b> <small class="${cls(win)}">${signedInr(win)} after charges</small></div>
             <div><span>Stop-loss (sell)</span><b class="num down">${inr(stop, 2)}</b> <small class="down">${signedInr(loss)} after charges</small></div>
           </div>
           ${win <= 0 ? '<p class="error">Charges would eat the whole profit even if the target is hit. Skip this one.</p>' : ''}
-          <div class="btn-row"><button class="btn small ghost" data-add="${esc(p.sym)}" data-shares="${p.shares}">Add to My trades after buying</button></div>
+          ${healthChips(p.sym)}
+          <div class="btn-row"><button class="btn small ghost" data-add="${esc(p.sym)}" data-shares="${p.shares}">${practice ? 'Add to My trades as practice' : 'Add to My trades after buying'}</button>
+            <span class="news">${newsLink(p.st.name)}</span></div>
         </div>`;
       }).join('');
-      if (picks.length > b.slots) {
+      if (!practice && picks.length > b.slots) {
         body += `<p class="muted" style="margin-top:.6rem">You only have room for ${b.slots} stock${b.slots > 1 ? 's' : ''}. Take the highest one${b.slots > 1 ? 's' : ''} first (they are sorted by 6-month strength, like in testing) and skip the rest.</p>`;
       }
     }
     const dear = tooDear.length ? `<p class="muted" style="margin-top:.6rem">Also signalled but too expensive for ${inr(per)}:
       ${tooDear.map(p => `${esc(p.sym)} (${inr(p.st.close)})`).join(', ')}.</p>` : '';
+    const filterLine = v.filter ? (() => {
+      const ok = TD.market?.filters?.[v.filter];
+      return `<p>Your plan only buys when <b>${esc(v.name.split(' + ').pop())}</b>. Today: ${ok ? '<b class="up">yes</b>' : '<b class="down">no, so no buys</b>'}.</p>`;
+    })() : '';
+    const title = practice ? (picks.length ? 'Practice only: don’t use real money' : 'Nothing to practise today')
+      : picks.length ? 'Buy at the market open' : 'Nothing to buy';
+    const intro = practice
+      ? `At ${inr(b.capital)} no tested plan made money reliably after charges, so these are <b>paper-trading</b> signals: write them down or
+         add them to My trades without buying, and see how they turn out.`
+      : `${b.slots === 1 ? 'Only buy if you don’t already hold a stock from this plan.' : `Only buy if you hold fewer than ${b.slots} stocks from this plan.`}
+         Target and stop-loss are worked out from the last close; after you buy, save the trade below with your real price.`;
     $('#buy').innerHTML = `<div class="card">
-      <span class="label">Buy list · for ${fmtDay(buyDay)} (next trading day)</span>
-      <h2>${picks.length ? 'Buy at the market open' : 'Nothing to buy'}</h2>
-      <p class="muted">Based on the close of ${fmtDay(TD.data_date)}. Pattern: ${esc(v.name)}.
-        ${b.slots === 1 ? 'Only buy if you don’t already hold a stock from this plan.'
-          : `Only buy if you hold fewer than ${b.slots} stocks from this plan.`}
-        Target and stop-loss are worked out from the last close; after you buy, save the trade below with your real price.</p>
+      <span class="label">${practice ? 'Practice list' : 'Buy list'} · for ${fmtDay(buyDay)} (next trading day)</span>
+      <h2>${title}</h2>
+      <p class="muted">Based on the close of ${fmtDay(TD.data_date)}. Pattern: ${esc(v.name)}. ${intro}</p>
+      ${filterLine}
       ${body}${dear}
+    </div>`;
+  }
+
+  function renderMood(cap) {
+    const m = TD.market;
+    if (!m || !m.nifty) { $('#mood').innerHTML = ''; return; }
+    const b = bucketFor(cap), v = b.chosen ? BT.variants[parseKey(b.chosen).vid] : null;
+    const items = [
+      m.nifty && { ok: m.nifty.up, title: 'Nifty 50', value: Math.round(m.nifty.close).toLocaleString('en-IN'),
+        text: `${m.nifty.up ? 'Above' : 'Below'} its 200-day average (${Math.round(m.nifty.sma200).toLocaleString('en-IN')}): Indian market ${m.nifty.up ? 'rising' : 'falling'}` },
+      m.vix && { ok: m.vix.calm, title: 'India VIX (fear gauge)', value: m.vix.close.toFixed(1),
+        text: `${m.vix.calm ? 'Below' : 'Above'} ${m.vix_calm_below}: market is ${m.vix.calm ? 'calm' : 'nervous'}` },
+      m.world && { ok: m.world.up, title: 'US market (S&P 500)', value: Math.round(m.world.close).toLocaleString('en-IN'),
+        text: `${m.world.up ? 'Above' : 'Below'} its 200-day average: world markets ${m.world.up ? 'rising' : 'falling'}` },
+    ].filter(Boolean);
+    const good = items.filter(i => i.ok).length;
+    const summary = good === items.length ? 'Good' : good === 0 ? 'Poor' : 'Mixed';
+    const planLine = v && v.filter
+      ? `Your plan uses the <b>${esc(v.name.split(' + ').pop())}</b> filter, because it made results steadier in testing.`
+      : 'Your plan doesn’t use a market filter: for your amount, waiting for good market mood didn’t make results steadier.';
+    $('#mood').innerHTML = `<div class="card">
+      <span class="label">Market mood · ${fmtDay(TD.data_date)}</span>
+      <h2>${summary}</h2>
+      <div class="mood-grid">${items.map(i => `<div class="mood ${i.ok ? 'good' : 'bad'}">
+        <small>${i.title}</small><b class="num">${i.value}</b><span>${i.text}</span></div>`).join('')}</div>
+      <p class="muted">News such as wars, interest-rate changes, the budget, elections or a global crash shows up in these numbers within days.
+        Each pattern was tested with and without waiting for good market mood. ${planLine}</p>
     </div>`;
   }
 
@@ -391,7 +459,7 @@
 
   function renderPatterns() {
     const ex = BT.standard_exit;
-    const rows = Object.values(BT.variants).map(v => {
+    const rows = Object.values(BT.variants).filter(v => !v.filter).map(v => {
       const sigs = TD.signals[v.id] || [];
       const ps = BT.pattern_stats[v.id]?.test || {};
       return { v, sigs, ps };
@@ -417,12 +485,13 @@
 
   function renderMethod() {
     const fixes = Object.entries(BT.data_fixes || {}).flatMap(([s, list]) => list.map(f => `${esc(s)} (${fmtDate(f.date)})`));
-    const nVariants = Object.keys(BT.variants).length, g = BT.grid;
+    const nVariants = Object.values(BT.variants).filter(v => !v.filter).length, g = BT.grid;
     $('#method').innerHTML = `<div class="card">
       <span class="label">How it was tested</span>
-      <h2>${BT.combos_tested} combinations, ${g.capitals.length} amounts</h2>
+      <h2>${BT.combos_tested.toLocaleString('en-IN')} combinations, ${g.capitals.length} amounts</h2>
       <ul class="plain">
-        <li><b>${nVariants} chart patterns</b> × ${g.targets.length} targets (${g.targets.map(x => '+' + p100(x) + '%').join(', ')})
+        <li><b>${nVariants} chart patterns</b>, each on its own and with 3 market-mood filters (Nifty 50 rising, India VIX below 20,
+          US S&amp;P 500 rising), × ${g.targets.length} targets (${g.targets.map(x => '+' + p100(x) + '%').join(', ')})
           × ${g.stops.length} stop-losses (${g.stops.map(x => '−' + p100(x) + '%').join(', ')}) × ${g.holds.length} holding times
           (${g.holds.join(', ')} trading days), on ${BT.n_stocks} Nifty 100 stocks from ${fmtDate(BT.data_start)} to ${fmtDate(BT.data_end)}.</li>
         <li><b>Real money rules:</b> whole shares only, Groww’s delivery charges on every buy and sell (brokerage, STT, stamp duty,
@@ -444,6 +513,9 @@
         <li>It uses <b>today’s</b> Nifty 100 list for all past years. Stocks that are in the index now did well to get there, so past results look better than they really were.</li>
         <li>It assumes you get the exact target and stop-loss price. In real trading, prices can jump past your order.</li>
         <li>Income tax on profits (20% short-term capital gains) is not included.</li>
+        <li><b>News and company financials are not in the test.</b> There is no free day-by-day record of past news or past financial
+          reports for Indian companies, and judging 2015 trades with today’s numbers would make the test look better than reality.
+          Market mood is tested instead, and each buy signal shows the company’s latest numbers and a news link so you can check them yourself.</li>
         <li>Prices come from Yahoo Finance, with missing days filled from NSE’s official bhavcopy.${fixes.length ? ` Price gaps caused by bonus issues or demergers were adjusted for: ${fixes.join(', ')}.` : ''}</li>
       </ul>
     </div>`;
@@ -489,6 +561,7 @@
       return;
     }
     store.set(KEYS.capital, cap);
+    renderMood(cap);
     renderPlan(cap);
     renderBuy(cap);
     renderMyTrades(cap);
