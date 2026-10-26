@@ -1,5 +1,6 @@
 """Tests for the screener. Run: python -m pytest screener -q"""
 import datetime as dt
+import json
 
 import numpy as np
 import pandas as pd
@@ -287,6 +288,20 @@ def test_today_payload_reports_last_signal_and_mood():
     assert out["last_signal"]["x"]["date"] == str(p.dates[250].date())
     assert [r["s"] for r in out["last_signal"]["x"]["stocks"]] == ["S4"]
     assert out["market"]["nifty"]["up"] and out["market"]["vix"]["calm"] and out["fundamentals"]["S4"]["pe"] == 20
+
+
+def test_backup_run_with_no_new_prices_is_a_no_op(tmp_path):
+    p = S.build_panel(make_frames(), now=dt.datetime(2030, 1, 1, tzinfo=S.IST))
+    universe = pd.DataFrame({"Symbol": p.symbols, "Name": p.symbols, "Industry": ""})
+    signals = S.pattern_signals(p)
+    first = S.today_payload(p, signals, universe, {}, {"S1": {"pe": 10.0}})
+    S.write_json(tmp_path / "t.json", first)
+    saved = json.loads((tmp_path / "t.json").read_text())
+    again = S.today_payload(p, signals, universe, {}, {"S1": {"pe": 11.0}})  # later run, new timestamp
+    assert S.same_prices(saved, again)
+    newer = S.today_payload(S.slice_panel(p, len(p.dates) - 1), S.pattern_signals(S.slice_panel(p, len(p.dates) - 1)),
+                            universe, {}, {})
+    assert not S.same_prices(saved, newer)
 
 
 # ---- portfolio rules -----------------------------------------------------------

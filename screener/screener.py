@@ -1053,6 +1053,14 @@ def _round(obj, nd=4):
     return obj
 
 
+def same_prices(old: dict, new: dict) -> bool:
+    """True when a fresh today.json would only differ in its timestamp or the
+    company numbers, so a backup run has nothing new to publish."""
+    keys = ("data_date", "dates", "signals", "last_signal", "stocks", "market")
+    new = _round(new)
+    return all(old.get(k) == new.get(k) for k in keys)
+
+
 def write_json(path: Path, obj) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     text = json.dumps(_round(obj), separators=(",", ":"), allow_nan=False)
@@ -1092,10 +1100,14 @@ def main(argv=None) -> int:
         if bt_path.exists():
             previous = {b["capital"]: b["chosen"] for b in json.loads(bt_path.read_text()).get("buckets", [])}
         write_json(bt_path, run_backtest(panel, signals, bench, previous=previous))
+    today_path = OUT_DIR / "today.json"
+    today = today_payload(panel, signals, universe, market_mood(market, filters))
+    if args.mode == "daily" and today_path.exists() and same_prices(json.loads(today_path.read_text()), today):
+        print(f"No new prices since the last update ({today['data_date']}); nothing to write.")
+        return 0
     signalled = sorted({s for v, sig in signals for s in sig.columns[sig.iloc[-1].to_numpy()]})
-    fundamentals = fetch_fundamentals(signalled)
-    write_json(OUT_DIR / "today.json",
-               today_payload(panel, signals, universe, market_mood(market, filters), fundamentals))
+    today["fundamentals"] = fetch_fundamentals(signalled)
+    write_json(today_path, today)
     return 0
 
 

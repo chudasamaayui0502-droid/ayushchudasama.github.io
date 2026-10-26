@@ -1,8 +1,14 @@
 name: Update stock signals
 
 on:
+  # GitHub runs scheduled jobs on a best-effort basis and sometimes skips
+  # one, so the daily update has backup slots. A run that finds no new
+  # prices changes nothing.
   schedule:
     - cron: "10 13 * * 1-5"  # 6:40 PM IST, Mon-Fri: today's signals
+    - cron: "40 14 * * 1-5"  # 8:10 PM IST backup
+    - cron: "40 16 * * 1-5"  # 10:10 PM IST backup
+    - cron: "40 1 * * 2-6"   # 7:10 AM IST next morning, before the market opens
     - cron: "40 2 * * 6"     # 8:10 AM IST Saturday: re-test every strategy
   workflow_dispatch:
     inputs:
