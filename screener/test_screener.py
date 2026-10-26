@@ -308,6 +308,10 @@ def test_backup_run_with_no_new_prices_is_a_no_op(tmp_path):
     saved = json.loads((tmp_path / "t.json").read_text())
     again = S.today_payload(p, signals, universe, {}, {"S1": {"pe": 11.0}})  # later run, new timestamp
     assert S.same_prices(saved, again)
+    wobble = json.loads(json.dumps(saved))
+    first_stock = next(iter(wobble["stocks"].values()))
+    first_stock["bars"][0][0] += 0.0001  # an old adjusted price, 4th decimal
+    assert S.same_prices(wobble, again)
     newer = S.today_payload(S.slice_panel(p, len(p.dates) - 1), S.pattern_signals(S.slice_panel(p, len(p.dates) - 1)),
                             universe, {}, {})
     assert not S.same_prices(saved, newer)
