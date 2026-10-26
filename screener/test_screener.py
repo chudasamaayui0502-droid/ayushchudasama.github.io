@@ -275,6 +275,15 @@ def test_filtered_pattern_is_subset_of_plain_pattern():
             assert fv.filter == fid and not (fsig.to_numpy() & ~sig.to_numpy()).any()
 
 
+def test_mood_shows_the_us_close_the_filter_uses():
+    p = S.build_panel(make_frames(), now=dt.datetime(2030, 1, 1, tzinfo=S.IST))
+    market = market_frames(p)
+    last = p.dates[-1]
+    market["world"] = market["world"][market["world"].index <= last]  # US bar for today is still forming
+    mood = S.market_mood(market, S.market_filters(p, market), last)
+    assert mood["world"]["date"] < str(last.date()) <= mood["nifty"]["date"]
+
+
 def test_today_payload_reports_last_signal_and_mood():
     p = S.build_panel(make_frames(), now=dt.datetime(2030, 1, 1, tzinfo=S.IST))
     sig = pd.DataFrame(False, index=p.dates, columns=p.symbols)
