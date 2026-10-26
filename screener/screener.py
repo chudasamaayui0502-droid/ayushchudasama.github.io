@@ -985,16 +985,23 @@ def run_backtest(p: Panel, signals, bench: pd.DataFrame | None, log=print, previ
 # Today's signals and recent prices for the page
 # --------------------------------------------------------------------------
 
-def market_mood(market: dict, filters: dict) -> dict:
+def market_mood(market: dict, filters: dict, as_of: pd.Timestamp | None = None) -> dict:
+    """Readings as of the Indian close on `as_of`. The US value is its last
+    finished session before that day, the same one the US filter uses (the
+    US market is still open during the Indian evening)."""
     mood = {"vix_calm_below": VIX_CALM, "filters": {fid: bool(m.iloc[-1]) for fid, (_, _, m) in filters.items()}}
     for name in ("nifty", "world"):
         if name in market:
             c = market[name]["Close"]
+            if as_of is not None:
+                c = c[c.index < as_of] if name == "world" else c[c.index <= as_of]
             sma = c.rolling(200, min_periods=200).mean()
             mood[name] = {"date": str(c.index[-1].date()), "close": float(c.iloc[-1]), "sma200": float(sma.iloc[-1]),
                           "up": bool(c.iloc[-1] > sma.iloc[-1])}
     if "vix" in market:
         v = market["vix"]["Close"]
+        if as_of is not None:
+            v = v[v.index <= as_of]
         mood["vix"] = {"date": str(v.index[-1].date()), "close": float(v.iloc[-1]), "calm": bool(v.iloc[-1] < VIX_CALM)}
     return mood
 
@@ -1101,7 +1108,7 @@ def main(argv=None) -> int:
             previous = {b["capital"]: b["chosen"] for b in json.loads(bt_path.read_text()).get("buckets", [])}
         write_json(bt_path, run_backtest(panel, signals, bench, previous=previous))
     today_path = OUT_DIR / "today.json"
-    today = today_payload(panel, signals, universe, market_mood(market, filters))
+    today = today_payload(panel, signals, universe, market_mood(market, filters, panel.dates[-1]))
     if args.mode == "daily" and today_path.exists() and same_prices(json.loads(today_path.read_text()), today):
         print(f"No new prices since the last update ({today['data_date']}); nothing to write.")
         return 0
