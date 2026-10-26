@@ -39,6 +39,7 @@
   const p100 = x => Math.round(x * 100);  // 0.07 * 100 is 7.000000000000001
   const pct = (x, d = 0) => x == null || !isFinite(x) ? '–' : (x * 100).toFixed(d) + '%';
   const cls = x => x > 0 ? 'up' : x < 0 ? 'down' : '';
+  const spct = (x, d = 1) => !isFinite(x) ? '–' : (x > 0 ? '+' : x < 0 ? '−' : '') + pct(Math.abs(x), d);
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const asDate = s => new Date(s + 'T00:00:00');
   const fmtDate = s => asDate(s).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -239,9 +240,8 @@
     </div>`;
   }
 
-  function healthChips(sym) {
-    const f = TD.fundamentals?.[sym];
-    if (!f) return '<p class="muted"><small>Company numbers not available.</small></p>';
+  function healthChips(sym, f = TD.fundamentals?.[sym], note = null) {
+    if (!f) return '<p class="muted"><small>Company numbers not available (they are fetched for stocks that signal that day).</small></p>';
     const chips = [];
     let warnings = 0;
     const add = (label, cls) => {
@@ -254,7 +254,7 @@
     if (f.de != null) add(`Debt/equity ${(f.de / 100).toFixed(2)}`, f.de > 150 ? 'warn' : 'good');
     if (f.pe != null) add(`P/E ${f.pe.toFixed(1)}`, f.pe < 0 ? 'bad' : f.pe > 60 ? 'warn' : 'info');
     if (f.roe != null) add(`ROE ${pct(f.roe)}`, f.roe < 0.08 ? 'warn' : 'good');
-    return `<div class="health"><small class="muted">Company check (latest numbers, not part of the test):
+    return `<div class="health"><small class="muted">Company check (${note || 'latest numbers'}, not part of the test):
       ${warnings ? `<b class="down">${warnings} warning${warnings > 1 ? 's' : ''}</b>` : '<b class="up">no warnings</b>'}</small>
       <div class="stock-chips">${chips.join('')}</div></div>`;
   }
@@ -332,7 +332,7 @@
       </div>
       ${k.tg && win <= 0 ? '<p class="error">Charges would eat the whole profit even if the target is hit. Skip this one.</p>' : ''}
       ${healthChips(x.sym)}
-      <div class="btn-row"><button class="btn small ghost" data-add="${esc(x.sym)}" data-shares="${x.shares}" data-vid="${esc(x.best.vid)}">Add to My trades after buying</button>
+      <div class="btn-row"><button class="btn small ghost" data-add="${esc(x.sym)}" data-shares="${x.shares}" data-vid="${esc(x.best.vid)}" data-rank="${rank}">Add to My trades after buying</button>
         <span class="news">${newsLink(x.st.name)}</span></div>
     </div>`;
   }
@@ -407,44 +407,184 @@
     </div>`;
   }
 
-  function tradeStatus(t) {
+  // Groww charges, line by line (the same sums as buyCharges / sellCharges)
+  function chargeItems(v, side) {
+    if (!(v > 0)) return [];
+    const b = brokerage(v), f = exchangeFees(v), dp = side === 'sell' ? (v >= 100 ? 20 : 3.5) : 0;
+    const items = [['Brokerage', b], ['STT (0.1%)', 0.001 * v]];
+    if (side === 'buy') items.push(['Stamp duty (0.015%)', 0.00015 * v]);
+    items.push(['Exchange, SEBI and IPFT fees', f]);
+    if (dp) items.push([`DP charge (per sale)`, dp]);
+    items.push(['GST (18% on brokerage, fees' + (dp ? ' and DP' : '') + ')', 0.18 * (b + f + dp)]);
+    return items;
+  }
+
+  function breakEven(t) {
+    let lo = t.price, hi = t.price * 2;
+    for (let i = 0; i < 60; i++) {
+      const mid = (lo + hi) / 2;
+      if (netPnl(t.qty, t.price, mid) < 0) lo = mid; else hi = mid;
+    }
+    return hi;
+  }
+
+  // Day-by-day replay of a saved trade: each day's prices and the stop level that applied,
+  // and the HOLD / SELL status that follows from them.
+  function tradeTimeline(t) {
     const s = TD.stocks[t.sym];
-    if (!s) return { state: 'nodata' };
+    if (!s) return { status: { state: 'nodata' }, rows: [] };
     const trail = !t.tg;
-    const target = trail ? null : t.price * (1 + t.tg / 100), stop = t.price * (1 - t.st / 100);
-    const out = { target, stop, close: s.close, trail };
-    if (t.date > TD.data_date) return { ...out, state: 'new' };
+    const target = trail ? null : t.price * (1 + t.tg / 100), fixedStop = t.price * (1 - t.st / 100);
+    const out = { target, stop: fixedStop, close: s.close, trail };
+    const rows = [];
+    if (t.date > TD.data_date) return { status: { ...out, state: 'new' }, rows };
     const first = TD.dates.findIndex(d => d >= t.date);
     out.partial = t.date < TD.dates[0];
-    let held = out.partial ? null : 0;
-    if (trail) {  // the stop sits st% below the highest close since buying, and only moves up
-      let high = t.price;
-      for (let i = Math.max(first, 0); i < TD.dates.length; i++) {
-        const bar = s.bars[i];
-        if (!bar || bar[2] == null) continue;
-        if (held != null) held++;
-        const level = high * (1 - t.st / 100);
-        if (bar[2] <= level) return { ...out, state: 'stop', on: TD.dates[i], at: Math.min(level, bar[0]), stop: level };
-        high = Math.max(high, bar[3]);
-        if (held != null && held >= t.hold) return { ...out, state: 'time', on: TD.dates[i], at: bar[3] };
-      }
-      return { ...out, state: 'hold', left: held == null ? null : t.hold - held, high, stop: high * (1 - t.st / 100) };
-    }
+    let held = out.partial ? null : 0, high = t.price, highOn = t.date;
     for (let i = Math.max(first, 0); i < TD.dates.length; i++) {
       const bar = s.bars[i];
       if (!bar || bar[2] == null) continue;
       if (held != null) held++;
-      if (bar[2] <= stop) return { ...out, state: 'stop', on: TD.dates[i], at: Math.min(stop, bar[0]) };
-      if (bar[1] >= target) return { ...out, state: 'target', on: TD.dates[i], at: Math.max(target, bar[0]) };
-      if (held != null && held >= t.hold) return { ...out, state: 'time', on: TD.dates[i], at: bar[3] };
+      const level = trail ? high * (1 - t.st / 100) : fixedStop;  // the trailing stop only uses closes before this day
+      const row = { date: TD.dates[i], o: bar[0], h: bar[1], l: bar[2], c: bar[3], stop: level, day: held };
+      rows.push(row);
+      if (bar[2] <= level) {
+        row.event = 'stop';
+        return { status: { ...out, state: 'stop', on: row.date, at: Math.min(level, bar[0]), stop: level, high, highOn }, rows };
+      }
+      if (!trail && bar[1] >= target) {
+        row.event = 'target';
+        return { status: { ...out, state: 'target', on: row.date, at: Math.max(target, bar[0]), high, highOn }, rows };
+      }
+      if (bar[3] > high) { high = bar[3]; highOn = row.date; }
+      if (held != null && held >= t.hold) {
+        row.event = 'time';
+        return { status: { ...out, state: 'time', on: row.date, at: bar[3], high, highOn }, rows };
+      }
     }
-    return { ...out, state: 'hold', left: held == null ? null : t.hold - held };
+    return { status: { ...out, state: 'hold', left: held == null ? null : t.hold - held, high, highOn,
+      ...(trail && { stop: high * (1 - t.st / 100) }) }, rows };
+  }
+  const tradeStatus = t => tradeTimeline(t).status;
+
+  function addWeekdays(day, n) {
+    let d = day;
+    for (let i = 0; i < n; i++) d = nextWeekday(d);
+    return d;
   }
 
-  function renderMyTrades(cap) {
-    const trades = store.get(KEYS.trades, []);
-    const list = trades.map(t => {
-      const s = tradeStatus(t), st = TD.stocks[t.sym];
+  const moneyRows = rows => rows.map(([label, value, cls_ = '', strong]) =>
+    `<tr><td>${strong ? `<b>${label}</b>` : label}</td><td class="r num ${cls_}">${strong ? `<b>${value}</b>` : value}</td></tr>`).join('');
+
+  function tradeDetails(t, s, rows) {
+    const st = TD.stocks[t.sym];
+    const exitPx = s.state === 'stop' || s.state === 'target' || s.state === 'time' ? s.at : s.close;
+    const exitLabel = s.state === 'hold' || s.state === 'new' ? 'if sold at the last close' : 'at the sell signal price';
+    const bv = t.qty * t.price, sv = t.qty * exitPx;
+    const bc = buyCharges(bv), sc = sellCharges(sv), gain = sv - bv, net = netPnl(t.qty, t.price, exitPx);
+    // shown to the paisa; the last line takes the rounding so the lines add up to the total shown
+    const items = list => {
+      const total = Math.round(list.reduce((a, [, x]) => a + x, 0) * 100);
+      let shown = 0;
+      return list.map(([l, a], i) => {
+        const paise = i === list.length - 1 ? total - shown : Math.round(a * 100);
+        shown += paise;
+        return `<tr class="sub"><td>${l}</td><td class="r num">${inr(paise / 100, 2)}</td></tr>`;
+      }).join('');
+    };
+    const be = breakEven(t);
+    const money = `<h4>Money</h4>
+      <table class="kv"><tbody>
+        ${moneyRows([[`Bought ${t.qty} × ${inr(t.price, 2)}`, inr(bv, 2)], ['Buy charges', '−' + inr(bc, 2), 'down']])}
+        ${items(chargeItems(bv, 'buy'))}
+        ${moneyRows([[`Worth ${exitLabel}: ${t.qty} × ${inr(exitPx, 2)}`, inr(sv, 2)], ['Sell charges', '−' + inr(sc, 2), 'down']])}
+        ${items(chargeItems(sv, 'sell'))}
+        ${moneyRows([
+          ['Price gain', `${signedInr(gain, 2)} (${spct(gain / bv)})`, cls(gain)],
+          ['Total charges (buy + sell)', '−' + inr(bc + sc, 2), 'down'],
+          ['Result after charges', `${signedInr(net, 2)} (${spct(net / (bv + bc))})`, cls(net), true],
+          ['Total paid (with buy charges)', inr(bv + bc, 2)],
+          ['Break-even sell price', `${inr(be, 2)} (${spct(be / t.price - 1)} from your buy price)`],
+        ])}
+      </tbody></table>`;
+
+    const levelRows = s.trail ? [
+      ['Rule', `Trailing stop ${t.st}% · no fixed target · up to ${t.hold} trading days`],
+      ['Highest close since you bought', s.high ? `${inr(s.high, 2)}${s.highOn && s.highOn !== t.date ? ` (${fmtDay(s.highOn)})` : ''}` : '–'],
+      [s.state === 'hold' ? 'Stop-loss now' : 'Stop-loss', inr(s.stop, 2), 'down'],
+      ['Result if the stop is hit', signedInr(netPnl(t.qty, t.price, s.stop), 2), cls(netPnl(t.qty, t.price, s.stop))],
+      ['Starting stop-loss', inr(t.price * (1 - t.st / 100), 2)],
+    ] : [
+      ['Rule', `Target +${t.tg}% · stop-loss −${t.st}% · up to ${t.hold} trading days`],
+      ['Target (sell)', inr(s.target, 2), 'up'],
+      ['Result at the target', signedInr(netPnl(t.qty, t.price, s.target), 2), cls(netPnl(t.qty, t.price, s.target))],
+      ['Stop-loss (sell)', inr(s.stop, 2), 'down'],
+      ['Result at the stop-loss', signedInr(netPnl(t.qty, t.price, s.stop), 2), cls(netPnl(t.qty, t.price, s.stop))],
+    ];
+    const daysHeld = rows.length ? rows[rows.length - 1].day : 0;
+    const dayRows = [
+      ['Bought on', fmtDate(t.date)],
+      ['Trading days held', s.partial ? 'more than 70 (older than the saved prices)' : String(daysHeld || 0)],
+      ...(s.state === 'hold' && s.left != null ? [['Days left', String(s.left)], ['Sell by (latest)', `about ${fmtDate(addWeekdays(TD.data_date, s.left))}`]] : []),
+      ...(s.on ? [['Sell signal on', fmtDate(s.on)]] : []),
+    ];
+    const levels = `<h4>Sell levels</h4><table class="kv"><tbody>${moneyRows(levelRows)}${moneyRows(dayRows)}</tbody></table>`;
+
+    let chart = '';
+    if (rows.length > 1) {
+      const pts = f => rows.map(r => [r.date, f(r)]);
+      chart = `<h4>Price since you bought</h4>` + lineChart([
+        { pts: pts(r => r.c), color: 'var(--accent)', label: 'Close' },
+        { pts: pts(() => t.price), color: 'var(--muted)', label: 'Your buy price' },
+        { pts: pts(r => r.stop), color: 'var(--down)', label: s.trail ? 'Trailing stop' : 'Stop-loss' },
+        ...(s.trail ? [] : [{ pts: pts(() => s.target), color: 'var(--up)', label: 'Target' }]),
+      ], fmtDate(rows[0].date), fmtDate(rows[rows.length - 1].date));
+    }
+    const ev = { stop: s.trail ? 'Trailing stop hit' : 'Stop-loss hit', target: 'Target hit', time: 'Time up' };
+    const daily = rows.length ? `<details class="daily"><summary>Day by day (${rows.length} day${rows.length > 1 ? 's' : ''})</summary>
+      <div class="table-wrap"><table><thead><tr><th>Day</th><th class="r">Close</th><th class="r">vs buy</th><th class="r">Low</th><th class="r">Stop</th></tr></thead>
+      <tbody>${[...rows].reverse().map(r => `<tr><td>${fmtDay(r.date)}${r.event ? `<br><small class="down">${ev[r.event]}</small>` : ''}</td>
+        <td class="r num">${inr(r.c, 2)}</td><td class="r num ${cls(r.c - t.price)}">${spct(r.c / t.price - 1)}</td>
+        <td class="r num">${inr(r.l, 2)}</td><td class="r num">${inr(r.stop, 2)}</td></tr>`).join('')}</tbody></table></div></details>` : '';
+
+    let origin = '<h4>Where this trade came from</h4><p class="muted">Added by hand.</p>';
+    const v = t.vid && BT.variants[t.vid];
+    if (v) {
+      const r = BT.pattern_rules?.[t.vid]?.[String(t.cap)];
+      origin = `<h4>Where this trade came from</h4><p><b>${esc(v.name)}</b>${t.rank ? ` · ranked #${t.rank} on the buy list` : ''}</p>
+        <p class="muted">${esc(v.desc)}</p>
+        ${r && r.ends ? `<p class="muted">Past trades like this at ${inr(t.cap)}: ${r.ends.target ? `${pct(r.ends.target)} reached the target, ` : ''}
+          ${pct(r.ends.stop)} ended at the ${r.ends.target ? 'stop-loss' : 'trailing stop'}, ${pct(r.ends.time)} at the time limit.
+          Final-test average after charges: <span class="${cls(r.avg.test)}">${r.avg.test > 0 ? '+' : ''}${pct(r.avg.test, 1)}</span> per trade (${r.test_n} trades).</p>` : ''}`;
+    }
+    const funda = TD.fundamentals?.[t.sym] || t.funda;
+    const company = `<h4>Company</h4>${st ? `<p class="muted">${esc(st.name)} · ${esc(st.industry)}</p>` : ''}
+      ${healthChips(t.sym, funda, !TD.fundamentals?.[t.sym] && t.funda ? 'numbers from the day you saved this trade' : null)}
+      <p class="news">${newsLink(st ? st.name : t.sym)}</p>`;
+    return `<div class="trade-details">${money}${levels}${chart}${daily}${origin}${company}</div>`;
+  }
+
+  function closedTrade(t) {
+    const st = TD.stocks[t.sym], bv = t.qty * t.price, sv = t.qty * t.sold.price;
+    const bc = buyCharges(bv), sc = sellCharges(sv), net = netPnl(t.qty, t.price, t.sold.price);
+    return `<div class="closed">
+      <div class="trade-top"><div><b>${esc(st ? st.name : t.sym)}</b> <small>${esc(t.sym)}</small></div>
+        <b class="num ${cls(net)}">${signedInr(net, 2)}</b></div>
+      <p class="num"><small>Bought ${t.qty} × ${inr(t.price, 2)} on ${fmtDate(t.date)} · Sold at ${inr(t.sold.price, 2)} on ${fmtDate(t.sold.date)}
+        · Price gain ${signedInr(sv - bv, 2)} · Charges −${inr(bc + sc, 2)} · ${spct(net / (bv + bc))}</small></p>
+      <div class="btn-row"><button class="btn small ghost" data-unsell="${esc(t.id)}">Undo sale</button>
+        <button class="btn small ghost" data-del="${esc(t.id)}">Remove</button></div>
+    </div>`;
+  }
+
+  const openTrades = new Set();  // which trade details are expanded, kept across re-renders
+
+  function renderMyTrades() {
+    const all = store.get(KEYS.trades, []);
+    const open = all.filter(t => !t.sold), closed = all.filter(t => t.sold);
+    let invested = 0, worth = 0, result = 0, counted = 0;
+    const list = open.map(t => {
+      const { status: s, rows } = tradeTimeline(t), st = TD.stocks[t.sym];
       const name = st ? st.name : t.sym;
       let badge, note, pnl = null, card = '';
       if (s.state === 'nodata') {
@@ -456,8 +596,7 @@
           as soon as the next day’s prices arrive (each trading day, usually 7–10 PM IST).`;
       } else if (s.state === 'stop') {
         pnl = netPnl(t.qty, t.price, s.at); card = ' sell';
-        badge = '<span class="badge bad">SELL · stop-loss hit</span>';
-        if (s.trail) badge = '<span class="badge bad">SELL · trailing stop hit</span>';
+        badge = `<span class="badge bad">SELL · ${s.trail ? 'trailing stop' : 'stop-loss'} hit</span>`;
         note = s.trail
           ? `The price fell to your trailing stop (${inr(s.stop, 2)}) on ${fmtDay(s.on)}. If your stop-loss order didn’t sell it, sell at the next market open.`
           : `The price fell to ${inr(s.stop, 2)} on ${fmtDay(s.on)}. If your stop-loss order didn’t sell it, sell at the next market open. Small losses like this are part of the plan.`;
@@ -468,7 +607,7 @@
       } else if (s.state === 'time') {
         pnl = netPnl(t.qty, t.price, s.at); card = ' sell';
         badge = '<span class="badge warn">SELL · time is up</span>';
-        note = `Held for ${t.hold} trading days without hitting the target or stop-loss. Sell at the next market open.`;
+        note = `Held for ${t.hold} trading days without hitting the ${s.trail ? 'trailing stop' : 'target or stop-loss'}. Sell at the next market open.`;
       } else {
         pnl = netPnl(t.qty, t.price, s.close);
         badge = '<span class="badge info">HOLD</span>';
@@ -478,28 +617,80 @@
               : 'Keep your target and stop-loss orders in place.')
             + (t.hint ? ` Trades like this that reached the target usually did so between day ${Math.round(t.hint[0])} and day ${Math.round(t.hint[2])}.` : '');
       }
-      return `<div class="trade${card}">
-        <div class="trade-top"><div><b>${esc(name)}</b> <small>${esc(t.sym)}</small></div>${badge}</div>
-        <p>${note}</p>
-        <p class="num"><small>Bought ${t.qty} × ${inr(t.price, 2)} on ${fmtDate(t.date)} ·
-          ${s.trail ? `Trailing stop ${t.st}% · Stop now ${inr(s.stop, 2)}` : `Target ${inr(s.target, 2)} · Stop ${inr(s.stop, 2)}`} · Now ${inr(s.close, 2)}</small></p>
-        ${pnl == null ? '' : `<p><b class="${cls(pnl)}">${signedInr(pnl, 2)}</b> <small>${s.state === 'hold' ? 'if sold at the last close' : 'at the exit price'}, after charges</small></p>`}
-        <div class="btn-row"><button class="btn small ghost" data-del="${esc(t.id)}">${s.state === 'hold' || s.state === 'new' ? 'Remove' : 'I sold it — remove'}</button></div>
+      if (st) {
+        invested += t.qty * t.price + buyCharges(t.qty * t.price);
+        worth += t.qty * st.close;
+        result += netPnl(t.qty, t.price, st.close);
+        counted++;
+      }
+      const sellable = s.state !== 'nodata';
+      return `<div class="trade${card}" data-trade="${esc(t.id)}">
+        <details${openTrades.has(t.id) ? ' open' : ''} data-id="${esc(t.id)}">
+          <summary>
+            <div class="trade-top"><div><b>${esc(name)}</b> <small>${esc(t.sym)}</small></div>${badge}</div>
+            <p>${note}</p>
+            <p class="num"><small>Bought ${t.qty} × ${inr(t.price, 2)} on ${fmtDate(t.date)} ·
+              ${s.trail ? `Trailing stop ${t.st}% · Stop now ${inr(s.stop, 2)}` : `Target ${inr(s.target, 2)} · Stop ${inr(s.stop, 2)}`} · Now ${inr(s.close, 2)}</small></p>
+            ${pnl == null ? '' : `<p><b class="${cls(pnl)}">${signedInr(pnl, 2)}</b> <small>${s.state === 'hold' ? 'if sold at the last close' : 'at the exit price'}, after charges</small></p>`}
+            <span class="more">Full details</span>
+          </summary>
+          ${s.state === 'nodata' ? '' : tradeDetails(t, s, rows)}
+        </details>
+        <div class="btn-row">
+          ${sellable ? `<button class="btn small${s.state === 'hold' || s.state === 'new' ? ' ghost' : ''}" data-sell="${esc(t.id)}" data-at="${s.at ?? s.close}" data-on="${s.on ?? TD.data_date}">I sold it</button>` : ''}
+          <button class="btn small ghost" data-edit="${esc(t.id)}">Edit</button>
+          <button class="btn small ghost" data-del="${esc(t.id)}">Remove</button>
+        </div>
+        <div class="sell-slot"></div>
       </div>`;
     }).join('');
+
+    const summary = counted ? `<div class="summary">
+        <div><small>Open trades</small><b class="num">${counted}</b></div>
+        <div><small>Paid (with charges)</small><b class="num">${inr(invested)}</b></div>
+        <div><small>Worth at last close</small><b class="num">${inr(worth)}</b></div>
+        <div><small>If all sold now</small><b class="num ${cls(result)}">${signedInr(result)}</b></div>
+      </div>` : '';
+    let closedHtml = '';
+    if (closed.length) {
+      const nets = closed.map(t => netPnl(t.qty, t.price, t.sold.price));
+      const total = nets.reduce((a, x) => a + x, 0), wins = nets.filter(x => x > 0).length;
+      closedHtml = `<details class="closed-list"><summary>Closed trades: ${closed.length} · ${wins} won · total
+          <b class="${cls(total)}">${signedInr(total, 2)}</b> after charges</summary>
+        ${[...closed].sort((a, z) => (z.sold.date > a.sold.date ? 1 : -1)).map(closedTrade).join('')}</details>`;
+    }
     $('#mytrades').innerHTML = `<div class="card">
       <span class="label">My trades · when to sell</span>
       <h2>Your open trades</h2>
       <p class="muted">Save each stock you buy here. Every evening the page checks the new prices and tells you to
-        <b>HOLD</b> or <b>SELL</b>. Saved only in this browser on this phone.</p>
-      ${list || '<p class="empty">No trades saved yet.</p>'}
+        <b>HOLD</b> or <b>SELL</b>. Tap a trade for every detail. Saved only in this browser on this phone.</p>
+      ${summary}
+      ${list || '<p class="empty">No open trades.</p>'}
       <div class="btn-row"><button class="btn" id="addTrade">Add a trade</button></div>
       <div id="formSlot"></div>
+      ${closedHtml}
     </div>`;
     $('#addTrade').onclick = () => openForm({});
   }
 
-  function openForm(prefill) {
+  function showSellForm(id, at, on) {
+    const box = document.querySelector(`[data-trade="${CSS.escape(id)}"] .sell-slot`);
+    box.innerHTML = `<form class="trade-form sell-form">
+      <label>Sold on<input name="date" type="date" required value="${esc(on)}" /></label>
+      <label>Sell price (₹)<input name="price" type="number" inputmode="decimal" step="any" min="0.01" required value="${(+at).toFixed(2)}" /></label>
+      <button type="submit" class="btn">Save sale</button></form>`;
+    const form = box.querySelector('form');
+    form.onsubmit = e => {
+      e.preventDefault();
+      const price = +form.elements.price.value, date = form.elements.date.value;
+      if (!(price > 0) || !date) return;
+      store.set(KEYS.trades, store.get(KEYS.trades, []).map(t => t.id === id ? { ...t, sold: { date, price } } : t));
+      renderMyTrades();
+    };
+    form.elements.price.focus();
+  }
+
+  function openForm(prefill, editId) {
     const cap = currentCapital(), b = bucketFor(cap), k = b.chosen ? parseKey(b.chosen) : { tg: 0.1, st: 0.05, hd: 20 };
     const slot = $('#formSlot');
     slot.innerHTML = '';
@@ -517,19 +708,25 @@
     form.elements.tg.value = prefill.tg ?? p100(k.tg);
     form.elements.st.value = prefill.st ?? p100(k.st);
     form.elements.hold.value = prefill.hold ?? k.hd;
+    if (editId) form.querySelector('button[type=submit]').textContent = 'Save changes';
     sel.onchange = () => { form.elements.price.value = TD.stocks[sel.value].close; };
     form.onsubmit = e => {
       e.preventDefault();
       const f = form.elements;
       const t = {
-        id: String(Date.now()), sym: f.sym.value, date: f.date.value,
+        id: editId || String(Date.now()), sym: f.sym.value, date: f.date.value,
         price: +f.price.value, qty: Math.round(+f.qty.value), tg: +f.tg.value, st: +f.st.value, hold: Math.round(+f.hold.value),
       };
       if (!t.date || !(t.price > 0) || !(t.qty >= 1) || !(t.tg >= 0) || !(t.st > 0) || !(t.hold >= 1)) return;
-      if (prefill.hint && t.sym === prefill.sym && t.hold === prefill.hold) t.hint = prefill.hint;
-      store.set(KEYS.trades, [...store.get(KEYS.trades, []), t]);
-      renderMyTrades(cap);
-      $('#mytrades').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (t.sym === prefill.sym) {  // keep where the trade came from unless the stock changed
+        for (const key of ['vid', 'cap', 'rank', 'funda', 'sold']) if (prefill[key] != null) t[key] = prefill[key];
+        if (prefill.hint && t.hold === prefill.hold) t.hint = prefill.hint;
+      }
+      const trades = store.get(KEYS.trades, []);
+      store.set(KEYS.trades, editId ? trades.map(x => x.id === editId ? t : x) : [...trades, t]);
+      openTrades.add(t.id);
+      renderMyTrades();
+      document.querySelector(`[data-trade="${CSS.escape(t.id)}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
     slot.append(form);
     form.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -678,15 +875,41 @@
         const r = BT.pattern_rules?.[add.dataset.vid]?.[String(bucketFor(currentCapital()).capital)];
         const k = r ? ruleOf(r) : null;
         openForm({ sym: add.dataset.add, qty: +add.dataset.shares, date: nextWeekday(TD.data_date),
+          vid: add.dataset.vid, cap: bucketFor(currentCapital()).capital, rank: +add.dataset.rank || null,
+          funda: TD.fundamentals?.[add.dataset.add] || null,
           ...(k && { tg: p100(k.tg), st: p100(k.st), hold: k.hd, hint: r.target_days }) });
+        return;
+      }
+      const sell = e.target.closest('[data-sell]');
+      if (sell) { showSellForm(sell.dataset.sell, sell.dataset.at, sell.dataset.on); return; }
+      const edit = e.target.closest('[data-edit]');
+      if (edit) {
+        const t = store.get(KEYS.trades, []).find(x => x.id === edit.dataset.edit);
+        if (t) openForm(t, t.id);
+        return;
+      }
+      const unsell = e.target.closest('[data-unsell]');
+      if (unsell) {
+        store.set(KEYS.trades, store.get(KEYS.trades, []).map(t => {
+          if (t.id !== unsell.dataset.unsell) return t;
+          const { sold, ...rest } = t;
+          return rest;
+        }));
+        renderMyTrades();
         return;
       }
       const del = e.target.closest('[data-del]');
       if (del && confirm('Remove this trade from the list?')) {
         store.set(KEYS.trades, store.get(KEYS.trades, []).filter(t => t.id !== del.dataset.del));
-        renderMyTrades(currentCapital());
+        openTrades.delete(del.dataset.del);
+        renderMyTrades();
       }
     });
+    // remember which trades are expanded ("toggle" doesn't bubble, so listen while capturing)
+    $('#mytrades').addEventListener('toggle', e => {
+      const d = e.target;
+      if (d.matches?.('details[data-id]')) d.open ? openTrades.add(d.dataset.id) : openTrades.delete(d.dataset.id);
+    }, true);
     renderCapitalDependent();
     renderPatterns();
     renderMethod();

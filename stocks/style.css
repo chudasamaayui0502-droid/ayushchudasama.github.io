@@ -114,9 +114,10 @@ td.r, th.r { text-align: right; }
 .btn.small { font-size: 12px; padding: 0.3rem 0.6rem; }
 .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 0.7rem; }
 
-.trade-form { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 0.75rem; }
-.trade-form label { display: flex; flex-direction: column; font-size: 12px; color: var(--muted); gap: 3px; }
-.trade-form input, .trade-form select { font: inherit; font-size: 15px; color: var(--text); background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 0.45rem 0.5rem; min-width: 0; }
+/* minmax(0, 1fr): the stock list's long names must not widen the form past the screen */
+.trade-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 0.75rem; }
+.trade-form label { display: flex; flex-direction: column; font-size: 12px; color: var(--muted); gap: 3px; min-width: 0; }
+.trade-form input, .trade-form select { font: inherit; font-size: 15px; color: var(--text); background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 0.45rem 0.5rem; min-width: 0; width: 100%; }
 .trade-form .btn { grid-column: 1 / -1; }
 
 .trade { border: 1px solid var(--line); border-radius: 10px; padding: 0.8rem; margin-top: 0.7rem; }
@@ -173,10 +174,35 @@ ul.plain li { margin: 0.25rem 0; }
 @media (max-width: 520px) {
   .rules { grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
   .rule b { font-size: 1rem; }
-  .trade-form { grid-template-columns: 1fr 1fr; }
+  .trade-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .spark { width: 84px; }
   .mood-grid { grid-template-columns: 1fr; }
   table { font-size: 12px; }
   th, td { padding: 6px 5px; }
   td:first-child { min-width: 7rem; }
+}
+
+/* My trades: tap a trade for every detail */
+.trade > details > summary { list-style: none; cursor: pointer; color: var(--text); }
+.trade > details > summary::-webkit-details-marker { display: none; }
+.trade > details > summary .more { display: inline-block; margin-top: 0.3rem; font-size: 13px; color: var(--accent); }
+.trade > details > summary .more::after { content: ' ▾'; }
+.trade > details[open] > summary .more::after { content: ' ▴'; }
+.trade > details[open] > summary { margin-bottom: 0.2rem; }
+.trade-details { border-top: 1px solid var(--line); margin-top: 0.6rem; padding-top: 0.4rem; }
+.trade-details h4 { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin: 0.9rem 0 0.3rem; font-weight: 500; }
+table.kv td { white-space: normal; padding: 5px 4px; }
+table.kv td:first-child { min-width: 0; width: 55%; color: var(--text); }
+table.kv tr.sub td { font-size: 12px; color: var(--muted); padding: 2px 4px 2px 16px; border-bottom: 0; }
+table.kv tr.sub td.r { padding-right: 4px; }
+.summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 0.6rem 0; }
+.summary > div { background: var(--panel-2); border-radius: 8px; padding: 0.5rem 0.6rem; }
+.summary small { display: block; color: var(--muted); font-size: 11px; }
+.summary b { font-size: 1.05rem; }
+.closed-list { margin-top: 1rem; }
+.closed { border: 1px solid var(--line); border-radius: 10px; padding: 0.7rem 0.8rem; margin-top: 0.6rem; }
+.daily { margin-top: 0.6rem; }
+.sell-form { margin-top: 0.6rem; }
+@media (max-width: 520px) {
+  .summary { grid-template-columns: 1fr 1fr; }
 }
