@@ -452,7 +452,8 @@
         note = 'This stock is not in the Nifty 100 list the tool follows, so it can’t check it.';
       } else if (s.state === 'new') {
         badge = '<span class="badge info">Waiting</span>';
-        note = `Bought after the last update (${fmtDay(TD.data_date)}). Check again after the next market close.`;
+        note = `Bought on ${fmtDay(t.date)}, but the page only has prices up to ${fmtDay(TD.data_date)} so far. It checks this trade
+          as soon as the next day’s prices arrive (each trading day, usually 7–10 PM IST).`;
       } else if (s.state === 'stop') {
         pnl = netPnl(t.qty, t.price, s.at); card = ' sell';
         badge = '<span class="badge bad">SELL · stop-loss hit</span>';
@@ -617,10 +618,24 @@
     </div>`;
   }
 
+  function istNow() {
+    const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', hourCycle: 'h23', weekday: 'short' }).formatToParts(new Date());
+    const p = Object.fromEntries(parts.map(x => [x.type, x.value]));
+    return { day: `${p.year}-${p.month}-${p.day}`, minutes: +p.hour * 60 + +p.minute, weekend: p.weekday === 'Sat' || p.weekday === 'Sun' };
+  }
+
   function renderHeader() {
-    const daysOld = (new Date() - asDate(TD.data_date)) / 864e5;
-    const stale = daysOld > 5 ? ` <span class="error">· These prices are ${Math.floor(daysOld)} days old. The daily update may have failed.</span>` : '';
-    $('#dataLine').innerHTML = `Using closing prices of <b>${fmtDay(TD.data_date)}</b> · updates every trading day around 7 PM IST${stale}`;
+    const now = istNow();
+    const daysOld = (asDate(now.day) - asDate(TD.data_date)) / 864e5;
+    let note = '';
+    if (daysOld > 5) {
+      note = ` <span class="error">· These prices are ${Math.floor(daysOld)} days old. The daily update may have failed.</span>`;
+    } else if (!now.weekend && TD.data_date < now.day && now.minutes >= 19 * 60) {
+      note = ` <span class="error">· Today’s prices aren’t in yet. The update runs between about 6:40 and 10:30 PM IST
+        (with a backup at 7:10 AM), so check again a little later. On market holidays there is no update.</span>`;
+    }
+    $('#dataLine').innerHTML = `Using closing prices of <b>${fmtDay(TD.data_date)}</b> · updates every trading day around 7 PM IST${note}`;
     $('#foot').innerHTML = `<p>Signals updated ${esc(TD.generated_at.replace('T', ' '))} IST · strategies re-tested ${esc(BT.generated_at.replace('T', ' '))} IST.</p>
       <p>Data: Yahoo Finance and NSE. Charges: Groww pricing page. This page is a learning tool, not investment advice, and is not from a SEBI-registered adviser.
       <a href="https://github.com/chudasamaayui0502-droid/ayushchudasama.github.io/tree/main/screener">How it works (code)</a>.</p>`;
