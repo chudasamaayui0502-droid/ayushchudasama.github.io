@@ -1060,12 +1060,25 @@ def _round(obj, nd=4):
     return obj
 
 
+def _fingerprint(payload: dict):
+    """What a reader of the page would notice: the day, today's and the last
+    signals, each stock's latest prices to the paisa, and the market mood.
+    (Yahoo's dividend-adjusted history wobbles in the 4th decimal between
+    downloads, which isn't new data.)"""
+    paise = lambda x: None if x is None else round(x, 2)
+    return (
+        payload.get("data_date"),
+        {vid: [row["s"] for row in rows] for vid, rows in payload.get("signals", {}).items()},
+        {vid: (ls["date"], [x["s"] for x in ls["stocks"]]) for vid, ls in payload.get("last_signal", {}).items()},
+        {sym: [paise(v) for v in (st["bars"][-1] if st.get("bars") else [])] for sym, st in payload.get("stocks", {}).items()},
+        json.dumps(_round(payload.get("market", {}), 2), sort_keys=True),
+    )
+
+
 def same_prices(old: dict, new: dict) -> bool:
-    """True when a fresh today.json would only differ in its timestamp or the
-    company numbers, so a backup run has nothing new to publish."""
-    keys = ("data_date", "dates", "signals", "last_signal", "stocks", "market")
-    new = _round(new)
-    return all(old.get(k) == new.get(k) for k in keys)
+    """True when a fresh today.json has nothing new for the page, so a backup
+    run doesn't need to publish it."""
+    return _fingerprint(old) == _fingerprint(_round(new))
 
 
 def write_json(path: Path, obj) -> None:
