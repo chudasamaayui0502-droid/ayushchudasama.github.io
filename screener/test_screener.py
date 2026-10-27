@@ -317,6 +317,20 @@ def test_backup_run_with_no_new_prices_is_a_no_op(tmp_path):
     assert not S.same_prices(saved, newer)
 
 
+def test_price_source_outage_has_its_own_exit_code(monkeypatch, tmp_path):
+    universe = pd.DataFrame({"Symbol": [f"S{k}" for k in range(10)], "Name": "x", "Industry": ""})
+    monkeypatch.setattr(S, "OUT_DIR", tmp_path)
+    monkeypatch.setattr(S, "load_universe", lambda: universe)
+    monkeypatch.setattr(S, "fill_recent_gaps", lambda frames: [])
+    monkeypatch.setattr(S, "download_prices", lambda symbols, use_cache=False: {})
+    assert S.main(["--mode", "daily"]) == S.DATA_UNAVAILABLE
+    frames = make_frames(n_days=300, n_stocks=10)
+    monkeypatch.setattr(S, "download_prices", lambda symbols, use_cache=False: dict(frames))
+    monkeypatch.setattr(S, "download_market", lambda use_cache=False: {})
+    assert S.main(["--mode", "daily"]) == S.DATA_UNAVAILABLE
+    assert list(tmp_path.iterdir()) == []  # nothing written
+
+
 # ---- portfolio rules -----------------------------------------------------------
 
 def synthetic_trades(rows):
