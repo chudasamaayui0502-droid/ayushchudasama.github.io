@@ -1090,6 +1090,11 @@ def write_json(path: Path, obj) -> None:
     print(f"Wrote {path.name} ({len(text) / 1024:.0f} KB)")
 
 
+# Exit code for "the price source didn't answer properly this time". The
+# workflow treats it as a warning: the next scheduled run tries again.
+DATA_UNAVAILABLE = 75
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--mode", choices=("full", "daily"), default="daily")
@@ -1102,13 +1107,13 @@ def main(argv=None) -> int:
     bench = frames.pop(BENCHMARK, None)
     if len(frames) < 0.8 * len(universe):
         print(f"Only {len(frames)} of {len(universe)} stocks downloaded; keeping the previous data.", file=sys.stderr)
-        return 1
+        return DATA_UNAVAILABLE
     panel = build_panel(frames)
     market = download_market(use_cache=args.cache)
     if set(market) != set(MARKET_TICKERS):
         print(f"Missing market data ({', '.join(set(MARKET_TICKERS) - set(market))}); keeping the previous data.",
               file=sys.stderr)
-        return 1
+        return DATA_UNAVAILABLE
     filters = market_filters(panel, market)
     signals = with_market_filters(pattern_signals(panel), filters)
     print(f"{len(panel.symbols)} stocks, {panel.dates[0].date()} to {panel.dates[-1].date()}, "

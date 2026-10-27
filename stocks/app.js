@@ -593,7 +593,7 @@
       } else if (s.state === 'new') {
         badge = '<span class="badge info">Waiting</span>';
         note = `Bought on ${fmtDay(t.date)}, but the page only has prices up to ${fmtDay(TD.data_date)} so far. It checks this trade
-          as soon as the next day’s prices arrive (each trading day, usually 7–10 PM IST).`;
+          as soon as the next day’s prices arrive (each trading day, usually by about 7 PM IST).`;
       } else if (s.state === 'stop') {
         pnl = netPnl(t.qty, t.price, s.at); card = ' sell';
         badge = `<span class="badge bad">SELL · ${s.trail ? 'trailing stop' : 'stop-loss'} hit</span>`;
@@ -829,8 +829,8 @@
     if (daysOld > 5) {
       note = ` <span class="error">· These prices are ${Math.floor(daysOld)} days old. The daily update may have failed.</span>`;
     } else if (!now.weekend && TD.data_date < now.day && now.minutes >= 19 * 60) {
-      note = ` <span class="error">· Today’s prices aren’t in yet. The update runs between about 6:40 and 10:30 PM IST
-        (with a backup at 7:10 AM), so check again a little later. On market holidays there is no update.</span>`;
+      note = ` <span class="error">· Today’s prices aren’t in yet. The update normally arrives by about 7 PM IST, with
+        backups later in the evening and at 8 AM, so check again a little later. On market holidays there is no update.</span>`;
     }
     $('#dataLine').innerHTML = `Using closing prices of <b>${fmtDay(TD.data_date)}</b> · updates every trading day around 7 PM IST${note}`;
     $('#foot').innerHTML = `<p>Signals updated ${esc(TD.generated_at.replace('T', ' '))} IST · strategies re-tested ${esc(BT.generated_at.replace('T', ' '))} IST.</p>
