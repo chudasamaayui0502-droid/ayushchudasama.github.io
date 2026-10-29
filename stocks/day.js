@@ -6,7 +6,7 @@
   const L = window.DayLogic;
   let G, DT;  // helpers from app.js, and data/daytrade.json
   const $ = sel => document.querySelector(sel);
-  const KEY = { margin: 'day.margin', trades: 'day.trades', auto: 'live.auto' };
+  const KEY = { margin: 'day.margin', trades: 'day.trades', auto: 'live.auto', target: 'day.target' };
   const FEED = 'https://priceapi.moneycontrol.com/techCharts/indianMarket';
   const INDICES = [['nifty', 'in;NSX', 'Nifty 50'], ['bank', 'in;nbx', 'Bank Nifty'], ['vix', 'in;IDXN', 'India VIX']];
   const LIVE_EVERY = 60_000;
@@ -45,8 +45,13 @@
     const m = +G.store.get(KEY.margin, 1);
     return DT && DT.grid.margins.includes(m) ? m : 1;
   };
-  function bucketFor(cap, m) {
-    const list = DT.buckets.filter(b => b.margin === m);
+  // "best": the best tested plan; "4", "5": the best plan with that fixed target
+  const targetChoice = () => {
+    const t = String(G.store.get(KEY.target, 'best'));
+    return t !== 'best' && DT && DT.buckets.some(b => b.target === t) ? t : 'best';
+  };
+  function bucketFor(cap, m, t = targetChoice()) {
+    const list = DT.buckets.filter(b => b.margin === m && (b.target || 'best') === t);
     let pick = list[0];
     for (const b of list) if (cap >= b.capital) pick = b;
     return pick;
@@ -140,11 +145,27 @@
         <b>short-sell</b>: sell first and buy back later the same day, to profit when the price falls.</p>
       <p class="label" style="margin-top:.8rem">Groww’s intraday margin</p>
       <div class="chips" id="marginChips">${chips}</div>
+      <p class="label" style="margin-top:.8rem">Target</p>
+      <div class="chips">${['best', ...(DT.grid.target_choices || []).map(t => String(Math.round(t * 100)))].map(t =>
+        `<button type="button" class="chip" data-dtarget="${t}" aria-pressed="${t === targetChoice()}">${t === 'best' ? 'Best tested ★' : t + '% target'}</button>`).join('')}</div>
       <p class="muted" style="margin-top:.5rem">With margin, Groww lets you trade more than your money for the day (up to 5× on many stocks).
         Profits <b>and losses</b> grow by the same amount: with ${inr(cap)}, a 1% move against you costs about ${inr(cap * 0.01)} with no margin
         and ${inr(cap * 0.05)} with 5×.</p>
+      ${targetNote(cap)}
       <p class="muted">Each amount and margin is tested separately below.${m > 1 ? ` You are trading ${inr(cap * m)} with ${inr(cap)} of your own money.` : ''}</p>
     </div>`;
+  }
+
+  // How often a fixed target was reached in one day, against the best tested plan
+  function targetNote(cap) {
+    const t = targetChoice();
+    if (t === 'best') return '<p class="muted" style="margin-top:.5rem">The plan below uses whichever target tested best for your amount and margin.</p>';
+    const m = margin(), mine = chosenOf(bucketFor(cap, m)), best = chosenOf(bucketFor(cap, m, 'best'));
+    if (!mine) return '';
+    const ex = mine.example, hit = ex.trades ? ex.targets_hit / ex.trades : 0;
+    return `<p class="verdict warn">With a fixed <b>${t}% target</b>, the target was reached in <b>${ex.targets_hit} of ${ex.trades}</b> trades in the
+      final test (${pctTxt(hit, 0)}): a ${t}% move in one day is rare for these big stocks, so most trades end at the stop-loss or at 3:10 PM.
+      ${inr(mine.runs.test.capital)} became <b>${inr(mine.runs.test.final)}</b>${best ? `, against ${inr(best.runs.test.final)} for the best tested plan` : ''}.</p>`;
   }
 
   function renderPlan(cap) {
@@ -157,7 +178,8 @@
     const { b, m, c, k, st, slots, value } = plan;
     const cost = L.roundTrip(value);
     const [vcls, vtitle, vraw] = VERDICT[b.verdict] || VERDICT.none;
-    const vtext = vraw.replace('{combos}', DT.combos_tested.toLocaleString('en-IN'));
+    const nCombos = targetChoice() === 'best' ? DT.combos_tested : DT.combos_tested / DT.grid.targets.length;
+    const vtext = vraw.replace('{combos}', nCombos.toLocaleString('en-IN'));
     const tested = b.capital === cap ? '' : `<p class="muted">Test results are for ${inr(b.capital)} (the closest tested amount at or below yours), ${m}× margin.</p>`;
     const rows = ['pick1', 'pick2', 'test'].map(name => {
       const r = c.runs[name], at = c.avg_trade[name];
@@ -866,6 +888,8 @@
     document.body.addEventListener('click', e => {
       const chip = e.target.closest('[data-margin]');
       if (chip) { G.store.set(KEY.margin, +chip.dataset.margin); render(G.currentCapital()); return; }
+      const tchip = e.target.closest('[data-dtarget]');
+      if (tchip) { G.store.set(KEY.target, tchip.dataset.dtarget); render(G.currentCapital()); return; }
       if (e.target.closest('#addDayTrade')) { openDayForm(); return; }
       const save = e.target.closest('[data-dsave]');
       if (save) {

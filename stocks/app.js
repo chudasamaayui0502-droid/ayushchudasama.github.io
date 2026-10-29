@@ -2,7 +2,7 @@
 
 (() => {
   const $ = (sel, el = document) => el.querySelector(sel);
-  const KEYS = { capital: 'swing.capital', trades: 'swing.trades', tab: 'page.tab' };
+  const KEYS = { capital: 'swing.capital', trades: 'swing.trades', tab: 'page.tab', target: 'swing.target' };
   const store = {
     get(key, fallback) {
       try { const v = localStorage.getItem(key); return v == null ? fallback : JSON.parse(v); } catch { return fallback; }
@@ -80,9 +80,16 @@
   const ruleSummary = k => k.tg
     ? `+${p100(k.tg)}% / −${p100(k.st)}% / ${k.hd} days`
     : `trailing stop −${p100(k.st)}% / up to ${k.hd} days`;
-  function bucketFor(cap) {
-    let pick = BT.buckets[0];
-    for (const b of BT.buckets) if (cap >= b.capital) pick = b;
+  // "best": the best tested plan; "5", "8": the best plan with that fixed target
+  const targetChoice = () => {
+    const t = store.get(KEYS.target, 'best');
+    return t !== 'best' && BT.by_target?.[t] ? t : 'best';
+  };
+  const rulesOf = (t = targetChoice()) => (t !== 'best' && BT.by_target?.[t]?.pattern_rules) || BT.pattern_rules;
+  function bucketFor(cap, t = targetChoice()) {
+    const list = (t !== 'best' && BT.by_target?.[t]?.buckets) || BT.buckets;
+    let pick = list[0];
+    for (const b of list) if (cap >= b.capital) pick = b;
     return pick;
   }
   const chosenOf = b => b.candidates.find(c => c.key === b.chosen);
@@ -147,7 +154,8 @@
     const per = cap / b.slots;
     const cost = buyCharges(per) + sellCharges(per);
     const [vcls, vtitle, vtextRaw] = VERDICTS[b.verdict] || VERDICTS.none;
-    const vtext = vtextRaw.replace('{combos}', BT.combos_tested);
+    const tc = targetChoice();
+    const vtext = vtextRaw.replace('{combos}', tc === 'best' ? BT.combos_tested : BT.by_target[tc].combos);
     const tested = b.capital === cap ? '' :
       `<p class="muted">Test results below are for ${inr(b.capital)}, the closest tested amount at or below yours.</p>`;
     const signedPct = x => (x > 0 ? '+' : x < 0 ? '−' : '') + pct(Math.abs(x), 1);
@@ -277,7 +285,7 @@
     const planVid = b.chosen ? parseKey(b.chosen).vid : null;
     const byStock = new Map();
     for (const [vid, list] of Object.entries(TD.signals)) {
-      const r = BT.pattern_rules?.[vid]?.[String(b.capital)];
+      const r = rulesOf()?.[vid]?.[String(b.capital)];
       if (!r || !r.ends || !list.length) continue;  // not enough past trades to judge
       for (const s of list) {
         const e = { vid, r, plan: vid === planVid };
@@ -377,6 +385,30 @@
       <p class="muted">From the close of ${fmtDay(TD.data_date)}: every stock a tested pattern signals today that fits your money,
         ranked below. Buy at the next market open (9:15–9:30 AM) as a <b>Delivery</b> order. ${slotsNote}</p>
       ${warn}${body}${dearLine}
+    </div>`;
+  }
+
+  function renderTarget(cap) {
+    const tc = targetChoice(), choices = Object.keys(BT.by_target || {});
+    if (!choices.length) { $('#swingTarget').innerHTML = ''; return; }
+    const best = bucketFor(cap, 'best'), bestC = chosenOf(best);
+    const chip = (t, label) => `<button type="button" class="chip" data-starget="${t}" aria-pressed="${t === tc}">${label}</button>`;
+    let note = '';
+    if (tc !== 'best' && bestC) {
+      const k = parseKey(best.chosen), v = BT.variants[k.vid], mine = bucketFor(cap);
+      const bf = bestC.spread.test.final, mf = chosenOf(mine)?.spread.test.final;
+      note = `<p class="verdict warn">You chose a fixed <b>${tc}% target</b>. In the final test the best ${tc}% plan for ${inr(best.capital)} turned it into
+        <b>${inr(mf)}</b>; the best tested plan (<b>${esc(v.name)}</b>, ${ruleSummary(k)}) turned it into <b>${inr(bf)}</b>.
+        Each buy + sell of ${inr(cap / mine.slots)} costs about ${inr(buyCharges(cap / mine.slots) + sellCharges(cap / mine.slots), 2)} in charges,
+        so a small fixed target leaves little profit.</p>`;
+    }
+    $('#swingTarget').innerHTML = `<div class="card">
+      <span class="label">Your target</span>
+      <div class="chips">${chip('best', 'Best tested ★')}${choices.map(t => chip(t, `${t}% target`)).join('')}</div>
+      <p class="muted" style="margin-top:.5rem">${tc === 'best'
+        ? 'The plan and buy list below use whichever target (or trailing stop) tested best for your amount.'
+        : `The plan and buy list below only use rules with a ${tc}% target, picked and tested the same way.`}</p>
+      ${note}
     </div>`;
   }
 
@@ -550,7 +582,7 @@
     let origin = '<h4>Where this trade came from</h4><p class="muted">Added by hand.</p>';
     const v = t.vid && BT.variants[t.vid];
     if (v) {
-      const r = BT.pattern_rules?.[t.vid]?.[String(t.cap)];
+      const r = rulesOf(t.tchoice || 'best')?.[t.vid]?.[String(t.cap)];
       origin = `<h4>Where this trade came from</h4><p><b>${esc(v.name)}</b>${t.rank ? ` · ranked #${t.rank} on the buy list` : ''}</p>
         <p class="muted">${esc(v.desc)}</p>
         ${r && r.ends ? `<p class="muted">Past trades like this at ${inr(t.cap)}: ${r.ends.target ? `${pct(r.ends.target)} reached the target, ` : ''}
@@ -719,7 +751,7 @@
       };
       if (!t.date || !(t.price > 0) || !(t.qty >= 1) || !(t.tg >= 0) || !(t.st > 0) || !(t.hold >= 1)) return;
       if (t.sym === prefill.sym) {  // keep where the trade came from unless the stock changed
-        for (const key of ['vid', 'cap', 'rank', 'funda', 'sold']) if (prefill[key] != null) t[key] = prefill[key];
+        for (const key of ['vid', 'cap', 'rank', 'funda', 'sold', 'tchoice']) if (prefill[key] != null) t[key] = prefill[key];
         if (prefill.hint && t.hold === prefill.hold) t.hint = prefill.hint;
       }
       const trades = store.get(KEYS.trades, []);
@@ -844,13 +876,14 @@
 
   function renderCapitalDependent() {
     const cap = currentCapital();
-    for (const chip of document.querySelectorAll('.chip')) chip.setAttribute('aria-pressed', String(+chip.dataset.cap === cap));
+    for (const chip of document.querySelectorAll('.chip[data-cap]')) chip.setAttribute('aria-pressed', String(+chip.dataset.cap === cap));
     if (cap < 100) {
       $('#plan').innerHTML = '<div class="card"><p>Enter at least ₹100.</p></div>';
       $('#buy').innerHTML = '';
       return;
     }
     store.set(KEYS.capital, cap);
+    renderTarget(cap);
     renderMood(cap);
     renderPlan(cap);
     renderBuy(cap);
@@ -883,18 +916,20 @@
     let timer;
     input().addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(renderCapitalDependent, 250); });
     $('#capitalChips').addEventListener('click', e => {
-      const chip = e.target.closest('.chip');
+      const chip = e.target.closest('.chip[data-cap]');
       if (!chip) return;
       input().value = chip.dataset.cap;
       renderCapitalDependent();
     });
     document.body.addEventListener('click', e => {
+      const tchip = e.target.closest('[data-starget]');
+      if (tchip) { store.set(KEYS.target, tchip.dataset.starget); renderCapitalDependent(); return; }
       const add = e.target.closest('[data-add]');
       if (add) {
-        const r = BT.pattern_rules?.[add.dataset.vid]?.[String(bucketFor(currentCapital()).capital)];
+        const r = rulesOf()?.[add.dataset.vid]?.[String(bucketFor(currentCapital()).capital)];
         const k = r ? ruleOf(r) : null;
         openForm({ sym: add.dataset.add, qty: +add.dataset.shares, date: nextWeekday(TD.data_date),
-          vid: add.dataset.vid, cap: bucketFor(currentCapital()).capital, rank: +add.dataset.rank || null,
+          vid: add.dataset.vid, cap: bucketFor(currentCapital()).capital, rank: +add.dataset.rank || null, tchoice: targetChoice(),
           funda: TD.fundamentals?.[add.dataset.add] || null,
           ...(k && { tg: p100(k.tg), st: p100(k.st), hold: k.hd, hint: r.target_days }) });
         return;

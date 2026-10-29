@@ -52,7 +52,11 @@ LAST_ENTRY_BAR = bar_at("12:55")  # no new trades after 12:55 PM
 EXIT_BAR = bar_at("15:10")        # sell everything at 3:10 PM, before Groww's 3:20 PM auto square-off (Rs 50 + GST)
 SLIPPAGE = 0.0005                 # 0.05% worse than the chart price on every market order
 STOPS = (0.005, 0.01, 0.015, 0.02, 0.03)
-TARGETS = (0.01, 0.015, 0.02, 0.03, 0.0)  # 0: no target, sell at 3:10 PM
+TARGETS = (0.01, 0.015, 0.02, 0.03, 0.04, 0.05, 0.0)  # 0: no target, sell at 3:10 PM
+# Fixed targets people can choose instead of the best tested plan; each gets
+# its own plan, picked the same way among the combinations with that target.
+TARGET_CHOICES = (0.04, 0.05)
+CHOICE_CANDIDATES = 4
 MARGINS = (1, 2, 5)               # Groww's intraday margin lets you trade up to 5x your money
 STANDARD_EXIT = (0.02, 0.0)       # stop, target used to compare setups with each other
 MIN_TRADES = 20                   # in each half of the picking period
@@ -743,7 +747,8 @@ def parse_key(key: str):
 
 def run_backtest(ip: Intraday, daily: Daily, nifty: Intraday | None, nifty_daily: Daily | None,
                  p: S.Panel, market: dict, log=print, previous: dict | None = None) -> dict:
-    """previous: {"capital|margin": combo key} picked last time, kept unless clearly beaten."""
+    """previous: {"capital|margin": combo key} picked last time, kept unless clearly beaten
+    ("capital|margin|4" for the plan with a fixed 4% target)."""
     t0 = time.time()
     prev = session_inputs(daily, ip.dates)
     prev["skip"] = skip_days(ip, daily, p)
@@ -776,6 +781,58 @@ def run_backtest(ip: Intraday, daily: Daily, nifty: Intraday | None, nifty_daily
             sims[k] = day_sim(trades[key], ip, cap, margin, s, e)
         return sims[k]
 
+    def make_bucket(cap, margin, scored_all, choice):
+        """The plan for one amount and margin; `choice` is "best" or a fixed target in % ("4")."""
+        exposure = cap * margin
+        slots = day_slots(exposure)
+        tg = None if choice == "best" else int(choice) / 100
+        scored = [c for c in scored_all if tg is None or parse_key(c["key"])[2] == tg]
+        good = [c for c in scored if c["pick1_est"] > 0 and c["pick2_est"] > 0]
+        pool = good or scored
+        best = pool[0] if pool else None
+        prev_key = (previous or {}).get(f"{cap}|{margin}" + ("" if choice == "best" else f"|{choice}"))
+        kept = next((c for c in pool if c["key"] == prev_key), None)
+        if kept and kept["steady"] < best["steady"] - SWITCH_MARGIN:
+            kept = None
+        pick = kept or best
+        shown = scored[:CANDIDATES if choice == "best" else CHOICE_CANDIDATES]
+        if pick and pick not in shown:
+            shown.append(pick)
+        cands = [{**c, "runs": {nm: {k: v for k, v in sim(c["key"], cap, margin, nm).items()
+                                     if k not in ("log", "curve")} for nm in bounds}} for c in shown]
+        chosen = next((c for c in cands if pick and c["key"] == pick["key"]), None)
+        random, verdict = None, "none"
+        if chosen:
+            sid, stop, target = parse_key(chosen["key"])
+            side = next(x.side for x in setups if x.id == sid)
+            run = sim(chosen["key"], cap, margin, "test")
+            s_, e_ = bounds["test"]
+            finals = random_baseline(ip, prev, run, side, stop, target, cap, margin, s_, e_)
+            if finals:
+                f = np.array(finals)
+                random = {"runs": len(f), "median": float(np.median(f)), "p10": float(np.percentile(f, 10)),
+                          "p90": float(np.percentile(f, 90)), "beat_pct": float((run["final"] > f).mean())}
+            lr = long_run.get(sid)
+            if run["trades"] == 0 or run["final"] <= cap:
+                verdict = "loss"
+            elif not good:
+                verdict = "unproven"
+            elif random and random["beat_pct"] < 0.6:
+                verdict = "luck"
+            elif lr and lr["n"] and lr["avg"] <= 0:
+                verdict = "recent_only"
+            else:
+                verdict = "good"
+            chosen["example"] = run
+            t = chosen["runs"]["test"]
+            log(f"Rs {cap:>7,} x{margin}{'' if choice == 'best' else f' ({choice}% target)'}: {chosen['key']:<28} "
+                f"test Rs {cap:,} -> Rs {t['final']:,.0f} ({t['trades']} trades, win {t['win_rate'] or 0:.0%}) | beat "
+                f"{0 if not random else random['beat_pct']:.0%} of random | {verdict}")
+        return {"capital": cap, "margin": margin, "target": choice, "slots": slots, "per_trade": exposure / slots,
+                "chosen": chosen["key"] if chosen else None,
+                "kept_previous": bool(kept and best is not kept), "verdict": verdict,
+                "passed_pick": len(good), "random": random, "candidates": cands}
+
     buckets = []
     for cap in S.CAPITALS:
         for margin in MARGINS:
@@ -792,51 +849,8 @@ def run_backtest(ip: Intraday, daily: Daily, nifty: Intraday | None, nifty_daily
                                "avg_trade": {nm: {k: q[k] for k in ("n", "win", "avg", "gross", "per_day", "days")}
                                              for nm, q in qs.items()}})
             scored.sort(key=lambda c: (-round(c["steady"], 9), c["key"]))
-            good = [c for c in scored if c["pick1_est"] > 0 and c["pick2_est"] > 0]
-            pool = good or scored
-            best = pool[0] if pool else None
-            kept = next((c for c in pool if c["key"] == (previous or {}).get(f"{cap}|{margin}")), None)
-            if kept and kept["steady"] < best["steady"] - SWITCH_MARGIN:
-                kept = None
-            pick = kept or best
-            shown = scored[:CANDIDATES]
-            if pick and pick not in shown:
-                shown.append(pick)
-            cands = [{**c, "runs": {nm: {k: v for k, v in sim(c["key"], cap, margin, nm).items()
-                                         if k not in ("log", "curve")} for nm in bounds}} for c in shown]
-            chosen = next((c for c in cands if pick and c["key"] == pick["key"]), None)
-            random, verdict = None, "none"
-            if chosen:
-                sid, stop, target = parse_key(chosen["key"])
-                side = next(x.side for x in setups if x.id == sid)
-                run = sim(chosen["key"], cap, margin, "test")
-                s_, e_ = bounds["test"]
-                finals = random_baseline(ip, prev, run, side, stop, target, cap, margin, s_, e_)
-                if finals:
-                    f = np.array(finals)
-                    random = {"runs": len(f), "median": float(np.median(f)), "p10": float(np.percentile(f, 10)),
-                              "p90": float(np.percentile(f, 90)), "beat_pct": float((run["final"] > f).mean())}
-                lr = long_run.get(sid)
-                if run["trades"] == 0 or run["final"] <= cap:
-                    verdict = "loss"
-                elif not good:
-                    verdict = "unproven"
-                elif random and random["beat_pct"] < 0.6:
-                    verdict = "luck"
-                elif lr and lr["n"] and lr["avg"] <= 0:
-                    verdict = "recent_only"
-                else:
-                    verdict = "good"
-                chosen["example"] = run
-            buckets.append({"capital": cap, "margin": margin, "slots": slots, "per_trade": value,
-                            "chosen": chosen["key"] if chosen else None,
-                            "kept_previous": bool(kept and best is not kept), "verdict": verdict,
-                            "passed_pick": len(good), "random": random, "candidates": cands})
-            if chosen:
-                t = chosen["runs"]["test"]
-                log(f"Rs {cap:>7,} x{margin}: {chosen['key']:<28} test Rs {cap:,} -> Rs {t['final']:,.0f} "
-                    f"({t['trades']} trades, win {t['win_rate'] or 0:.0%}) | beat "
-                    f"{0 if not random else random['beat_pct']:.0%} of random | {verdict}")
+            for choice in ("best", *(str(round(t * 100)) for t in TARGET_CHOICES)):
+                buckets.append(make_bucket(cap, margin, scored, choice))
 
     return {
         "schema": SCHEMA,
@@ -846,6 +860,7 @@ def run_backtest(ip: Intraday, daily: Daily, nifty: Intraday | None, nifty_daily
         "periods": [{"name": nm, "start": str(ip.dates[s].date()), "end": str(ip.dates[e].date()), "sessions": e - s + 1}
                     for nm, (s, e) in bounds.items()],
         "grid": {"stops": STOPS, "targets": TARGETS, "margins": MARGINS, "capitals": S.CAPITALS,
+                 "target_choices": TARGET_CHOICES,
                  "entry_time": bar_time(ENTRY_BAR), "last_entry": bar_time(LAST_ENTRY_BAR),
                  "exit_time": bar_time(EXIT_BAR), "slippage": SLIPPAGE, "min_trades": MIN_TRADES,
                  "random_runs": RANDOM_RUNS},
