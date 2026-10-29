@@ -444,6 +444,34 @@ def test_full_backtest_on_synthetic_data_has_no_nan_in_json(tmp_path, monkeypatc
                 lo, mid, hi = r["target_days"]
                 assert 1 <= lo <= mid <= hi <= max(S.HOLDS + S.TRAIL_HOLDS)
     assert len(bt["buckets"]) == len(S.CAPITALS)
+    # a plan and daily rules for each fixed target someone can choose
+    assert sorted(bt["by_target"]) == sorted(str(round(t * 100)) for t in S.TARGET_CHOICES)
+    for name, x in bt["by_target"].items():
+        assert x["combos"] == len(signals) * len(S.STOPS) * len(S.HOLDS)
+        assert all(r["rule"].startswith(f"{name}|") for by_cap in x["pattern_rules"].values() for r in by_cap.values())
+        assert len(x["buckets"]) == len(S.CAPITALS)
+        for b in x["buckets"]:
+            if b["chosen"]:
+                assert b["chosen"].split("|")[1] == name
+                assert all(c["key"].split("|")[1] == name for c in b["candidates"])
+
+
+def test_fixed_target_pick_is_also_kept_unless_clearly_beaten(monkeypatch):
+    monkeypatch.setattr(S, "PERIODS", [("train", "2019-01-01", "2019-12-31"),
+                                       ("validate", "2020-01-01", "2020-06-30"),
+                                       ("test", "2020-07-01", None)])
+    monkeypatch.setattr(S, "MIN_TRAIN_TRADES", 1)
+    monkeypatch.setattr(S, "CAPITALS", [10000])
+    monkeypatch.setattr(S, "RANDOM_RUNS", 2)
+    p = S.build_panel(make_frames(n_days=500, n_stocks=8), now=dt.datetime(2030, 1, 1, tzinfo=S.IST))
+    signals = S.pattern_signals(p)
+    quiet = lambda *_: None
+    first = S.run_backtest(p, signals, None, log=quiet)["by_target"]["5"]["buckets"][0]
+    other = first["candidates"][-1]["key"]
+    assert other != first["chosen"]
+    monkeypatch.setattr(S, "SWITCH_MARGIN", 100.0)
+    kept = S.run_backtest(p, signals, None, log=quiet, previous_by_target={"5": {10000: other}})["by_target"]["5"]["buckets"][0]
+    assert kept["chosen"] == other and kept["kept_previous"]
 
 
 def test_new_file_layout_always_counts_as_new_data():

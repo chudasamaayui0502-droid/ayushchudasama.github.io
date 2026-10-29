@@ -51,6 +51,10 @@ HOLDS = (10, 20, 40)  # trading days
 TRAILS = (0.10, 0.15, 0.20)
 TRAIL_HOLDS = (60, 120)  # trading days
 STANDARD_EXIT = (0.08, 0.04, 20)  # used to compare patterns with each other
+# Fixed targets people can choose instead of the best tested plan; each gets
+# its own plan picked the same way, among the combinations with that target.
+TARGET_CHOICES = (0.05, 0.08)
+CHOICE_CANDIDATES = 4
 BENCHMARK = "NIFTYBEES"  # Nifty 50 ETF
 # Big news (wars, rate changes, budgets, global crashes) shows up in these
 # within days, and unlike news itself they have a long, testable history.
@@ -782,8 +786,10 @@ def combo_key(vid, exit_rule):
     return f"{vid}|{round(tg * 100)}|{round(st * 100)}|{hd}"
 
 
-def run_backtest(p: Panel, signals, bench: pd.DataFrame | None, log=print, previous: dict | None = None) -> dict:
-    """previous: {capital: combo key} picked last time, kept unless clearly beaten."""
+def run_backtest(p: Panel, signals, bench: pd.DataFrame | None, log=print, previous: dict | None = None,
+                 previous_by_target: dict | None = None) -> dict:
+    """previous: {capital: combo key} picked last time, kept unless clearly beaten;
+    previous_by_target: the same for each fixed-target choice, {"5": {capital: key}}."""
     O, H, L, C = (df.to_numpy() for df in (p.O, p.H, p.L, p.C))
     Cf = p.C.ffill().to_numpy()
     score = momentum_score(p)
@@ -857,39 +863,54 @@ def run_backtest(p: Panel, signals, bench: pd.DataFrame | None, log=print, previ
 
     # For the page's daily list: every pattern's steadiest target/stop rule at
     # each amount, with how its past trades ended and how long targets took.
-    pattern_rules = {}
-    for cap in CAPITALS:
-        best = {}
-        for key, qs in stage1[cap]:
-            if qs["train"]["n"] < MIN_TRAIN_TRADES or qs["validate"]["n"] < MIN_TRAIN_TRADES // 3:
-                continue
-            steady = min(expected_yearly(qs, "train", cap), expected_yearly(qs, "validate", cap))
-            vid = key.split("|")[0]
-            if vid not in best or (steady, key) > best[vid][:2]:
-                best[vid] = (steady, key, qs)
-        for vid, (steady, key, qs) in best.items():
-            tr = trades_cache[key]
-            ok, _ = trade_net_returns(tr, cap / slots_for(cap))
-            m = ok & tr.complete
-            kind, days = tr.kind[m], (tr.x - tr.e + 1)[m]
-            hit_days = days[kind == 2]
-            pattern_rules.setdefault(vid, {})[str(cap)] = {
-                "rule": key.split("|", 1)[1], "steady": steady,
-                "avg": {name: qs[name]["avg"] for name in ("train", "validate", "test")},
-                "test_n": qs["test"]["n"], "test_win": qs["test"]["win"], "n": int(m.sum()),
-                "ends": {"target": float((kind == 2).mean()), "stop": float((kind == 1).mean()),
-                         "time": float((kind == 0).mean())} if m.any() else None,
-                "target_days": [float(np.percentile(hit_days, q)) for q in (25, 50, 75)] if len(hit_days) else None,
-            }
+    def rules_for(keep) -> dict:
+        out = {}
+        for cap in CAPITALS:
+            best = {}
+            for key, qs in stage1[cap]:
+                if not keep(key) or qs["train"]["n"] < MIN_TRAIN_TRADES or qs["validate"]["n"] < MIN_TRAIN_TRADES // 3:
+                    continue
+                steady = min(expected_yearly(qs, "train", cap), expected_yearly(qs, "validate", cap))
+                vid = key.split("|")[0]
+                if vid not in best or (steady, key) > best[vid][:2]:
+                    best[vid] = (steady, key, qs)
+            for vid, (steady, key, qs) in best.items():
+                tr = trades_cache[key]
+                ok, _ = trade_net_returns(tr, cap / slots_for(cap))
+                m = ok & tr.complete
+                kind, days = tr.kind[m], (tr.x - tr.e + 1)[m]
+                hit_days = days[kind == 2]
+                out.setdefault(vid, {})[str(cap)] = {
+                    "rule": key.split("|", 1)[1], "steady": steady,
+                    "avg": {name: qs[name]["avg"] for name in ("train", "validate", "test")},
+                    "test_n": qs["test"]["n"], "test_win": qs["test"]["win"], "n": int(m.sum()),
+                    "ends": {"target": float((kind == 2).mean()), "stop": float((kind == 1).mean()),
+                             "time": float((kind == 0).mean())} if m.any() else None,
+                    "target_days": [float(np.percentile(hit_days, q)) for q in (25, 50, 75)] if len(hit_days) else None,
+                }
+        return out
 
-    buckets = []
-    for cap in CAPITALS:
+    bench_cache = {}
+
+    def benchmark(cap):
+        if cap not in bench_cache:
+            res = {}
+            if bench_O is not None:
+                for name, (s, e) in bounds.items():
+                    res[name] = buy_and_hold(bench_O, bench_C, cap, s, e, p.dates)
+                    if res[name] and name != "test":
+                        res[name].pop("curve")
+            bench_cache[cap] = res
+        return bench_cache[cap]
+
+    def make_bucket(cap, keep, prev_key, n_shown, label=""):
+        """The plan for one amount among the combinations `keep` allows."""
         # Pick on training + checking only, using the average of every trade:
         # thousands of trades barely move when a few prices change, unlike a
         # single run with real money. The test period is never looked at here.
         scored = []
         for key, qs in stage1[cap]:
-            if qs["train"]["n"] < MIN_TRAIN_TRADES or qs["validate"]["n"] < MIN_TRAIN_TRADES // 3:
+            if not keep(key) or qs["train"]["n"] < MIN_TRAIN_TRADES or qs["validate"]["n"] < MIN_TRAIN_TRADES // 3:
                 continue
             tr, va = expected_yearly(qs, "train", cap), expected_yearly(qs, "validate", cap)
             avg_trade = {name: {k: q[k] for k in ("n", "win", "avg", "hold")} for name, q in qs.items()}
@@ -899,24 +920,18 @@ def run_backtest(p: Panel, signals, bench: pd.DataFrame | None, log=print, previ
         good = [c for c in scored if c["train_est"] > 0 and c["validate_est"] > 0]
         pool = good or scored
         best = pool[0] if pool else None
-        prev_key = (previous or {}).get(cap)
         kept = next((c for c in pool if c["key"] == prev_key), None)
         if kept and kept["steady"] < best["steady"] - SWITCH_MARGIN:
             kept = None
         pick = kept or best
-        shown = scored[:CANDIDATES_PER_CAPITAL]
+        shown = scored[:n_shown]
         if pick and pick not in shown:
             shown.append(pick)
         # What following each one with real money would have looked like
         cands = [{**c, "spread": {name: spread(c["key"], cap, name) for name in ("train", "validate", "test")}}
                  for c in shown]
         chosen = next((c for c in cands if pick and c["key"] == pick["key"]), None)
-        bench_res = {}
-        if bench_O is not None:
-            for name, (s, e) in bounds.items():
-                bench_res[name] = buy_and_hold(bench_O, bench_C, cap, s, e, p.dates)
-                if bench_res[name] and name != "test":
-                    bench_res[name].pop("curve")
+        bench_res = benchmark(cap)
         random = None
         if chosen:
             s_, e_ = bounds["test"]
@@ -953,18 +968,33 @@ def run_backtest(p: Panel, signals, bench: pd.DataFrame | None, log=print, previ
                     for k, b_, bp, s2, sp, sh, pnl, kind in run["log"]]
                 oc["example"] = ex
             out_cands.append(oc)
-        buckets.append({
+        if chosen:
+            t = chosen["spread"]["test"]
+            log(f"Rs {cap:>7,}{label}: {chosen['key']:<32} test Rs {cap:,} -> Rs {t['final']:,.0f} "
+                f"(range {t['low']:,.0f}-{t['high']:,.0f}, win {t['win_rate'] or 0:.0%}) "
+                f"| Nifty ETF -> Rs {(bench_res.get('test') or {}).get('final', float('nan')):,.0f} "
+                f"| beat {0 if not random else random['beat_pct']:.0%} of random | {verdict}")
+        return {
             "capital": cap, "slots": slots_for(cap), "chosen": chosen["key"] if chosen else None,
             "kept_previous": bool(kept and best is not kept),
             "verdict": verdict, "passed_train_and_validate": len(good), "random": random,
             "candidates": out_cands, "benchmark": bench_res,
-        })
-        if chosen:
-            t = chosen["spread"]["test"]
-            log(f"Rs {cap:>7,}: {chosen['key']:<32} test Rs {cap:,} -> Rs {t['final']:,.0f} "
-                f"(range {t['low']:,.0f}-{t['high']:,.0f}, win {t['win_rate'] or 0:.0%}) "
-                f"| Nifty ETF -> Rs {(bench_res.get('test') or {}).get('final', float('nan')):,.0f} "
-                f"| beat {0 if not random else random['beat_pct']:.0%} of random | {verdict}")
+        }
+
+    everything = lambda key: True
+    pattern_rules = rules_for(everything)
+    buckets = [make_bucket(cap, everything, (previous or {}).get(cap), CANDIDATES_PER_CAPITAL) for cap in CAPITALS]
+    # The same, for people who want a fixed target of their own
+    by_target = {}
+    for tg in TARGET_CHOICES:
+        name = str(round(tg * 100))
+        keep = lambda key, tg=tg: rules[key][0] == tg
+        prev = (previous_by_target or {}).get(name, {})
+        by_target[name] = {
+            "combos": sum(1 for key in rules if keep(key)),
+            "pattern_rules": rules_for(keep),
+            "buckets": [make_bucket(cap, keep, prev.get(cap), CHOICE_CANDIDATES, f" ({name}% target)") for cap in CAPITALS],
+        }
 
     return {
         "generated_at": dt.datetime.now(IST).isoformat(timespec="minutes"),
@@ -973,12 +1003,12 @@ def run_backtest(p: Panel, signals, bench: pd.DataFrame | None, log=print, previ
         "periods": [{"name": name, "start": str(p.dates[s].date()), "end": str(p.dates[e].date())}
                     for name, (s, e) in bounds.items()],
         "grid": {"targets": TARGETS, "stops": STOPS, "holds": HOLDS, "trails": TRAILS, "trail_holds": TRAIL_HOLDS,
-                 "capitals": CAPITALS},
+                 "capitals": CAPITALS, "target_choices": TARGET_CHOICES},
         "start_offsets": START_OFFSETS, "switch_margin": SWITCH_MARGIN,
         "variants": {vid: v.__dict__ for vid, v in variants.items()},
         "pattern_stats": pattern_stats, "pattern_rules": pattern_rules,
         "standard_exit": STANDARD_EXIT,
-        "buckets": buckets,
+        "buckets": buckets, "by_target": by_target,
     }
 
 
@@ -1144,10 +1174,13 @@ def main(argv=None) -> int:
 
     bt_path = OUT_DIR / "backtest.json"
     if args.mode == "full" or not bt_path.exists():
-        previous = None
+        previous = previous_by_target = None
         if bt_path.exists():
-            previous = {b["capital"]: b["chosen"] for b in json.loads(bt_path.read_text()).get("buckets", [])}
-        write_json(bt_path, run_backtest(panel, signals, bench, previous=previous))
+            old_bt = json.loads(bt_path.read_text())
+            previous = {b["capital"]: b["chosen"] for b in old_bt.get("buckets", [])}
+            previous_by_target = {t: {b["capital"]: b["chosen"] for b in x.get("buckets", [])}
+                                  for t, x in (old_bt.get("by_target") or {}).items()}
+        write_json(bt_path, run_backtest(panel, signals, bench, previous=previous, previous_by_target=previous_by_target))
 
     # Day trading: re-tested with the strategies, on a year of 5-minute prices
     import daytrade as DT
@@ -1164,8 +1197,8 @@ def main(argv=None) -> int:
             ip, daily_aligned = DT.align(ip, daily)
             previous = None
             if dt_path.exists():
-                previous = {f"{b['capital']}|{b['margin']}": b["chosen"]
-                            for b in json.loads(dt_path.read_text()).get("buckets", [])}
+                previous = {f"{b['capital']}|{b['margin']}" + ("" if b.get("target", "best") == "best" else f"|{b['target']}"):
+                            b["chosen"] for b in json.loads(dt_path.read_text()).get("buckets", [])}
             write_json(dt_path, DT.run_backtest(ip, daily_aligned, nifty_ip, nifty_daily, panel, market,
                                                 previous=previous))
 

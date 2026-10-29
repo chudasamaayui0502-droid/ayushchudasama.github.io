@@ -466,7 +466,13 @@ def test_run_backtest_end_to_end():
     res = D.run_backtest(ip, daily, nifty, nd, p, {}, log=lambda *a: None)
     json.dumps(S._round(res), allow_nan=False)
     assert res["combos_tested"] == len(D.all_setups()) * len(D.STOPS) * len(D.TARGETS)
-    assert len(res["buckets"]) == len(S.CAPITALS) * len(D.MARGINS)
+    assert len(res["buckets"]) == len(S.CAPITALS) * len(D.MARGINS) * (1 + len(D.TARGET_CHOICES))
+    choices = {"best", *(str(round(t * 100)) for t in D.TARGET_CHOICES)}
+    assert {b["target"] for b in res["buckets"]} == choices
+    for b in res["buckets"]:
+        if b["target"] != "best" and b["chosen"]:
+            assert D.parse_key(b["chosen"])[2] == int(b["target"]) / 100
+            assert all(D.parse_key(c["key"])[2] == int(b["target"]) / 100 for c in b["candidates"])
     for b in res["buckets"]:
         assert b["verdict"] in {"good", "luck", "recent_only", "unproven", "loss", "none"}
         if b["chosen"]:
