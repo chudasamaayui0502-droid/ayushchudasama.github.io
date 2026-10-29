@@ -77,13 +77,38 @@ def test_main_writes_github_output(tmp_path, monkeypatch, capsys):
     monkeypatch.setenv("GITHUB_OUTPUT", str(out))
     page = tmp_path / "today.json"
     monkeypatch.setattr(N, "TODAY_JSON", page)
-    page.write_text(json.dumps({"data_date": "2099-01-01"}))
+    page.write_text(json.dumps({"data_date": "2099-01-01", "day_watch": {"date": "2099-01-01", "levels": {}}}))
     assert N.main() == 0
     assert out.read_text() == "needed=false\n"
     page.write_text("not json")
     N.main()
     assert out.read_text() == "needed=false\nneeded=true\n"
     assert "No usable" in capsys.readouterr().out
+
+
+def test_missing_day_trading_watch_list_means_update(tmp_path, monkeypatch, capsys):
+    out = tmp_path / "out"
+    monkeypatch.setenv("GITHUB_OUTPUT", str(out))
+    page = tmp_path / "today.json"
+    monkeypatch.setattr(N, "TODAY_JSON", page)
+    for watch in (None, {"error": "feed down"}, {"date": "2098-12-31"}):
+        page.write_text(json.dumps({"data_date": "2099-01-01", "day_watch": watch}))
+        N.main()
+    assert out.read_text() == "needed=true\n" * 3
+    assert "watch list is missing" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("today, ready", [
+    ({"data_date": "2026-10-29", "day_watch": {"date": "2026-10-29"}}, True),
+    ({"data_date": "2026-10-29", "day_watch": {"date": "2026-10-30"}}, True),  # the feed is a day ahead of Yahoo
+    ({"data_date": "2026-10-29", "day_watch": {"date": "2026-10-28"}}, False),
+    ({"data_date": "2026-10-29", "day_watch": {"date": "2026-10-29", "error": "x"}}, False),
+    ({"data_date": "2026-10-29"}, False),
+])
+def test_watch_ready_agrees_with_the_screener(today, ready):
+    import screener as S
+    assert N.watch_ready(today) is ready
+    assert S.watch_ok(today) is ready
 
 
 def test_nse_answers_are_told_apart(monkeypatch):

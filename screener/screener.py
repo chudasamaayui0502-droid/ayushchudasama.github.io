@@ -3,10 +3,11 @@
 
 Downloads daily prices for the Nifty 100, looks for chart patterns, backtests
 every pattern x target x stop-loss x holding-time combination with Groww
-delivery charges, and writes JSON for the stocks/ page.
+delivery charges, and writes JSON for the stocks/ page. Day trading is in
+daytrade.py; this script runs its test too and adds its watch list.
 
-    python screener/screener.py --mode full    # backtest + today's signals
-    python screener/screener.py --mode daily   # today's signals only
+    python screener/screener.py --mode full    # backtests + today's signals
+    python screener/screener.py --mode daily   # today's signals and watch list
 """
 from __future__ import annotations
 
@@ -1064,9 +1065,10 @@ def _fingerprint(payload: dict):
     """What a reader of the page would notice: the day, today's and the last
     signals, each stock's latest prices to the paisa, and the market mood.
     (Yahoo's dividend-adjusted history wobbles in the 4th decimal between
-    downloads, which isn't new data.)"""
+    downloads, which isn't new data.) A new file layout always counts as new."""
     paise = lambda x: None if x is None else round(x, 2)
     return (
+        payload.get("schema"),
         payload.get("data_date"),
         {vid: [row["s"] for row in rows] for vid, rows in payload.get("signals", {}).items()},
         {vid: (ls["date"], [x["s"] for x in ls["stocks"]]) for vid, ls in payload.get("last_signal", {}).items()},
@@ -1089,6 +1091,27 @@ def write_json(path: Path, obj) -> None:
     tmp.replace(path)
     print(f"Wrote {path.name} ({len(text) / 1024:.0f} KB)")
 
+
+def watch_ok(payload: dict) -> bool:
+    """today.json has a day-trading watch list for its latest prices."""
+    w = payload.get("day_watch") or {}
+    return bool(w.get("date")) and not w.get("error") and w["date"] >= payload.get("data_date", "")
+
+
+def day_watch(universe: pd.DataFrame, daily=None, nifty_daily=None) -> dict:
+    """The next session's day-trading watch list, or {"error": why}."""
+    import daytrade as DT
+
+    if daily is None:
+        daily, nifty_daily = DT.download_daily(list(universe.Symbol), days=60)
+    if daily is None:
+        return {"error": "The price feed (Moneycontrol) didn't answer."}
+    today = dt.datetime.now(IST).date()
+    actions = DT.fetch_corporate_actions(today, today + dt.timedelta(days=10))
+    return DT.watch_list(daily, nifty_daily, actions)
+
+
+TODAY_SCHEMA = 2
 
 # Exit code for "the price source didn't answer properly this time". The
 # workflow treats it as a warning: the next scheduled run tries again.
@@ -1125,10 +1148,39 @@ def main(argv=None) -> int:
         if bt_path.exists():
             previous = {b["capital"]: b["chosen"] for b in json.loads(bt_path.read_text()).get("buckets", [])}
         write_json(bt_path, run_backtest(panel, signals, bench, previous=previous))
+
+    # Day trading: re-tested with the strategies, on a year of 5-minute prices
+    import daytrade as DT
+
+    dt_path = OUT_DIR / "daytrade.json"
+    daily = nifty_daily = None
+    if args.mode == "full" or not dt_path.exists():
+        ip, nifty_ip = DT.download_intraday(list(universe.Symbol))
+        daily, nifty_daily = DT.download_daily(list(universe.Symbol))
+        if ip is None or daily is None:
+            print("Day trading not re-tested: the 5-minute price feed didn't answer; keeping the last test.",
+                  file=sys.stderr)
+        else:
+            ip, daily_aligned = DT.align(ip, daily)
+            previous = None
+            if dt_path.exists():
+                previous = {f"{b['capital']}|{b['margin']}": b["chosen"]
+                            for b in json.loads(dt_path.read_text()).get("buckets", [])}
+            write_json(dt_path, DT.run_backtest(ip, daily_aligned, nifty_ip, nifty_daily, panel, market,
+                                                previous=previous))
+
     today_path = OUT_DIR / "today.json"
     today = today_payload(panel, signals, universe, market_mood(market, filters, panel.dates[-1]))
-    if args.mode == "daily" and today_path.exists() and same_prices(json.loads(today_path.read_text()), today):
+    today["schema"] = TODAY_SCHEMA
+    old = json.loads(today_path.read_text()) if today_path.exists() else None
+    same = args.mode == "daily" and old is not None and same_prices(old, today)
+    if same and watch_ok(old):
         print(f"No new prices since the last update ({today['data_date']}); nothing to write.")
+        return 0
+    today["day_watch"] = day_watch(universe, daily, nifty_daily)
+    if same and not watch_ok(today):
+        print(f"No new prices since the last update ({today['data_date']}), and the day-trading watch list "
+              f"still can't be made; nothing to write.", file=sys.stderr)
         return 0
     signalled = sorted({s for v, sig in signals for s in sig.columns[sig.iloc[-1].to_numpy()]})
     today["fundamentals"] = fetch_fundamentals(signalled)

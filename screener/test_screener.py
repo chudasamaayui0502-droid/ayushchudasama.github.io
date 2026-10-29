@@ -444,3 +444,10 @@ def test_full_backtest_on_synthetic_data_has_no_nan_in_json(tmp_path, monkeypatc
                 lo, mid, hi = r["target_days"]
                 assert 1 <= lo <= mid <= hi <= max(S.HOLDS + S.TRAIL_HOLDS)
     assert len(bt["buckets"]) == len(S.CAPITALS)
+
+
+def test_new_file_layout_always_counts_as_new_data():
+    old = {"data_date": "2026-10-29", "signals": {}, "last_signal": {}, "stocks": {}, "market": {}}
+    new = {**old, "schema": S.TODAY_SCHEMA}
+    assert not S.same_prices(old, new)
+    assert S.same_prices({**old, "schema": S.TODAY_SCHEMA}, new)

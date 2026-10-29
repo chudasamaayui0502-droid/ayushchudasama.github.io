@@ -6,8 +6,10 @@ name: Update stock signals
 # in the owner's Claude account) starts this workflow with
 # workflow_dispatch at 6:52 PM IST and again at 8:07 AM IST the next
 # morning; the schedule below is a free fallback. Every daily run first
-# checks whether the newest prices are already published and, if they
-# are, stops within seconds.
+# checks whether the newest prices (and the next session's day-trading
+# watch list) are already published and, if they are, stops within seconds.
+# The Saturday run re-tests every swing strategy and, on a year of 5-minute
+# prices, every day-trading setup.
 on:
   schedule:
     - cron: "17 13 * * 1-5"  # 6:47 PM IST
