@@ -278,7 +278,7 @@
         ${sideWord(st.side).toLowerCase()} it at <b>9:20 AM</b> as an <b>Intraday</b> order. The Live tab checks every stock for you at 9:15.`
       : st.kind === 'level'
         ? `From 9:20 AM to 12:55 PM, ${sideWord(st.side).toLowerCase()} a stock as soon as its price ${st.side > 0 ? 'goes above' : 'goes below'} the level shown.
-          On Groww you can place a <b>stop-limit</b> (trigger) order at that level in the morning instead of watching.`
+          ${st.filter ? 'The Live tab also checks the Nifty filter at that moment.' : 'On Groww you can place a <b>stop-limit</b> (trigger) order at that level in the morning instead of watching.'}`
         : `Wait for the first ${st.orb_bars * 5} minutes (until ${L.barTime(st.orb_bars)} AM). Then ${sideWord(st.side).toLowerCase()} if the price
           ${st.side > 0 ? 'goes above the highest' : 'goes below the lowest'} price of that time. The Live tab shows the exact level at ${L.barTime(st.orb_bars)} AM.`;
     const levelHead = st.kind === 'open' ? (st.gap_hi != null || st.gap_lo != null ? 'Trade if it' : 'Trade at 9:20') : st.kind === 'level' ? 'Trade when it' : 'Yesterday’s close';
@@ -463,9 +463,12 @@
         <li><b>The evening before</b>, look at the watch list above: which stocks, and at what price the plan would trade.</li>
         <li><b>At 9:15 AM</b>, open the <b>Live</b> tab. It checks the opening prices and tells you when a setup is on: what to do,
           how many shares, and where the stop-loss and target are.</li>
-        <li><b>On Groww</b>, choose <b>Intraday</b> (not Delivery), place the order, then right away place the stop-loss order
-          (and the target, if the plan has one).</li>
-        <li><b>Save it</b> under “My day trades” with your real price and time. The Live tab follows it.</li>
+        <li><b>On Groww</b>, choose <b>Intraday</b> (not Delivery), place the order, then right away place a <b>stop-loss order</b>.
+          Keep the Live tab open: it shows the price every minute and tells you when to sell (“Target hit”, “Stop-loss hit” or 3:10 PM).
+          When the target is hit, sell and cancel the stop-loss order. Don’t keep a stop-loss and a target order open together:
+          when one fills, the other can start a new trade.</li>
+        <li><b>Save it</b> under “My day trades” with your real price and time. The Live tab then follows <i>your</i> price. It only
+          updates while the page is open on screen (it doesn’t ring an alarm), so the stop-loss order on Groww is your safety net.</li>
         <li><b>By 3:10 PM</b>, get out of everything that is still open. If you don’t, Groww closes it at 3:20 PM and charges ${SQUARE_OFF}.</li>
         <li><b>Never</b> move the stop-loss further away, add to a losing trade, or take more trades than the plan says.</li>
       </ol>
@@ -670,12 +673,14 @@
       const info = G.TD.stocks[t.sym];
       const action = t.state === 'open'
         ? (fresh ? `<b>${sideWord(t.side).toUpperCase()} NOW (Intraday):</b> ${t.shares} share${t.shares > 1 ? 's' : ''} near ${inr(t.pe, 2)}.
-            Then place a stop-loss order at <b>${inr(tick(t.sp), 2)}</b>${t.tp ? ` and a target (limit ${t.side > 0 ? 'sell' : 'buy'}) at <b>${inr(tick(t.tp), 2)}</b>` : ''}.`
+            Then place a stop-loss order at <b>${inr(tick(t.sp), 2)}</b> on Groww.${t.tp ? ` The target is <b>${inr(tick(t.tp), 2)}</b>: this page
+            says “Target hit” when it gets there. Then ${t.side > 0 ? 'sell' : 'buy back'} and cancel the stop-loss order.` : ''}
+            <br><small>Keep only one exit order open: if a stop-loss and a target order are both open and one fills, the other can start a new, unwanted trade.</small>`
           : `${t.side > 0 ? 'Bought' : 'Short-sold'} at ${t.entryTime} near ${inr(t.pe, 2)}. Keep the stop-loss at ${inr(tick(t.sp), 2)}${t.tp ? ` and the target at ${inr(tick(t.tp), 2)}` : ''}; get out by 3:10 PM.
             ${n.minutes - barStart(t.e) > 10 && phase(n) === 'open' ? '<br><small>If you didn’t enter at the time, skip it: the test only counts entries at the trigger price.</small>' : ''}`)
         : t.state === 'stop' ? `Stopped out at ${t.exitTime} near ${inr(t.px, 2)}. ${phase(n) === 'open' ? 'If your stop-loss order didn’t fill, get out now.' : ''}`
-          : t.state === 'target' ? `Target reached at ${t.exitTime} (${inr(t.px, 2)}). ${phase(n) === 'open' ? 'If your target order didn’t fill, take the profit now.' : ''}`
-            : `Sold at 3:10 PM near ${inr(t.px, 2)}. ${phase(n) === 'open' ? '<b>Get out now if you are still in.</b>' : ''}`;
+          : t.state === 'target' ? `Target reached at ${t.exitTime} (${inr(t.px, 2)}). ${phase(n) === 'open' ? `<b>${t.side > 0 ? 'Sell' : 'Buy back'} now</b> if you are still in, and cancel your stop-loss order.` : ''}`
+            : `Sold at 3:10 PM near ${inr(t.px, 2)}. ${phase(n) === 'open' ? `<b>${t.side > 0 ? 'Sell' : 'Buy back'} now</b> if you are still in, and cancel your stop-loss order.` : ''}`;
       return `<div class="live-trade ${t.state}">
         <div class="trade-top"><div><b>${G.esc(info ? info.name : t.sym)}</b> <small>${G.esc(t.sym)} · ${t.side > 0 ? 'buy' : 'short-sell'}</small></div>
           <span class="badge ${bc}">${bt}</span></div>
@@ -775,7 +780,8 @@
       const pnl = now > 0 ? L.tradePnl(t.qty, t.price, now, t.side) : null;
       const [bc, bt] = STATE_TEXT[r.state];
       const say = r.state === 'open' ? 'Hold. Get out by 3:10 PM.' : r.state === 'stop' ? `The stop-loss level was reached at ${r.exitTime}. If your order didn’t fill, get out now.`
-        : r.state === 'target' ? `The target was reached at ${r.exitTime}. If your order didn’t fill, take the profit now.` : 'It’s 3:10 PM: get out now.';
+        : r.state === 'target' ? `The target was reached at ${r.exitTime}: <b>${t.side > 0 ? 'sell' : 'buy back'} now</b> and cancel your stop-loss order.`
+          : `It’s 3:10 PM: <b>${t.side > 0 ? 'sell' : 'buy back'} now</b> and cancel your stop-loss order.`;
       cards.push(`<div class="live-trade ${r.state}" data-ltrade="${G.esc(t.id)}">
         <div class="trade-top"><div><b>${G.esc(t.sym)}</b> <small>day trade · ${t.side > 0 ? 'bought' : 'short-sold'} ${t.qty} × ${inr(t.price, 2)} at ${G.esc(t.time)}</small></div>
           <span class="badge ${bc}">${bt}</span></div>
