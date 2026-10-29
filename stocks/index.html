@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NSE Swing Signals</title>
-  <meta name="description" content="Chart-pattern buy and sell signals for Nifty 100 stocks, tested on 10+ years of NSE data with Groww charges." />
+  <title>NSE Trade Signals</title>
+  <meta name="description" content="Swing and day-trading signals for Nifty 100 stocks, tested on NSE prices with Groww charges, with a live dashboard." />
   <meta name="robots" content="noindex" />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
@@ -12,12 +12,12 @@
 <body>
 <main class="wrap">
   <header class="hero">
-    <div class="tag">NSE · Nifty 100 · Swing trading</div>
-    <h1>Swing <span>Signals</span></h1>
+    <div class="tag">NSE · Nifty 100 · Swing &amp; day trading</div>
+    <h1>Trade <span>Signals</span></h1>
     <p class="sub" id="dataLine">Loading prices…</p>
   </header>
 
-  <p class="warn"><strong>Not financial advice.</strong> These signals come from chart patterns tested on past prices.
+  <p class="warn"><strong>Not financial advice.</strong> These signals come from patterns tested on past prices.
     They are wrong often. Always use the stop-loss, and only use money you can afford to lose.</p>
 
   <section class="card" id="capitalCard">
@@ -29,13 +29,34 @@
     <div class="chips" id="capitalChips"></div>
   </section>
 
-  <section id="buy"></section>
-  <section id="mytrades"></section>
-  <section id="mood"></section>
-  <section id="plan"></section>
-  <section id="patterns"></section>
-  <section id="method"></section>
-  <section id="howto"></section>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Trading style">
+    <button type="button" role="tab" data-tab="swing" aria-selected="true">Swing<small>days to weeks</small></button>
+    <button type="button" role="tab" data-tab="day" aria-selected="false">Day trading<small>same day</small></button>
+    <button type="button" role="tab" data-tab="live" aria-selected="false">Live<small>market hours</small></button>
+  </nav>
+
+  <div data-panel="swing" role="tabpanel">
+    <section id="buy"></section>
+    <section id="mytrades"></section>
+    <section id="mood"></section>
+    <section id="plan"></section>
+    <section id="patterns"></section>
+    <section id="method"></section>
+    <section id="howto"></section>
+  </div>
+
+  <div data-panel="day" role="tabpanel" hidden>
+    <section id="daySettings"></section>
+    <section id="dayPlan"></section>
+    <section id="dayWatch"></section>
+    <section id="dayTrades"></section>
+    <section id="dayHowto"></section>
+    <section id="dayMethod"></section>
+  </div>
+
+  <div data-panel="live" role="tabpanel" hidden>
+    <section id="live"></section>
+  </div>
 
   <footer class="foot" id="foot"></footer>
 </main>
@@ -53,6 +74,8 @@
   </form>
 </template>
 
+<script src="daylogic.js"></script>
+<script src="day.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

@@ -206,3 +206,31 @@ table.kv tr.sub td.r { padding-right: 4px; }
 @media (max-width: 520px) {
   .summary { grid-template-columns: 1fr 1fr; }
 }
+
+/* Tabs: Swing / Day trading / Live */
+[hidden] { display: none !important; }
+.tabs { position: sticky; top: 0; z-index: 5; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 8px 0; margin: 0 0 0.6rem; background: var(--bg); }
+.tabs button { font: inherit; font-weight: 700; font-size: 14px; line-height: 1.2; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--text); padding: 0.5rem 0.3rem; cursor: pointer; }
+.tabs button small { display: block; font-weight: 400; font-size: 11px; color: var(--muted); }
+.tabs button[aria-selected="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.badge:not(.good):not(.warn):not(.bad):not(.info) { background: var(--panel-2); color: var(--muted); border: 1px solid var(--line); }
+
+/* Day trading and Live */
+.rules.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.daychart { width: 100%; height: 70px; display: block; margin: 0.4rem 0; }
+.mood .daychart { height: 34px; margin: 0.35rem 0 0; }
+.live-trade { border: 1px solid var(--line); border-radius: 10px; padding: 0.8rem; margin-top: 0.7rem; background: var(--panel-2); }
+.live-trade.open { border-color: var(--accent); }
+.live-trade.target { border-color: var(--up); }
+.live-trade.stop { border-color: var(--down); }
+.live-list td:first-child { min-width: 0; width: 6.5rem; }
+.live-list td:nth-child(2) { white-space: normal; }
+@media (max-width: 520px) {
+  .rules.four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tabs button { font-size: 13px; }
+}
+table.watch td:first-child { min-width: 0; white-space: normal; }
+.pick, .trade, .live-trade { scroll-margin-top: 76px; }  /* clear the sticky tabs */
+.idx-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+.idx-grid .mood b { font-size: 1rem; }
+@media (max-width: 520px) { .idx-grid .mood { padding: 0.45rem; } .idx-grid .mood b { font-size: 0.9rem; } }

@@ -65,14 +65,24 @@ def check(have: dt.date, now: dt.datetime, has_prices=nse_has_prices) -> tuple[b
     return False, f"Up to date: the page has prices for {have}; NSE has none for {days} (market holiday)."
 
 
+def watch_ready(today: dict) -> bool:
+    """The page has a day-trading watch list for its latest prices (the same
+    test as screener.watch_ok)."""
+    w = today.get("day_watch") or {}
+    return bool(w.get("date")) and not w.get("error") and w["date"] >= today.get("data_date", "")
+
+
 def main(argv=None) -> int:
     now = dt.datetime.now(IST)
     try:
-        have = dt.date.fromisoformat(json.loads(TODAY_JSON.read_text())["data_date"])
+        today = json.loads(TODAY_JSON.read_text())
+        have = dt.date.fromisoformat(today["data_date"])
     except Exception as exc:
         needed, why = True, f"No usable {TODAY_JSON.name} ({exc})."
     else:
         needed, why = check(have, now, has_prices=nse_has_prices)
+        if not needed and not watch_ready(today):
+            needed, why = True, f"{why} But the day-trading watch list is missing, so making it now."
     print(why)
     out = os.environ.get("GITHUB_OUTPUT")
     if out:

@@ -2,7 +2,7 @@
 
 (() => {
   const $ = (sel, el = document) => el.querySelector(sel);
-  const KEYS = { capital: 'swing.capital', trades: 'swing.trades' };
+  const KEYS = { capital: 'swing.capital', trades: 'swing.trades', tab: 'page.tab' };
   const store = {
     get(key, fallback) {
       try { const v = localStorage.getItem(key); return v == null ? fallback : JSON.parse(v); } catch { return fallback; }
@@ -51,7 +51,7 @@
     return isoDay(d);
   }
 
-  let BT, TD;
+  let BT, TD, DT;
 
   const PERIOD_LABEL = {
     train: ['Training', 'used to shortlist'],
@@ -833,8 +833,8 @@
         backups later in the evening and at 8 AM, so check again a little later. On market holidays there is no update.</span>`;
     }
     $('#dataLine').innerHTML = `Using closing prices of <b>${fmtDay(TD.data_date)}</b> · updates every trading day around 7 PM IST${note}`;
-    $('#foot').innerHTML = `<p>Signals updated ${esc(TD.generated_at.replace('T', ' '))} IST · strategies re-tested ${esc(BT.generated_at.replace('T', ' '))} IST.</p>
-      <p>Data: Yahoo Finance and NSE. Charges: Groww pricing page. This page is a learning tool, not investment advice, and is not from a SEBI-registered adviser.
+    $('#foot').innerHTML = `<p>Signals updated ${esc(TD.generated_at.replace('T', ' '))} IST · strategies re-tested ${esc(BT.generated_at.replace('T', ' '))} IST${DT ? ` · day trading re-tested ${esc(DT.generated_at.replace('T', ' '))} IST` : ''}.</p>
+      <p>Data: Yahoo Finance and NSE; day trading and live prices: Moneycontrol’s chart feed. Charges: Groww pricing page. This page is a learning tool, not investment advice, and is not from a SEBI-registered adviser.
       <a href="https://github.com/chudasamaayui0502-droid/ayushchudasama.github.io/tree/main/screener">How it works (code)</a>.</p>`;
   }
 
@@ -855,9 +855,28 @@
     renderPlan(cap);
     renderBuy(cap);
     renderMyTrades(cap);
+    window.DayUI?.render(cap);
+  }
+
+  // ---- tabs: Swing / Day trading / Live ----
+  const TABS = ['swing', 'day', 'live'];
+  let tab = 'swing';
+  function showTab(name, scroll = false) {
+    if (!TABS.includes(name)) name = 'swing';
+    tab = name;
+    for (const panel of document.querySelectorAll('[data-panel]')) panel.hidden = panel.dataset.panel !== name;
+    for (const btn of document.querySelectorAll('[data-tab]')) btn.setAttribute('aria-selected', String(btn.dataset.tab === name));
+    store.set(KEYS.tab, name);
+    if (name === 'live') window.DayUI?.startLive(); else window.DayUI?.stopLive();
+    if (scroll) $('#tabs').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   function init() {
+    window.DayUI?.init({
+      $, store, KEYS, inr, signedInr, p100, pct, cls, spct, esc, asDate, fmtDate, fmtDay, isoDay, nextWeekday,
+      lineChart, sparkline, netPnl, currentCapital, todaysSignals, showTab, currentTab: () => tab,
+      get TD() { return TD; }, get BT() { return BT; },
+    }, DT);
     renderHeader();
     $('#capitalChips').innerHTML = BT.grid.capitals.map(c => `<button type="button" class="chip" data-cap="${c}">${inr(c)}</button>`).join('');
     input().value = store.get(KEYS.capital, 1000);
@@ -914,6 +933,12 @@
     renderPatterns();
     renderMethod();
     renderHowTo();
+    $('#tabs').addEventListener('click', e => {
+      const btn = e.target.closest('[data-tab]');
+      if (btn) showTab(btn.dataset.tab);
+    });
+    const fromLink = location.hash.slice(1);
+    showTab(TABS.includes(fromLink) ? fromLink : store.get(KEYS.tab, 'swing'));
   }
 
   async function load() {
@@ -922,7 +947,8 @@
         if (!r.ok) throw new Error(`${url}: ${r.status}`);
         return r.json();
       });
-      [BT, TD] = await Promise.all([get('data/backtest.json'), get('data/today.json')]);
+      // day trading is optional: the page works without it until its first test has run
+      [BT, TD, DT] = await Promise.all([get('data/backtest.json'), get('data/today.json'), get('data/daytrade.json').catch(() => null)]);
     } catch (err) {
       $('#dataLine').innerHTML = `<span class="error">Could not load the price data (${esc(err.message)}). Try again in a minute.</span>`;
       return;
