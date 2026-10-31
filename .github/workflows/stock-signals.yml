@@ -8,8 +8,9 @@ name: Update stock signals
 # morning; the schedule below is a free fallback. Every daily run first
 # checks whether the newest prices (and the next session's day-trading
 # watch list) are already published and, if they are, stops within seconds.
-# The Saturday run re-tests every swing strategy and, on a year of 5-minute
-# prices, every day-trading setup.
+# The Saturday run re-tests every swing strategy (on the Nifty 500's most traded
+# stocks of each time), every day-trading setup (on a year of 5-minute prices)
+# and the investing portfolio; the portfolio's list is also made at each month-end.
 on:
   schedule:
     - cron: "17 13 * * 1-5"  # 6:47 PM IST

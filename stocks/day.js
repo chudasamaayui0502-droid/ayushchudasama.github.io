@@ -6,7 +6,7 @@
   const L = window.DayLogic;
   let G, DT;  // helpers from app.js, and data/daytrade.json
   const $ = sel => document.querySelector(sel);
-  const KEY = { margin: 'day.margin', trades: 'day.trades', auto: 'live.auto', target: 'day.target' };
+  const KEY = { margin: 'day.margin', trades: 'day.trades', auto: 'live.auto', target: 'day.target', alerts: 'live.alerts', seen: 'live.seen' };
   const FEED = 'https://priceapi.moneycontrol.com/techCharts/indianMarket';
   const INDICES = [['nifty', 'in;NSX', 'Nifty 50'], ['bank', 'in;nbx', 'Bank Nifty'], ['vix', 'in;IDXN', 'India VIX']];
   const LIVE_EVERY = 60_000;
@@ -502,7 +502,69 @@
   // Live tab
   // ---------------------------------------------------------------------------
 
-  const live = { started: false, timer: null, busy: false, at: null, error: null, ok: 0, failed: 0,
+  // ---- alerts: a beep, a vibration and a notification for each new event, once ----
+  const alerts = {
+    on: () => !!G.store.get(KEY.alerts, false),
+    audio: null,
+    seen() {
+      const v = G.store.get(KEY.seen, null);
+      return v && v.day === nowIST().day ? new Set(v.keys) : new Set();
+    },
+    remember(keys) { G.store.set(KEY.seen, { day: nowIST().day, keys: [...keys].slice(-300) }); },
+    beep() {
+      const ctx = this.audio;
+      if (!ctx || ctx.state === 'closed') return;
+      try {
+        ctx.resume?.();
+        [0, 0.28].forEach(at => {
+          const o = ctx.createOscillator(), g = ctx.createGain();
+          o.frequency.value = 880; g.gain.value = 0.2;
+          o.connect(g); g.connect(ctx.destination);
+          o.start(ctx.currentTime + at); o.stop(ctx.currentTime + at + 0.18);
+        });
+      } catch { /* no sound */ }
+    },
+    async notify(title, body, tag) {
+      if (!('Notification' in window) || Notification.permission !== 'granted') return;
+      try {
+        const reg = await navigator.serviceWorker?.getRegistration();
+        if (reg) await reg.showNotification(title, { body, tag, renotify: true });
+        else new Notification(title, { body, tag });
+      } catch { /* not allowed here */ }
+    },
+    fire(ev) {
+      this.beep();
+      try { navigator.vibrate?.([250, 120, 250]); } catch { /* not supported */ }
+      this.notify(ev.title, ev.body, ev.key);
+      const old = document.title;
+      document.title = `🔔 ${ev.title}`;
+      setTimeout(() => { document.title = old; }, 15000);
+    },
+    // events found in this render: alert the ones not seen before today
+    check(events) {
+      if (!this.on() || !events.length) return;
+      const seen = this.seen();
+      const fresh = events.filter(e => !seen.has(e.key));
+      for (const e of fresh) { seen.add(e.key); }
+      this.remember(seen);
+      fresh.slice(0, 3).forEach((e, i) => setTimeout(() => this.fire(e), i * 1500));
+    },
+    async enable() {
+      try { this.audio = this.audio || new (window.AudioContext || window.webkitAudioContext)(); } catch { this.audio = null; }
+      let perm = 'unsupported';
+      if ('Notification' in window) {
+        try { perm = Notification.permission === 'default' ? await Notification.requestPermission() : Notification.permission; } catch { perm = 'denied'; }
+      }
+      try { if (navigator.serviceWorker && perm === 'granted') await navigator.serviceWorker.register('sw.js'); } catch { /* notifications still work on desktops */ }
+      G.store.set(KEY.alerts, true);
+      this.perm = perm;
+      this.beep();
+      if (perm === 'granted') this.notify('Alerts are on', 'You will get an alert when the plan triggers, or a target, stop-loss or 3:10 PM is reached.', 'alerts-on');
+    },
+    disable() { G.store.set(KEY.alerts, false); },
+  };
+
+  const live = { started: false, timer: null, busy: false, at: null, error: null, ok: 0, failed: 0, events: [],
     index: {}, prevSession: null, session: {}, opens: {}, day: null };
 
   const histUrl = (kind, sym, res, from, to, count) =>
@@ -647,7 +709,8 @@
     live.timer = null;
     const n = nowIST(), ph = phase(n);
     const auto = G.store.get(KEY.auto, true);
-    if (!auto || document.hidden || !live.started || G.currentTab() !== 'live') return;
+    if (!auto || !live.started) return;
+    if ((document.hidden || G.currentTab() !== 'live') && !alerts.on()) return;  // alerts keep it running in the background
     let wait = null;
     if (ph === 'open' || ph === 'preopen' || (ph === 'after' && n.minutes < 15 * 60 + 45)) wait = LIVE_EVERY;
     else if (ph === 'before') wait = Math.min(5 * 60_000, (9 * 60 - n.minutes) * 60_000);
@@ -693,6 +756,14 @@
       const fresh = phase(n) === 'open' && t.state === 'open' && n.minutes - barStart(t.e) <= 10;
       const [bc, bt] = STATE_TEXT[t.state];
       const info = G.TD.stocks[t.sym];
+      if (phase(n) === 'open' || (phase(n) === 'after' && n.minutes < 15 * 60 + 40)) {
+        const out = t.side > 0 ? 'sell' : 'buy back';
+        const ev = t.state === 'open' ? (fresh ? { title: `${sideWord(t.side).toUpperCase()} NOW: ${t.sym}`, body: `Intraday · ${t.shares} share${t.shares > 1 ? 's' : ''} near ${inr(t.pe, 2)} · stop-loss ${inr(tick(t.sp), 2)}` } : null)
+          : t.state === 'target' ? { title: `Target hit: ${t.sym}`, body: `${out[0].toUpperCase() + out.slice(1)} now near ${inr(t.px, 2)} and cancel your stop-loss order.` }
+            : t.state === 'stop' ? { title: `Stop-loss hit: ${t.sym}`, body: 'Get out now if your stop-loss order didn’t fill.' }
+              : { title: `3:10 PM: ${t.sym}`, body: `${out[0].toUpperCase() + out.slice(1)} now if you are still in.` };
+        if (ev) live.events.push({ key: `${live.day}|plan|${t.sym}|${t.state}`, ...ev });
+      }
       const action = t.state === 'open'
         ? (fresh ? `<b>${sideWord(t.side).toUpperCase()} NOW (Intraday):</b> ${t.shares} share${t.shares > 1 ? 's' : ''} near ${inr(t.pe, 2)}.
             Then place a stop-loss order at <b>${inr(tick(t.sp), 2)}</b> on Groww.${t.tp ? ` The target is <b>${inr(tick(t.tp), 2)}</b>: this page
@@ -771,7 +842,11 @@
       ${live.error ? `<p class="error">${G.esc(live.error)}</p>` : ''}
       <div class="mood-grid idx-grid">${idx}</div>
       <div class="btn-row"><button class="btn small" id="liveNow">Update now</button>
-        <button class="btn small ghost" id="liveAuto" aria-pressed="${auto}">${auto ? 'Auto-update: on' : 'Auto-update: off'}</button></div>
+        <button class="btn small ghost" id="liveAuto" aria-pressed="${auto}">${auto ? 'Auto-update: on' : 'Auto-update: off'}</button>
+        <button class="btn small ${alerts.on() ? '' : 'ghost'}" id="liveAlerts" aria-pressed="${alerts.on()}">${alerts.on() ? '🔔 Alerts: on' : '🔕 Alerts: off'}</button></div>
+      ${alerts.on() ? `<p class="muted"><small>Alerts (sound, vibration${'Notification' in window && Notification.permission === 'granted' ? ', notification' : ''}) come while this page is open,
+        also in a background tab on a computer. Phones may pause pages in the background, so keep the screen on while you trade.
+        ${'Notification' in window && Notification.permission === 'denied' ? ' Notifications are blocked for this site in your browser settings.' : ''}</small></p>` : ''}
       <p class="muted"><small>Prices: Moneycontrol’s public chart feed, a few seconds to a minute behind the exchange. For your orders, trust the price on Groww.</small></p>
     </div>`;
   }
@@ -785,6 +860,11 @@
       if (!(last > 0)) continue;
       const target = t.tg ? t.price * (1 + t.tg / 100) : null, stop = t.price * (1 - t.st / 100);
       const pnl = G.netPnl(t.qty, t.price, last);
+      if (x.day === n.day && ((target && last >= target) || last <= stop)) {
+        const hit = target && last >= target ? 'target' : 'stop';
+        live.events.push({ key: `${n.day}|swing|${t.id}|${hit}`, title: `${t.sym} ${hit === 'target' ? 'reached your target' : 'fell to your stop-loss'}`,
+          body: `Swing trade: now ${inr(last, 2)}. See the Swing tab.` });
+      }
       const note = target && last >= target ? '<b class="up">at or above the target now</b>' : last <= stop ? '<b class="down">at or below the stop-loss now</b>'
         : `${target ? `${G.spct(target / last - 1, 1)} to the target, ` : ''}${G.spct(stop / last - 1, 1)} to the stop-loss`;
       rows.push(`<tr><td><b>${G.esc(t.sym)}</b><br><small>swing · ${t.qty} × ${inr(t.price, 2)}</small></td>
@@ -801,6 +881,10 @@
       const now = r.state === 'open' ? r.now : r.px;
       const pnl = now > 0 ? L.tradePnl(t.qty, t.price, now, t.side) : null;
       const [bc, bt] = STATE_TEXT[r.state];
+      if (r.state !== 'open') {
+        live.events.push({ key: `${n.day}|day|${t.id}|${r.state}`, title: `${r.state === 'target' ? 'Target hit' : r.state === 'stop' ? 'Stop-loss hit' : '3:10 PM'}: ${t.sym}`,
+          body: r.state === 'stop' ? 'Your day trade: get out now if your order didn’t fill.' : `Your day trade: ${t.side > 0 ? 'sell' : 'buy back'} now and cancel your stop-loss order.` });
+      }
       const say = r.state === 'open' ? 'Hold. Get out by 3:10 PM.' : r.state === 'stop' ? `The stop-loss level was reached at ${r.exitTime}. If your order didn’t fill, get out now.`
         : r.state === 'target' ? `The target was reached at ${r.exitTime}: <b>${t.side > 0 ? 'sell' : 'buy back'} now</b> and cancel your stop-loss order.`
           : `It’s 3:10 PM: <b>${t.side > 0 ? 'sell' : 'buy back'} now</b> and cancel your stop-loss order.`;
@@ -845,7 +929,9 @@
     if (!live.started) return;
     const n = nowIST();
     const ctx = liveContext(n);
+    live.events = [];
     $('#live').innerHTML = marketCard(n) + planToday(ctx) + myTradesLive(n) + swingLive(n);
+    if (live.at) alerts.check(live.events);
   }
 
   function startLive() {
@@ -922,6 +1008,10 @@
         return;
       }
       if (e.target.closest('#liveNow')) { refresh().then(schedule); return; }
+      if (e.target.closest('#liveAlerts')) {
+        (alerts.on() ? Promise.resolve(alerts.disable()) : alerts.enable()).then(() => { renderLive(); schedule(); });
+        return;
+      }
       if (e.target.closest('#liveAuto')) {
         G.store.set(KEY.auto, !G.store.get(KEY.auto, true));
         renderLive();
@@ -930,5 +1020,15 @@
     });
   }
 
-  window.DayUI = { init, render, startLive, stopLive: () => { clearTimeout(live.timer); live.timer = null; } };
+  // for "Check a stock": the stock's row in the next session's watch list, if the plan watches it
+  function watchRow(sym) {
+    const plan = DT && planFor(G.currentCapital());
+    if (!plan || !plan.c) return null;
+    const wl = watchFor(plan);
+    const r = wl && wl.rows.find(x => x.sym === sym);
+    return r ? { ...r, setup: plan.st, rule: ruleSummary(plan.k), next: wl.next, practice: plan.b.verdict !== 'good' } : null;
+  }
+
+  // leaving the Live tab stops the updates, unless alerts are on
+  window.DayUI = { init, render, startLive, watchRow, entryText, stopLive: () => { if (!alerts.on()) { clearTimeout(live.timer); live.timer = null; } } };
 })();

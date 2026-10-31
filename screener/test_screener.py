@@ -479,3 +479,84 @@ def test_new_file_layout_always_counts_as_new_data():
     new = {**old, "schema": S.TODAY_SCHEMA}
     assert not S.same_prices(old, new)
     assert S.same_prices({**old, "schema": S.TODAY_SCHEMA}, new)
+
+
+# ---- the backtest's stock list and the walk-forward test ---------------------
+
+def test_eligibility_uses_the_previous_month_end_only():
+    p = S.build_panel(make_frames(n_days=400, n_stocks=6), now=dt.datetime(2030, 1, 1, tzinfo=S.IST))
+    el = S.eligibility(p, size=3)
+    assert el.to_numpy().sum(axis=1).max() <= 3
+    assert not el.iloc[:100].to_numpy().any()  # no six months of trading yet
+    me = np.nonzero(S.month_ends(p.dates))[0]
+    # the list changes only on the day after a month-end
+    changes = np.nonzero((el.to_numpy()[1:] != el.to_numpy()[:-1]).any(axis=1))[0] + 1
+    assert set(changes) <= set(me + 1)
+    # making one stock trade 1000x more from some day on can't change the list before that day
+    cut = 300
+    p2 = S.build_panel(make_frames(n_days=400, n_stocks=6), now=dt.datetime(2030, 1, 1, tzinfo=S.IST))
+    p2.V.iloc[cut:, 0] *= 1000
+    el2 = S.eligibility(p2, size=3)
+    assert el.iloc[:cut + 1].equals(el2.iloc[:cut + 1])
+    assert not el.iloc[cut + 30:].equals(el2.iloc[cut + 30:])
+
+
+def test_backtest_only_buys_stocks_on_the_list(monkeypatch):
+    monkeypatch.setattr(S, "PERIODS", [("train", "2019-01-01", "2019-12-31"), ("validate", "2020-01-01", "2020-06-30"),
+                                       ("test", "2020-07-01", None)])
+    monkeypatch.setattr(S, "MIN_TRAIN_TRADES", 1)
+    monkeypatch.setattr(S, "CAPITALS", [100000])
+    monkeypatch.setattr(S, "RANDOM_RUNS", 3)
+    monkeypatch.setattr(S, "TARGET_CHOICES", ())
+    p = S.build_panel(make_frames(n_days=500, n_stocks=8), now=dt.datetime(2030, 1, 1, tzinfo=S.IST))
+    el = S.eligibility(p, size=3)
+    res = S.run_backtest(p, S.pattern_signals(p), None, log=lambda *a: None, eligible=el)
+    ex = next(c for c in res["buckets"][0]["candidates"] if c["key"] == res["buckets"][0]["chosen"])["example"]
+    assert ex["trades_log"], "the example run should trade"
+    for sym, bought, *_ in ex["trades_log"]:
+        signal_day = p.dates[p.dates.get_loc(pd.Timestamp(bought)) - 1]
+        assert el.at[signal_day, sym], (sym, bought)
+    assert res["universe"] == {"size": 100, "from": 8, "point_in_time": True}
+
+
+def test_walk_forward_picks_from_the_past_only(monkeypatch):
+    monkeypatch.setattr(S, "PERIODS", [("train", "2019-01-01", "2020-12-31"), ("validate", "2021-01-01", "2021-12-31"),
+                                       ("test", "2022-01-01", None)])
+    monkeypatch.setattr(S, "MIN_TRAIN_TRADES", 1)
+    monkeypatch.setattr(S, "CAPITALS", [100000])
+    monkeypatch.setattr(S, "RANDOM_RUNS", 2)
+    monkeypatch.setattr(S, "TARGET_CHOICES", ())
+    monkeypatch.setattr(S, "WALK_FIRST_YEAR", 2021)
+    monkeypatch.setattr(S, "WALK_CHECK_YEARS", 1)
+    frames = make_frames(n_days=1300, n_stocks=6, seed=4)
+    p = S.build_panel(frames, now=dt.datetime(2030, 1, 1, tzinfo=S.IST))
+    quiet = lambda *a: None
+    w = S.run_backtest(p, S.pattern_signals(p), frames["S0"], log=quiet)["walk_forward"]["100000"]
+    years = [y["year"] for y in w["years"]]
+    assert years == list(range(2021, p.dates[-1].year + 1))
+    assert w["years"][0]["start_value"] == 100000 and w["etf"]
+    for a, b in zip(w["years"], w["years"][1:]):
+        assert b["start_value"] == a["end_value"]
+    # scramble everything from 2023 on: the picks for 2021 and 2022 can't change
+    cut = p.dates.searchsorted(pd.Timestamp("2023-01-01"))
+    frames2 = {k: df.copy() for k, df in frames.items()}
+    for df in frames2.values():
+        df.iloc[cut:, :4] *= np.linspace(1, 3, len(df) - cut)[:, None]
+    p2 = S.build_panel(frames2, now=dt.datetime(2030, 1, 1, tzinfo=S.IST))
+    w2 = S.run_backtest(p2, S.pattern_signals(p2), frames2["S0"], log=quiet)["walk_forward"]["100000"]
+    assert [y["plan"] for y in w["years"][:2]] == [y["plan"] for y in w2["years"][:2]]
+
+
+def test_invest_list_is_due_after_each_month_end(tmp_path):
+    path = tmp_path / "invest.json"
+    days = lambda *d: pd.DatetimeIndex(pd.to_datetime(list(d)))
+    assert S.invest_due(path, days("2026-10-29"))  # no file yet
+    path.write_text(json.dumps({"momentum": [{"list": {"as_of": "2026-09-30"}}]}))
+    assert not S.invest_due(path, days("2026-09-30", "2026-10-01", "2026-10-29"))  # October not finished
+    assert S.invest_due(path, days("2026-09-30", "2026-10-29", "2026-10-30"))      # 30 Oct 2026 is the last weekday
+    path.write_text(json.dumps({"momentum": [{"list": {"as_of": "2026-10-30"}}]}))
+    assert not S.invest_due(path, days("2026-10-30", "2026-11-02"))
+    # a holiday on the month's last weekday (Mon 30 Nov): not seen as finished on Fri 27 Nov,
+    # so the list is made on the next month's first day, from 27 Nov's prices
+    assert not S.invest_due(path, days("2026-10-30", "2026-11-27"))
+    assert S.invest_due(path, days("2026-10-30", "2026-11-27", "2026-12-01"))

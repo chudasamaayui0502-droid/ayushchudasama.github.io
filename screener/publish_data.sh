@@ -6,7 +6,7 @@
 # the new main and try again, so nothing newer is ever undone.
 set -euo pipefail
 
-paths=(stocks/data screener/nifty100_fallback.csv)
+paths=(stocks/data screener/nifty100_fallback.csv screener/nifty500_fallback.csv)
 msg="Update stock signals for $(TZ=Asia/Kolkata date +%Y-%m-%d)"
 git config user.name "github-actions[bot]"
 git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

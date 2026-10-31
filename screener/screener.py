@@ -31,6 +31,13 @@ OUT_DIR = HERE.parent / "stocks" / "data"
 CACHE_DIR = HERE / ".cache"
 FALLBACK_LIST = HERE / "nifty100_fallback.csv"
 NIFTY100_URL = "https://archives.nseindia.com/content/indices/ind_nifty100list.csv"
+# The backtest picks its stocks from the Nifty 500 as it would have looked at
+# the time (see eligibility()), not from today's Nifty 100: today's list holds
+# the stocks that grew big, which makes any strategy tested on it look better.
+FALLBACK_500 = HERE / "nifty500_fallback.csv"
+NIFTY500_URL = "https://archives.nseindia.com/content/indices/ind_nifty500list.csv"
+TEST_SIZE = 100       # stocks the backtest may trade at any time
+TURNOVER_DAYS = 126   # traded value is judged over the last 6 months
 
 IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
 HISTORY_START = "2014-01-01"
@@ -55,6 +62,10 @@ STANDARD_EXIT = (0.08, 0.04, 20)  # used to compare patterns with each other
 # its own plan picked the same way, among the combinations with that target.
 TARGET_CHOICES = (0.05, 0.08)
 CHOICE_CANDIDATES = 4
+# Walk-forward: from this year on, the plan is re-picked every January from
+# what was known by then, and followed for the year.
+WALK_FIRST_YEAR = 2019
+WALK_CHECK_YEARS = 2  # the latest years before each January are the "checking" part
 BENCHMARK = "NIFTYBEES"  # Nifty 50 ETF
 # Big news (wars, rate changes, budgets, global crashes) shows up in these
 # within days, and unlike news itself they have a long, testable history.
@@ -123,19 +134,30 @@ def affordable_shares(budget, price):
 # Data
 # --------------------------------------------------------------------------
 
-def load_universe() -> pd.DataFrame:
+def _load_list(url: str, fallback: Path, min_rows: int, name: str) -> pd.DataFrame:
     try:
-        req = urllib.request.Request(NIFTY100_URL, headers={"User-Agent": "Mozilla/5.0"})
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
         raw = urllib.request.urlopen(req, timeout=30).read().decode("utf-8")
         df = pd.read_csv(io.StringIO(raw))
-        if len(df) < 90 or "Symbol" not in df:
-            raise ValueError("unexpected Nifty 100 list")
-        FALLBACK_LIST.write_text(raw)
+        if len(df) < min_rows or "Symbol" not in df:
+            raise ValueError(f"unexpected {name} list")
+        fallback.write_text(raw)
     except Exception as exc:  # NSE blocks some networks; the saved copy is fine
-        print(f"Using saved Nifty 100 list ({exc})", file=sys.stderr)
-        df = pd.read_csv(FALLBACK_LIST)
+        print(f"Using saved {name} list ({exc})", file=sys.stderr)
+        df = pd.read_csv(fallback)
     df = df.rename(columns={"Company Name": "Name"})
     return df[["Symbol", "Name", "Industry"]].reset_index(drop=True)
+
+
+def load_universe() -> pd.DataFrame:
+    """Today's Nifty 100: the stocks the page gives signals for."""
+    return _load_list(NIFTY100_URL, FALLBACK_LIST, 90, "Nifty 100")
+
+
+def load_test_universe() -> pd.DataFrame:
+    """Today's Nifty 500, from which the backtest picks the stocks that were
+    big at each point in time."""
+    return _load_list(NIFTY500_URL, FALLBACK_500, 450, "Nifty 500")
 
 
 def _clean(df: pd.DataFrame) -> pd.DataFrame:
@@ -470,6 +492,20 @@ def pattern_signals(p: Panel) -> list[tuple[Variant, pd.DataFrame]]:
     return out
 
 
+def eligibility(p: Panel, size: int = TEST_SIZE) -> pd.DataFrame:
+    """[day, stock] True where the stock was among the `size` most traded
+    (median daily traded value over the last 6 months) at the previous
+    month-end: the backtest's stock list as it was at the time, refreshed
+    monthly like an index review. A stock that is big today but was small in
+    2016 couldn't be bought in 2016."""
+    turn = (p.C * p.V).rolling(TURNOVER_DAYS, min_periods=100).median()
+    me = month_ends(p.dates)
+    at = turn[me]
+    top = (at.rank(axis=1, ascending=False, method="first") <= size) & at.notna()
+    # a month-end's list applies from the next trading day
+    return top.astype(float).reindex(p.dates).shift(1).ffill().fillna(0).astype(bool)
+
+
 def month_ends(dates: pd.DatetimeIndex) -> np.ndarray:
     """Last weekday of each month. Known in advance from the calendar, so it
     doesn't peek at future prices (an exchange holiday can shift it a day)."""
@@ -536,8 +572,8 @@ class Trades:
         return Trades(*(getattr(self, f)[mask] for f in self.__dataclass_fields__))
 
 
-def entry_points(sig: pd.DataFrame, O: np.ndarray, score: np.ndarray):
-    S = sig.to_numpy()
+def entry_points(sig: pd.DataFrame, O: np.ndarray, score: np.ndarray, allowed: np.ndarray | None = None):
+    S = sig.to_numpy() if allowed is None else sig.to_numpy() & allowed
     t, n = np.nonzero(S[:-1])  # a signal on the last day is bought tomorrow
     e = t + 1
     ok = np.isfinite(O[e, n])
@@ -648,7 +684,7 @@ def quick_stats(tr: Trades, budget: float, bounds) -> dict:
 
 
 def portfolio_sim(tr: Trades, capital: float, slots: int, start: int, end: int,
-                  Cf: np.ndarray, dates: pd.DatetimeIndex) -> dict:
+                  Cf: np.ndarray, dates: pd.DatetimeIndex, marks: list | None = None) -> dict:
     """Follow the strategy with real money: limited cash, whole shares, charges,
     at most `slots` stocks at a time, never the same stock twice. When several
     stocks signal on the same day, the strongest (6-month return) goes first."""
@@ -722,6 +758,7 @@ def portfolio_sim(tr: Trades, capital: float, slots: int, start: int, end: int,
         "invested_pct": invested_days / (end - start + 1),
         "curve": downsample_curve(equity, dates[start:end + 1]),
         "log": log,  # [stock, buy row, buy price, sell row, sell price, shares, profit after charges, kind]
+        **({"marks": [float(equity[m - start]) for m in marks]} if marks else {}),
     }
 
 
@@ -762,12 +799,16 @@ def exits_for(rule) -> dict:
 
 
 def random_baseline(O, H, L, C, Cf, dates, rule, n_entries, cap, start, end,
-                    runs=RANDOM_RUNS, seed=7) -> list[float]:
+                    runs=RANDOM_RUNS, seed=7, allowed: np.ndarray | None = None) -> list[float]:
     """Same exit rule, capital and number of buy signals, but the buy days and
-    stocks are picked at random. If a pattern can't beat this, its profit came
-    from the market rising, not from the pattern."""
+    stocks are picked at random (from the stocks on the list that day). If a
+    pattern can't beat this, its profit came from the market rising, not from
+    the pattern."""
     lo = max(start, 1)
-    t_idx, n_idx = np.nonzero(np.isfinite(C[lo - 1:end]) & np.isfinite(O[lo:end + 1]))
+    ok = np.isfinite(C[lo - 1:end]) & np.isfinite(O[lo:end + 1])
+    if allowed is not None:
+        ok &= allowed[lo - 1:end]
+    t_idx, n_idx = np.nonzero(ok)
     if not len(t_idx) or n_entries == 0:
         return []
     t_idx = t_idx + lo - 1
@@ -787,10 +828,12 @@ def combo_key(vid, exit_rule):
 
 
 def run_backtest(p: Panel, signals, bench: pd.DataFrame | None, log=print, previous: dict | None = None,
-                 previous_by_target: dict | None = None) -> dict:
+                 previous_by_target: dict | None = None, eligible: pd.DataFrame | None = None) -> dict:
     """previous: {capital: combo key} picked last time, kept unless clearly beaten;
-    previous_by_target: the same for each fixed-target choice, {"5": {capital: key}}."""
+    previous_by_target: the same for each fixed-target choice, {"5": {capital: key}};
+    eligible: [day, stock] stocks that may be bought (see eligibility()), all if None."""
     O, H, L, C = (df.to_numpy() for df in (p.O, p.H, p.L, p.C))
+    allowed = None if eligible is None else eligible.reindex(index=p.dates, columns=p.symbols).fillna(False).to_numpy(bool)
     Cf = p.C.ffill().to_numpy()
     score = momentum_score(p)
     bounds = period_bounds(p.dates)
@@ -802,7 +845,7 @@ def run_backtest(p: Panel, signals, bench: pd.DataFrame | None, log=print, previ
     trades_cache, rules = {}, {}
     pattern_stats = {}
     for v, sig in signals:
-        n, e, pe, sc = entry_points(sig, O, score)
+        n, e, pe, sc = entry_points(sig, O, score, allowed)
         exits = simulate_exits(n, e, pe, sc, O, H, L, C)
         for rule, tr in exits.items():
             key = combo_key(v.id, rule)
@@ -937,7 +980,7 @@ def run_backtest(p: Panel, signals, bench: pd.DataFrame | None, log=print, previ
             s_, e_ = bounds["test"]
             tr = trades_cache[chosen["key"]]
             finals = random_baseline(O, H, L, C, Cf, p.dates, rules[chosen["key"]],
-                                     int(((tr.e >= s_) & (tr.e <= e_)).sum()), cap, s_, e_)
+                                     int(((tr.e >= s_) & (tr.e <= e_)).sum()), cap, s_, e_, allowed=allowed)
             if finals:
                 f = np.array(finals)
                 random = {"runs": len(f), "median": float(np.median(f)), "p10": float(np.percentile(f, 10)),
@@ -981,6 +1024,81 @@ def run_backtest(p: Panel, signals, bench: pd.DataFrame | None, log=print, previ
             "candidates": out_cands, "benchmark": bench_res,
         }
 
+    def walk_forward(cap) -> dict | None:
+        """Each January from WALK_FIRST_YEAR: pick the plan as make_bucket does,
+        but only from trades that had finished by then (training from the first
+        period's start, checking on the last WALK_CHECK_YEARS years), keep last
+        year's plan unless clearly beaten, and follow that plan's buy signals
+        through the year with real money. Trades bought in December run on
+        under their own rules. Nothing after each January is used to pick."""
+        first = int(p.dates.searchsorted(pd.Timestamp(f"{WALK_FIRST_YEAR}-01-01")))
+        if first >= len(p.dates) - 1:
+            return None
+        begin = int(p.dates.searchsorted(pd.Timestamp(PERIODS[0][1])))
+        slots, budget = slots_for(cap), cap / slots_for(cap)
+        net = {key: trade_net_returns(tr, budget) for key, tr in trades_cache.items()}
+        years, parts, prev_key, ends = [], [], None, []
+        for y in range(WALK_FIRST_YEAR, p.dates[-1].year + 1):
+            s = int(p.dates.searchsorted(pd.Timestamp(f"{y}-01-01")))
+            e = int(p.dates.searchsorted(pd.Timestamp(f"{y + 1}-01-01"))) - 1
+            v = int(p.dates.searchsorted(pd.Timestamp(f"{y - WALK_CHECK_YEARS}-01-01")))
+            windows = {"train": (begin, v - 1), "validate": (v, s - 1)}
+            scored = []
+            for key, tr in trades_cache.items():
+                ok, r = net[key]
+                hold = tr.x - tr.e + 1
+                est = {}
+                for name, (a, b) in windows.items():
+                    m = ok & tr.complete & (tr.e >= a) & (tr.x <= b)
+                    k = int(m.sum())
+                    if k < max(1, MIN_TRAIN_TRADES if name == "train" else MIN_TRAIN_TRADES // 3):
+                        break
+                    h = float(hold[m].mean())
+                    busy = min(1.0, k * h / (b - a + 1) / slots)
+                    est[name] = float(r[m].mean()) / h * busy * 250
+                else:
+                    scored.append((min(est.values()), key, est["train"] > 0 and est["validate"] > 0))
+            if not scored:
+                continue
+            scored.sort(key=lambda c: (-round(c[0], 9), c[1]))
+            good = [c for c in scored if c[2]]
+            pool = good or scored
+            best = pool[0]
+            kept = next((c for c in pool if c[1] == prev_key), None)
+            if kept and kept[0] < best[0] - SWITCH_MARGIN:
+                kept = None
+            pick = kept or best
+            prev_key = pick[1]
+            tr = trades_cache[pick[1]]
+            parts.append(tr.subset((tr.e >= s) & (tr.e <= e)))
+            years.append({"year": y, "plan": pick[1], "kept": bool(kept and kept is not best), "passed": bool(good)})
+            ends.append(e)
+        if not years:
+            return None
+        start, end = int(p.dates.searchsorted(pd.Timestamp(f"{years[0]['year']}-01-01"))), ends[-1]
+        allt = Trades(*(np.concatenate([getattr(t, f) for t in parts]) for f in Trades.__dataclass_fields__))
+        run = portfolio_sim(allt, cap, slots, start, end, Cf, p.dates, marks=ends)
+        etf = etf_marks = None
+        if bench_O is not None:
+            etf = buy_and_hold(bench_O, bench_C, cap, start, end, p.dates)
+            if etf:
+                f0 = start + int(np.argmax(np.isfinite(bench_O[start:end + 1])))
+                units = float(affordable_shares(cap, bench_O[f0]))
+                cash = cap - units * bench_O[f0] - float(buy_charges(units * bench_O[f0]))
+                bc = pd.Series(bench_C).ffill().to_numpy()
+                etf_marks = [float(cash + units * bc[m]) for m in ends]
+        prev_val, prev_etf = float(cap), float(cap)
+        for i, yr in enumerate(years):
+            yr.update({"start_value": prev_val, "end_value": run["marks"][i]})
+            prev_val = run["marks"][i]
+            if etf_marks:
+                yr.update({"etf_start": prev_etf, "etf_end": etf_marks[i]})
+                prev_etf = etf_marks[i]
+        return {"start": str(p.dates[start].date()), "end": str(p.dates[end].date()), "final": run["final"],
+                "cagr": run["cagr"], "max_dd": run["max_dd"], "trades": run["trades"], "win_rate": run["win_rate"],
+                "charges": run["charges"], "curve": run["curve"], "years": years,
+                "etf": {k: etf[k] for k in ("final", "cagr", "max_dd", "curve")} if etf else None}
+
     everything = lambda key: True
     pattern_rules = rules_for(everything)
     buckets = [make_bucket(cap, everything, (previous or {}).get(cap), CANDIDATES_PER_CAPITAL) for cap in CAPITALS]
@@ -996,6 +1114,19 @@ def run_backtest(p: Panel, signals, bench: pd.DataFrame | None, log=print, previ
             "buckets": [make_bucket(cap, keep, prev.get(cap), CHOICE_CANDIDATES, f" ({name}% target)") for cap in CAPITALS],
         }
 
+    walk = {}
+    for b in buckets:
+        w = walk_forward(b["capital"])
+        if not w:
+            continue
+        walk[str(b["capital"])] = w
+        log(f"Rs {b['capital']:>7,} walk-forward {w['start'][:4]}-{w['end'][:4]}: Rs {b['capital']:,} -> Rs {w['final']:,.0f} "
+            f"({w['cagr']:+.1%} a year) | Nifty ETF -> Rs {(w['etf'] or {}).get('final', float('nan')):,.0f}")
+        # a plan that looked fine in the one final test, but whose way of picking
+        # lost to simply holding the index when repeated year after year
+        if w["etf"] and w["final"] < w["etf"]["final"] and b["verdict"] in ("good", "luck", "below_index"):
+            b["verdict"] = "walk_loss"
+
     return {
         "generated_at": dt.datetime.now(IST).isoformat(timespec="minutes"),
         "data_start": str(p.dates[0].date()), "data_end": str(p.dates[-1].date()),
@@ -1008,7 +1139,9 @@ def run_backtest(p: Panel, signals, bench: pd.DataFrame | None, log=print, previ
         "variants": {vid: v.__dict__ for vid, v in variants.items()},
         "pattern_stats": pattern_stats, "pattern_rules": pattern_rules,
         "standard_exit": STANDARD_EXIT,
-        "buckets": buckets, "by_target": by_target,
+        "buckets": buckets, "by_target": by_target, "walk_forward": walk,
+        "universe": {"size": TEST_SIZE if eligible is not None else len(p.symbols),
+                     "from": len(p.symbols), "point_in_time": eligible is not None},
     }
 
 
@@ -1141,6 +1274,21 @@ def day_watch(universe: pd.DataFrame, daily=None, nifty_daily=None) -> dict:
     return DT.watch_list(daily, nifty_daily, actions)
 
 
+def invest_due(path: Path, dates: pd.DatetimeIndex) -> bool:
+    """invest.json lacks the list for the latest finished month."""
+    try:
+        as_of = max(b["list"]["as_of"] for b in json.loads(path.read_text())["momentum"])
+    except Exception:
+        return True
+    last = dates[-1]
+    if (last + pd.offsets.BDay(1)).month != last.month:  # no weekday left this month: it has finished
+        latest = last
+    else:
+        before = dates[dates < pd.Timestamp(last.year, last.month, 1)]
+        latest = before[-1] if len(before) else last
+    return as_of < str(latest.date())
+
+
 TODAY_SCHEMA = 2
 
 # Exit code for "the price source didn't answer properly this time". The
@@ -1172,6 +1320,22 @@ def main(argv=None) -> int:
     print(f"{len(panel.symbols)} stocks, {panel.dates[0].date()} to {panel.dates[-1].date()}, "
           f"{len(signals)} pattern versions")
 
+    wide_cache = {}
+
+    def wide_panel():
+        """The Nifty 500 (today's list) for the backtests, downloaded once: (panel, ok)."""
+        if "p" not in wide_cache:
+            test_list = load_test_universe()
+            extra = [x for x in test_list.Symbol if x not in frames]
+            more = download_prices(extra, use_cache=args.cache)
+            ok = len(more) >= 0.8 * len(extra)
+            if not ok:
+                print(f"Only {len(more)} of {len(extra)} more Nifty 500 stocks downloaded.", file=sys.stderr)
+            fill_recent_gaps(more)
+            wide_cache["p"] = (build_panel({**frames, **more}), ok)
+            wide_cache["names"] = {**dict(zip(test_list.Symbol, test_list.Name)), **dict(zip(universe.Symbol, universe.Name))}
+        return wide_cache["p"]
+
     bt_path = OUT_DIR / "backtest.json"
     if args.mode == "full" or not bt_path.exists():
         previous = previous_by_target = None
@@ -1180,7 +1344,26 @@ def main(argv=None) -> int:
             previous = {b["capital"]: b["chosen"] for b in old_bt.get("buckets", [])}
             previous_by_target = {t: {b["capital"]: b["chosen"] for b in x.get("buckets", [])}
                                   for t, x in (old_bt.get("by_target") or {}).items()}
-        write_json(bt_path, run_backtest(panel, signals, bench, previous=previous, previous_by_target=previous_by_target))
+        # the backtest trades the Nifty 500's most traded stocks of each time
+        wide, ok = wide_panel()
+        if ok or not bt_path.exists():  # with too few stocks, keep the last test (or, with none yet, say so on the page)
+            wide_signals = with_market_filters(pattern_signals(wide), market_filters(wide, market))
+            print(f"Backtest list: {len(wide.symbols)} stocks" + (f", the {TEST_SIZE} most traded at each month-end" if ok else ""))
+            write_json(bt_path, run_backtest(wide, wide_signals, bench, previous=previous, previous_by_target=previous_by_target,
+                                             eligible=eligibility(wide) if ok else None))
+        else:
+            print("Strategies not re-tested: too few Nifty 500 stocks downloaded; keeping the last test.", file=sys.stderr)
+
+    # Long-term investing: re-tested weekly, and its monthly list made at each month-end
+    import invest as INV
+
+    inv_path = OUT_DIR / "invest.json"
+    if args.mode == "full" or invest_due(inv_path, panel.dates):
+        wide, ok = wide_panel()
+        if ok:
+            write_json(inv_path, INV.run(wide, market, bench, eligibility(wide), wide_cache["names"]))
+        else:
+            print("Investing not updated: too few Nifty 500 stocks downloaded.", file=sys.stderr)
 
     # Day trading: re-tested with the strategies, on a year of 5-minute prices
     import daytrade as DT
@@ -1218,6 +1401,13 @@ def main(argv=None) -> int:
     signalled = sorted({s for v, sig in signals for s in sig.columns[sig.iloc[-1].to_numpy()]})
     today["fundamentals"] = fetch_fundamentals(signalled)
     write_json(today_path, today)
+
+    # the tool's own record: today's buy list saved, and everything saved so far followed
+    import track as TR
+
+    if bt_path.exists():
+        track_path = OUT_DIR / "track.json"
+        write_json(track_path, TR.update(track_path, today, json.loads(bt_path.read_text()), panel, bench))
     return 0
 
 

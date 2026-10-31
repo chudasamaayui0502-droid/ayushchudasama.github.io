@@ -29,9 +29,20 @@
     <div class="chips" id="capitalChips"></div>
   </section>
 
+  <form class="card check-card" id="checkForm" role="search" autocomplete="off">
+    <label class="label" for="checkInput">Check a stock</label>
+    <div class="check-row">
+      <input id="checkInput" list="checkList" placeholder="Name or symbol, e.g. ITC" />
+      <button class="btn" type="submit">Check</button>
+    </div>
+    <datalist id="checkList"></datalist>
+    <small id="checkHint" class="error"></small>
+  </form>
+
   <nav class="tabs" id="tabs" role="tablist" aria-label="Trading style">
     <button type="button" role="tab" data-tab="swing" aria-selected="true">Swing<small>days to weeks</small></button>
     <button type="button" role="tab" data-tab="day" aria-selected="false">Day trading<small>same day</small></button>
+    <button type="button" role="tab" data-tab="invest" aria-selected="false">Invest<small>long term</small></button>
     <button type="button" role="tab" data-tab="live" aria-selected="false">Live<small>market hours</small></button>
   </nav>
 
@@ -55,11 +66,25 @@
     <section id="dayMethod"></section>
   </div>
 
+  <div data-panel="invest" role="tabpanel" hidden>
+    <section id="investBest"></section>
+    <section id="investSip"></section>
+    <section id="investMom"></section>
+    <section id="investMethod"></section>
+  </div>
+
   <div data-panel="live" role="tabpanel" hidden>
     <section id="live"></section>
   </div>
 
   <footer class="foot" id="foot"></footer>
+
+  <dialog id="checkDialog" aria-label="Stock details">
+    <div class="dialog-inner">
+      <button id="checkClose" class="btn small ghost dialog-close" type="button">Close</button>
+      <div id="checkBody"></div>
+    </div>
+  </dialog>
 </main>
 
 <template id="tradeForm">
@@ -77,6 +102,8 @@
 
 <script src="daylogic.js"></script>
 <script src="day.js"></script>
+<script src="invest.js"></script>
+<script src="check.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

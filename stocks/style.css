@@ -209,7 +209,7 @@ table.kv tr.sub td.r { padding-right: 4px; }
 
 /* Tabs: Swing / Day trading / Live */
 [hidden] { display: none !important; }
-.tabs { position: sticky; top: 0; z-index: 5; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 8px 0; margin: 0 0 0.6rem; background: var(--bg); }
+.tabs { position: sticky; top: 0; z-index: 5; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding: 8px 0; margin: 0 0 0.6rem; background: var(--bg); }
 .tabs button { font: inherit; font-weight: 700; font-size: 14px; line-height: 1.2; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--text); padding: 0.5rem 0.3rem; cursor: pointer; }
 .tabs button small { display: block; font-weight: 400; font-size: 11px; color: var(--muted); }
 .tabs button[aria-selected="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
@@ -234,3 +234,28 @@ table.watch td:first-child { min-width: 0; white-space: normal; }
 .idx-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
 .idx-grid .mood b { font-size: 1rem; }
 @media (max-width: 520px) { .idx-grid .mood { padding: 0.45rem; } .idx-grid .mood b { font-size: 0.9rem; } }
+
+/* Invest */
+.sip-row { display: grid; grid-template-columns: minmax(0, 9rem) minmax(0, 1fr); gap: 12px; align-items: end; margin: 0.6rem 0; }
+.sip-row label { display: flex; flex-direction: column; font-size: 12px; color: var(--muted); gap: 3px; }
+.sip-row input { font: inherit; font-size: 16px; color: var(--text); background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 0.45rem 0.5rem; width: 100%; min-width: 0; }
+@media (max-width: 520px) {
+  .tabs { gap: 4px; }
+  .tabs button { font-size: 12px; padding: 0.45rem 0.15rem; }
+  .tabs button small { font-size: 10px; }
+  .sip-row { grid-template-columns: 1fr; }
+}
+
+/* Check a stock */
+.check-card { padding-bottom: 0.8rem; }
+.check-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+.check-row input { font: inherit; font-size: 16px; color: var(--text); background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 0.5rem 0.6rem; min-width: 0; width: 100%; }
+#checkDialog { border: 1px solid var(--line); border-radius: 12px; background: var(--panel); color: var(--text); padding: 0;
+  width: min(640px, calc(100% - 20px)); max-height: 90vh; margin: auto; }
+#checkDialog::backdrop { background: rgba(0, 0, 0, 0.55); }
+.dialog-inner { padding: 1rem; position: relative; }
+.dialog-close { position: sticky; top: 0; float: right; z-index: 2; background: var(--panel); }
+.check-name { font-size: 1.15rem; }
+.candles { width: 100%; height: auto; display: block; margin-top: 0.3rem; }
+#checkBody h4 { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin: 1rem 0 0.3rem; font-weight: 500; }
+#checkBody .r { text-align: right; }
