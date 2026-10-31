@@ -51,7 +51,7 @@
     return isoDay(d);
   }
 
-  let BT, TD, DT;
+  let BT, TD, DT, INV, TR;
 
   const PERIOD_LABEL = {
     train: ['Training', 'used to shortlist'],
@@ -71,6 +71,8 @@
     loss: ['bad', 'Lost money in the final test',
       'Following the best plan for this amount lost money in the final test (middle of several start dates), mostly because charges are large compared with small trades. Practise on paper or add more money first.'],
     none: ['bad', 'Not enough data', 'No strategy had enough trades to test at this amount.'],
+    walk_loss: ['bad', 'Lost to the Nifty ETF when followed year by year',
+      'Picked again every January from what was known then (the way this tool works), the swing plans for this amount made less than simply holding the Nifty 50 ETF since 2019 (see “Followed since 2019” below). The final test below looks better, but it is just one period. Treat these signals as practice; for long-term money, see the Invest tab.'],
   };
 
   const parseKey = key => {
@@ -122,7 +124,8 @@
     const vals = series.flatMap(s => s.pts.map(p => p[1]));
     let lo = Math.min(...vals), hi = Math.max(...vals);
     const pad = (hi - lo || hi || 1) * 0.06;
-    lo -= pad; hi += pad;
+    lo = lo >= 0 ? Math.max(0, lo - pad) : lo - pad;  // money never goes below zero
+    hi += pad;
     const y = v => T + (hi - v) / (hi - lo) * (H - T - B);
     let grid = '';
     for (let i = 0; i <= 3; i++) {
@@ -223,6 +226,8 @@
         (<b>${pct(cost / per, 1)}</b>), so a stock must rise more than that before you make anything.</p>
       <div class="verdict ${vcls}"><span class="badge ${vcls}">${vtitle}</span><p>${vtext}</p></div>
       ${planToday}
+      ${walkCard(b)}
+      ${trackCard(b)}
       <h3>How this plan did on past prices</h3>
       ${tested}
       ${passedLine}
@@ -246,6 +251,59 @@
           <thead><tr><th>Pattern</th><th class="r">Training</th><th class="r">Checking</th><th class="r">Final test</th></tr></thead>
           <tbody>${cands}</tbody></table></div></details>
     </div>`;
+  }
+
+  // "If you had followed this tool": the plan re-picked every January from what
+  // was known then, followed with money, against holding the Nifty 50 ETF
+  const walkOf = b => targetChoice() === 'best' ? BT.walk_forward?.[String(b.capital)] : null;
+  function walkCard(b) {
+    const w = walkOf(b);
+    if (!w) return targetChoice() === 'best' ? '' : '<p class="muted">The year-by-year (walk-forward) test is done for the best tested plan only.</p>';
+    const e = w.etf, beat = e && w.final >= e.final;
+    const rows = w.years.map(y => {
+      const k = parseKey(y.plan), v = BT.variants[k.vid];
+      const r = y.end_value / y.start_value - 1, er = y.etf_end / y.etf_start - 1;
+      return `<tr><td><b>${y.year}</b></td><td>${esc(v ? v.name : k.vid)}<br><small>${ruleSummary(k)}${y.kept ? ' · kept' : ''}</small></td>
+        <td class="r num ${cls(r)}">${spct(r, 0)}<br><small>${inr(y.end_value)}</small></td>
+        <td class="r num ${cls(er)}">${spct(er, 0)}<br><small>${inr(y.etf_end)}</small></td></tr>`;
+    }).join('');
+    return `<h3>Followed since ${w.start.slice(0, 4)}, the honest test</h3>
+      <p class="muted">Every January the plan was picked again the same way, using only trades that had finished by then, and its signals were
+        followed with ${inr(b.capital)} for the year: no hindsight at all.</p>
+      <div class="verdict ${beat ? 'good' : 'bad'}"><p>${inr(b.capital)} became <b class="${cls(w.final - b.capital)}">${inr(w.final)}</b>
+        (${spct(w.cagr, 1)} a year, worst fall −${pct(w.max_dd)}).${e ? ` Holding the Nifty 50 ETF instead: <b>${inr(e.final)}</b> (${spct(e.cagr, 1)} a year).` : ''}
+        ${beat ? '' : '<br><b>The tool’s way of picking swing plans did worse than the index.</b>'}</p></div>
+      <details><summary>Year by year</summary><div class="table-wrap"><table>
+        <thead><tr><th>Year</th><th>Plan that year</th><th class="r">This tool</th><th class="r">Nifty ETF</th></tr></thead>
+        <tbody>${rows}</tbody></table></div></details>`;
+  }
+
+  // the tool's own record: every evening's buy list, followed with pretend money from the day it started
+  function trackCard(b) {
+    if (!TR?.since) return '';
+    const r = TR.results?.[String(b.capital)], since = fmtDate(TR.since);
+    const how = `Since ${since} the page saves each evening’s buy list for ${inr(b.capital)} and follows it exactly as it tells you to:
+      buy at the next open while a slot is free, sell at the target, stop-loss or time limit, with Groww charges. Nothing here can be fitted to the past.`;
+    const other = targetChoice() === 'best' ? '' : ' It follows the list for the “Best” target setting.';
+    if (!r) return `<h3>The tool’s live record</h3><p class="muted">${how}${other} The first results show here after the next trading day.</p>`;
+    const gain = r.final - b.capital, etf = r.etf_final;
+    const beatEtf = etf == null || r.final >= etf, tone = gain >= 0 && beatEtf ? 'good' : gain < 0 && !beatEtf ? 'bad' : 'warn';
+    const row = ([sym, bd, bp, sd, sp, sh, pnl, kind, rule]) => {
+      const [label, kc] = kind === 1 && rule.split('|')[0] === '0' ? ['Trailing stop', ''] : KIND[kind] || ['', ''];
+      return `<tr><td><b>${esc(sym)}</b></td><td>${fmtDate(bd)}</td><td class="r num">${inr(bp, 2)}</td>
+        <td>${kind === -1 ? 'now' : fmtDate(sd)}</td><td class="r num">${inr(sp, 2)}</td><td class="r num">${sh}</td>
+        <td class="r num ${cls(pnl)}">${signedInr(pnl, 2)}</td><td class="${kc}">${label}</td></tr>`;
+    };
+    const trades = [...r.open, ...r.closed.slice().reverse()];
+    return `<h3>The tool’s live record</h3>
+      <p class="muted">${how}${other}</p>
+      <div class="verdict ${tone}"><p>${inr(b.capital)} from ${fmtDate(r.start)} is now <b class="${cls(gain)}">${inr(r.final)}</b>
+        (${spct(r.final / b.capital - 1, 1)}, at the close of ${fmtDate(r.end)}).${etf ? ` The Nifty 50 ETF over the same days: <b>${inr(etf)}</b>.` : ''}
+        <br>${r.trades} trade${r.trades === 1 ? '' : 's'} finished${r.trades ? `, ${pct(r.win_rate)} made money` : ''}; ${r.open.length} still open. Charges paid: ${inr(r.charges)}.
+        ${r.trades < 20 ? '<br><small>Still early: a few weeks of trades say little; give it months.</small>' : ''}</p></div>
+      ${trades.length ? `<details><summary>See its ${trades.length} trade${trades.length === 1 ? '' : 's'}</summary><div class="table-wrap"><table>
+        <thead><tr><th>Stock</th><th>Bought</th><th class="r">Price</th><th>Sold</th><th class="r">Price</th><th class="r">Shares</th><th class="r">Profit after charges</th><th>Why sold</th></tr></thead>
+        <tbody>${trades.map(row).join('')}</tbody></table></div></details>` : ''}`;
   }
 
   function healthChips(sym, f = TD.fundamentals?.[sym], note = null) {
@@ -345,6 +403,14 @@
     </div>`;
   }
 
+  function walkWarn(b) {
+    const w = walkOf(b);
+    if (!w || !w.etf || w.final >= w.etf.final) return '';
+    return `<div class="verdict bad"><span class="badge bad">Read this first</span><p>Followed year by year since ${w.start.slice(0, 4)}, the swing
+      signals for ${inr(b.capital)} turned it into <b>${inr(w.final)}</b>; simply holding the Nifty 50 ETF made <b>${inr(w.etf.final)}</b>.
+      Use these signals to practise on paper. For long-term money, the <b>Invest</b> tab shows what did better.</p></div>`;
+  }
+
   function renderBuy(cap) {
     const { b, per, ok, dear, planVid } = todaysSignals(cap);
     const cost = buyCharges(per) + sellCharges(per);
@@ -384,7 +450,7 @@
       <h2>${ok.length ? `${ok.length} stock${ok.length > 1 ? 's' : ''} you can buy` : 'Nothing to buy'}</h2>
       <p class="muted">From the close of ${fmtDay(TD.data_date)}: every stock a tested pattern signals today that fits your money,
         ranked below. Buy at the next market open (9:15–9:30 AM) as a <b>Delivery</b> order. ${slotsNote}</p>
-      ${warn}${body}${dearLine}
+      ${walkWarn(b)}${warn}${body}${dearLine}
     </div>`;
   }
 
@@ -801,7 +867,9 @@
           US S&amp;P 500 rising), × ${g.targets.length} targets (${g.targets.map(x => '+' + p100(x) + '%').join(', ')})
           × ${g.stops.length} stop-losses (${g.stops.map(x => '−' + p100(x) + '%').join(', ')}) × ${g.holds.length} holding times
           (${g.holds.join(', ')} trading days), plus trailing stops with no fixed target (${(g.trails || []).map(x => p100(x) + '%').join(', ')}
-          below the highest close, held up to ${(g.trail_holds || []).join(' or ')} trading days), on ${BT.n_stocks} Nifty 100 stocks from ${fmtDate(BT.data_start)} to ${fmtDate(BT.data_end)}.</li>
+          below the highest close, held up to ${(g.trail_holds || []).join(' or ')} trading days), on ${BT.universe?.point_in_time
+          ? `the ${BT.universe.size} most-traded stocks of the Nifty 500 at each month-end (the list as it was at the time, from ${BT.universe.from} stocks)`
+          : `${BT.n_stocks} Nifty 100 stocks`} from ${fmtDate(BT.data_start)} to ${fmtDate(BT.data_end)}.</li>
         <li><b>Real money rules:</b> whole shares only, Groww’s delivery charges on every buy and sell (brokerage, STT, stamp duty,
           exchange fees, ₹20 DP charge, GST), and only as many stocks at once as your amount allows.</li>
         <li><b>No peeking at the future:</b> a pattern is spotted at the close and bought at the <i>next</i> day’s open. If the target and
@@ -815,10 +883,15 @@
         <li><b>Luck check:</b> the plan is compared with 100 runs of random stock picks using the same target, stop-loss and amount.</li>
         <li><b>No flip-flopping:</b> strategies are re-tested every Saturday, but a new one only replaces your plan if it is clearly better
           (by ${pct(BT.switch_margin)} a year).</li>
+        <li><b>Year-by-year check (walk-forward):</b> the whole process is also replayed since ${BT.walk_forward && Object.values(BT.walk_forward)[0]
+          ? Object.values(BT.walk_forward)[0].start.slice(0, 4) : '2019'}: every January the plan is picked again from what was known then and
+          followed for the year. This is the closest test to really using the tool.</li>
       </ul>
       <h3>Limits to keep in mind</h3>
       <ul class="plain">
-        <li>It uses <b>today’s</b> Nifty 100 list for all past years. Stocks that are in the index now did well to get there, so past results look better than they really were.</li>
+        <li>${BT.universe?.point_in_time
+          ? 'Stocks that have since left the stock market entirely (delisted, often after crashing) are missing from the data, which still makes past results look a little better than they were. Today’s buy list uses today’s Nifty 100.'
+          : 'It uses <b>today’s</b> Nifty 100 list for all past years. Stocks that are in the index now did well to get there, so past results look better than they really were.'}</li>
         <li>It assumes you get the exact target and stop-loss price. In real trading, prices can jump past your order.</li>
         <li>Income tax on profits (20% short-term capital gains) is not included.</li>
         <li><b>News and company financials are not in the test.</b> There is no free day-by-day record of past news or past financial
@@ -866,7 +939,7 @@
     }
     $('#dataLine').innerHTML = `Using closing prices of <b>${fmtDay(TD.data_date)}</b> · updates every trading day around 7 PM IST${note}`;
     $('#foot').innerHTML = `<p>Signals updated ${esc(TD.generated_at.replace('T', ' '))} IST · strategies re-tested ${esc(BT.generated_at.replace('T', ' '))} IST${DT ? ` · day trading re-tested ${esc(DT.generated_at.replace('T', ' '))} IST` : ''}.</p>
-      <p>Data: Yahoo Finance and NSE; day trading and live prices: Moneycontrol’s chart feed. Charges: Groww pricing page. This page is a learning tool, not investment advice, and is not from a SEBI-registered adviser.
+      <p>Data: Yahoo Finance and NSE; day trading and live prices: Moneycontrol’s chart feed.${INV ? ` Investing tested ${esc(INV.generated_at.replace('T', ' '))} IST.` : ''} Charges: Groww pricing page. This page is a learning tool, not investment advice, and is not from a SEBI-registered adviser.
       <a href="https://github.com/chudasamaayui0502-droid/ayushchudasama.github.io/tree/main/screener">How it works (code)</a>.</p>`;
   }
 
@@ -889,10 +962,11 @@
     renderBuy(cap);
     renderMyTrades(cap);
     window.DayUI?.render(cap);
+    window.InvestUI?.render(cap);
   }
 
   // ---- tabs: Swing / Day trading / Live ----
-  const TABS = ['swing', 'day', 'live'];
+  const TABS = ['swing', 'day', 'invest', 'live'];
   let tab = 'swing';
   function showTab(name, scroll = false) {
     if (!TABS.includes(name)) name = 'swing';
@@ -905,11 +979,15 @@
   }
 
   function init() {
-    window.DayUI?.init({
+    const helpers = {
       $, store, KEYS, inr, signedInr, p100, pct, cls, spct, esc, asDate, fmtDate, fmtDay, isoDay, nextWeekday,
-      lineChart, sparkline, netPnl, currentCapital, todaysSignals, showTab, currentTab: () => tab,
-      get TD() { return TD; }, get BT() { return BT; },
-    }, DT);
+      lineChart, sparkline, netPnl, affordableShares, currentCapital, todaysSignals, showTab, currentTab: () => tab,
+      healthChips, newsLink, rulesOf, bucketFor, ruleOf, weeksText, buyCharges, sellCharges,
+      get TD() { return TD; }, get BT() { return BT; }, get INV() { return INV; },
+    };
+    window.DayUI?.init(helpers, DT);
+    window.InvestUI?.init(helpers, INV);
+    window.CheckUI?.init(helpers);
     renderHeader();
     $('#capitalChips').innerHTML = BT.grid.capitals.map(c => `<button type="button" class="chip" data-cap="${c}">${inr(c)}</button>`).join('');
     input().value = store.get(KEYS.capital, 1000);
@@ -983,7 +1061,9 @@
         return r.json();
       });
       // day trading is optional: the page works without it until its first test has run
-      [BT, TD, DT] = await Promise.all([get('data/backtest.json'), get('data/today.json'), get('data/daytrade.json').catch(() => null)]);
+      [BT, TD, DT, INV, TR] = await Promise.all([get('data/backtest.json'), get('data/today.json'),
+        get('data/daytrade.json').catch(() => null), get('data/invest.json').catch(() => null),
+        get('data/track.json').catch(() => null)]);
     } catch (err) {
       $('#dataLine').innerHTML = `<span class="error">Could not load the price data (${esc(err.message)}). Try again in a minute.</span>`;
       return;
