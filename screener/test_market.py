@@ -51,6 +51,7 @@ def test_payload_lists_patterns_for_liquid_stocks_only_most_traded_first(monkeyp
     s = rows[0][0]
     assert rows[0][f.index("pc")] == round(float(p.C[s].iloc[-1]), 2)
     assert rows[0][f.index("h52")] == round(float(p.H[s].iloc[-252:].max()), 2)
+    assert rows[0][f.index("h52p")] == round(float(p.H[s].iloc[-253:-1].max()), 2)  # the year before the latest day
     assert out["hits_by_stock"][s][0] == vid
     json.dumps(S._round(out), allow_nan=False)
 
@@ -132,3 +133,23 @@ def test_live_chart_maths(tmp_path):
     assert "gapup" not in sc["tags"] and "pdl" not in sc["tags"]
     assert out["merged"] == [100.5, 102.5, 101.5, 105]
     assert out["up"] and not out["down"]
+
+
+@pytest.mark.skipif(NODE is None, reason="needs Node.js")
+def test_made_up_bar_on_a_day_without_session_is_dropped(tmp_path):
+    fri, sun, tue = "2026-11-13", "2026-11-15", "2026-11-17"
+    feed = {"t": [ist(fri, "15:25"), ist(fri, "15:30"), ist(sun, "14:10")], "o": [100, 101, 101], "h": [101, 102, 101],
+            "l": [99, 100, 101], "c": [101, 101, 101], "v": [500, 900, 0]}
+    first_bar_index = {"t": [ist(tue, "09:15")], "o": [200], "h": [201], "l": [199], "c": [200.5], "v": [0]}  # indices carry no volume
+    holiday_noon = {"t": [ist(fri, "15:30"), ist(tue, "12:00")], "o": [100, 101], "h": [101, 101], "l": [99, 101], "c": [101, 101], "v": [500, 0]}
+    stock_open = {"t": [ist(tue, "09:15")], "o": [100], "h": [101], "l": [99], "c": [100], "v": [800]}
+    out = node(f"""
+      const days = f => L.byDay(L.bars(f, true)).map(([d, b]) => [d, b.length]);
+      console.log(JSON.stringify([{json.dumps(feed)}, {json.dumps(first_bar_index)}, {json.dumps(holiday_noon)}, {json.dumps(stock_open)}].map(days)
+        .concat([L.bars({json.dumps(feed)}, false).length])));
+    """, tmp_path)
+    assert out[0] == [[fri, 2]]          # Sunday's made-up bar dropped
+    assert out[1] == [[tue, 1]]          # a session's first 9:15 bar is kept, even with no volume
+    assert out[2] == [[fri, 1]]          # a weekday holiday's made-up noon bar dropped
+    assert out[3] == [[tue, 1]]
+    assert out[4] == 3                   # daily charts are left alone
