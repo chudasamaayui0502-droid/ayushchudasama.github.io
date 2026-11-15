@@ -51,7 +51,7 @@
     return isoDay(d);
   }
 
-  let BT, TD, DT, INV, TR;
+  let BT, TD, DT, INV, TR, SC;
 
   const PERIOD_LABEL = {
     train: ['Training', 'used to shortlist'],
@@ -231,7 +231,7 @@
       <h3>How this plan did on past prices</h3>
       ${tested}
       ${passedLine}
-      <p class="muted">“Every signal” is the pattern’s average trade across all Nifty 100 stocks. “${inr(b.capital)} became” is what following it with
+      <p class="muted">“Every signal” is the pattern’s average trade across all the stocks on the test list. “${inr(b.capital)} became” is what following it with
         your money would have done: with ${b.slots === 1 ? 'one stock' : b.slots + ' stocks'} at a time you only catch some of the signals, so luck
         matters a lot. Each ₹ figure is the middle of ${BT.start_offsets} runs started on different weeks.</p>
       <div class="periods">${rows}</div>
@@ -304,6 +304,34 @@
       ${trades.length ? `<details><summary>See its ${trades.length} trade${trades.length === 1 ? '' : 's'}</summary><div class="table-wrap"><table>
         <thead><tr><th>Stock</th><th>Bought</th><th class="r">Price</th><th>Sold</th><th class="r">Price</th><th class="r">Shares</th><th class="r">Profit after charges</th><th>Why sold</th></tr></thead>
         <tbody>${trades.map(row).join('')}</tbody></table></div></details>` : ''}`;
+  }
+
+  // the whole-market scan: every NSE stock's daily and weekly chart, read each evening
+  function renderMarket() {
+    const box = $('#market');
+    if (!box) return;
+    if (!SC || !SC.hits) { box.innerHTML = ''; return; }
+    const c = SC.counts;
+    const groups = Object.entries(SC.hits).filter(([, l]) => l.length).sort((a, b) => b[1].length - a[1].length);
+    const n = x => Number(x).toLocaleString('en-IN');
+    box.innerHTML = `<div class="card">
+      <span class="label">Whole-market scan · close of ${fmtDay(SC.data_date)}</span>
+      <h2>${n(c.total)} charts read</h2>
+      <div class="count-grid">
+        <div><b>${n(c.daily)}</b><small>daily charts (every NSE stock with prices)</small></div>
+        <div><b>${n(c.weekly)}</b><small>weekly charts</small></div>
+        <div><b>${n(c.intraday)}</b><small>5-minute charts (a year each, for day trading)</small></div>
+        <div><b>${n(c.patterns)}</b><small>chart patterns checked on each</small></div>
+      </div>
+      <p>Patterns at the close among the <b>${n(c.liquid)}</b> stocks that trade at least ₹${SC.min_turnover_cr} crore a day and cost ₹${SC.min_price} or more
+        (the rest are too thin to buy and sell at a fair price). Tap a stock for its chart.</p>
+      <div class="hits">${groups.map(([id, syms]) => `<details><summary><span>${esc(SC.patterns[id] || id)}</span><b>${syms.length}</b></summary>
+        <div class="stock-chips">${syms.slice(0, 80).map(x => `<button type="button" class="chip" data-chart="${esc(x)}" data-tf="D">${esc(x)}</button>`).join('')}
+        ${syms.length > 80 ? `<small class="muted">and ${syms.length - 80} more (the most traded are shown)</small>` : ''}</div></details>`).join('')}</div>
+      <p class="warn-inline"><small><b>Not a buy list.</b> The buy list above uses only the patterns and stocks that were tested together
+        (the ${n(BT.universe?.size || 100)} most traded stocks of each month). These wider results are for looking around: smaller stocks move more,
+        are harder to sell, and weren’t part of the test.</small></p>
+    </div>`;
   }
 
   function healthChips(sym, f = TD.fundamentals?.[sym], note = null) {
@@ -687,7 +715,7 @@
       let badge, note, pnl = null, card = '';
       if (s.state === 'nodata') {
         badge = '<span class="badge warn">No price data</span>';
-        note = 'This stock is not in the Nifty 100 list the tool follows, so it can’t check it.';
+        note = 'This stock is not on the tool’s list of the 100 most-traded stocks any more, so it can’t check it.';
       } else if (s.state === 'new') {
         badge = '<span class="badge info">Waiting</span>';
         note = `Bought on ${fmtDay(t.date)}, but the page only has prices up to ${fmtDay(TD.data_date)} so far. It checks this trade
@@ -868,7 +896,7 @@
           × ${g.stops.length} stop-losses (${g.stops.map(x => '−' + p100(x) + '%').join(', ')}) × ${g.holds.length} holding times
           (${g.holds.join(', ')} trading days), plus trailing stops with no fixed target (${(g.trails || []).map(x => p100(x) + '%').join(', ')}
           below the highest close, held up to ${(g.trail_holds || []).join(' or ')} trading days), on ${BT.universe?.point_in_time
-          ? `the ${BT.universe.size} most-traded stocks of the Nifty 500 at each month-end (the list as it was at the time, from ${BT.universe.from} stocks)`
+          ? `the ${BT.universe.size} most-traded NSE stocks at each month-end (the list as it was at the time: ${BT.universe.from} stocks were on it at some point)`
           : `${BT.n_stocks} Nifty 100 stocks`} from ${fmtDate(BT.data_start)} to ${fmtDate(BT.data_end)}.</li>
         <li><b>Real money rules:</b> whole shares only, Groww’s delivery charges on every buy and sell (brokerage, STT, stamp duty,
           exchange fees, ₹20 DP charge, GST), and only as many stocks at once as your amount allows.</li>
@@ -890,7 +918,7 @@
       <h3>Limits to keep in mind</h3>
       <ul class="plain">
         <li>${BT.universe?.point_in_time
-          ? 'Stocks that have since left the stock market entirely (delisted, often after crashing) are missing from the data, which still makes past results look a little better than they were. Today’s buy list uses today’s Nifty 100.'
+          ? 'Stocks that have since left the stock market entirely (delisted, often after crashing) are missing from the data, which still makes past results look a little better than they were. Today’s buy list uses today’s 100 most-traded stocks, picked the same way.'
           : 'It uses <b>today’s</b> Nifty 100 list for all past years. Stocks that are in the index now did well to get there, so past results look better than they really were.'}</li>
         <li>It assumes you get the exact target and stop-loss price. In real trading, prices can jump past your order.</li>
         <li>Income tax on profits (20% short-term capital gains) is not included.</li>
@@ -939,7 +967,8 @@
     }
     $('#dataLine').innerHTML = `Using closing prices of <b>${fmtDay(TD.data_date)}</b> · updates every trading day around 7 PM IST${note}`;
     $('#foot').innerHTML = `<p>Signals updated ${esc(TD.generated_at.replace('T', ' '))} IST · strategies re-tested ${esc(BT.generated_at.replace('T', ' '))} IST${DT ? ` · day trading re-tested ${esc(DT.generated_at.replace('T', ' '))} IST` : ''}.</p>
-      <p>Data: Yahoo Finance and NSE; day trading and live prices: Moneycontrol’s chart feed.${INV ? ` Investing tested ${esc(INV.generated_at.replace('T', ' '))} IST.` : ''} Charges: Groww pricing page. This page is a learning tool, not investment advice, and is not from a SEBI-registered adviser.
+      <p>Data: Moneycontrol’s chart feed (stock prices, live prices), Yahoo Finance (indices, the Nifty ETF, company numbers) and NSE (stock lists, holidays, company events).
+        Charts: <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView Lightweight Charts™</a>.${INV ? ` Investing tested ${esc(INV.generated_at.replace('T', ' '))} IST.` : ''} Charges: Groww pricing page. This page is a learning tool, not investment advice, and is not from a SEBI-registered adviser.
       <a href="https://github.com/chudasamaayui0502-droid/ayushchudasama.github.io/tree/main/screener">How it works (code)</a>.</p>`;
   }
 
@@ -974,7 +1003,7 @@
     for (const panel of document.querySelectorAll('[data-panel]')) panel.hidden = panel.dataset.panel !== name;
     for (const btn of document.querySelectorAll('[data-tab]')) btn.setAttribute('aria-selected', String(btn.dataset.tab === name));
     store.set(KEYS.tab, name);
-    if (name === 'live') window.DayUI?.startLive(); else window.DayUI?.stopLive();
+    if (name === 'live') { window.DayUI?.startLive(); window.ScanUI?.start(); } else { window.DayUI?.stopLive(); window.ScanUI?.stop(); }
     if (scroll) $('#tabs').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
@@ -983,12 +1012,15 @@
       $, store, KEYS, inr, signedInr, p100, pct, cls, spct, esc, asDate, fmtDate, fmtDay, isoDay, nextWeekday,
       lineChart, sparkline, netPnl, affordableShares, currentCapital, todaysSignals, showTab, currentTab: () => tab,
       healthChips, newsLink, rulesOf, bucketFor, ruleOf, weeksText, buyCharges, sellCharges,
-      get TD() { return TD; }, get BT() { return BT; }, get INV() { return INV; },
+      get TD() { return TD; }, get BT() { return BT; }, get INV() { return INV; }, get SC() { return SC; },
     };
+    window.LiveChart?.init(helpers);
+    window.ScanUI?.init(helpers, SC);
     window.DayUI?.init(helpers, DT);
     window.InvestUI?.init(helpers, INV);
     window.CheckUI?.init(helpers);
     renderHeader();
+    renderMarket();
     $('#capitalChips').innerHTML = BT.grid.capitals.map(c => `<button type="button" class="chip" data-cap="${c}">${inr(c)}</button>`).join('');
     input().value = store.get(KEYS.capital, 1000);
     let timer;
@@ -1061,9 +1093,9 @@
         return r.json();
       });
       // day trading is optional: the page works without it until its first test has run
-      [BT, TD, DT, INV, TR] = await Promise.all([get('data/backtest.json'), get('data/today.json'),
+      [BT, TD, DT, INV, TR, SC] = await Promise.all([get('data/backtest.json'), get('data/today.json'),
         get('data/daytrade.json').catch(() => null), get('data/invest.json').catch(() => null),
-        get('data/track.json').catch(() => null)]);
+        get('data/track.json').catch(() => null), get('data/scan.json').catch(() => null)]);
     } catch (err) {
       $('#dataLine').innerHTML = `<span class="error">Could not load the price data (${esc(err.message)}). Try again in a minute.</span>`;
       return;

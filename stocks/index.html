@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NSE Trade Signals</title>
-  <meta name="description" content="Swing and day-trading signals for Nifty 100 stocks, tested on NSE prices with Groww charges, with a live dashboard." />
+  <meta name="description" content="Swing, day-trading and investing signals for NSE stocks, tested on NSE prices with Groww charges, with a live scanner and live charts." />
   <meta name="robots" content="noindex" />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
@@ -12,7 +12,7 @@
 <body>
 <main class="wrap">
   <header class="hero">
-    <div class="tag">NSE · Nifty 100 · Swing &amp; day trading</div>
+    <div class="tag">NSE · All stocks · Swing, day trading &amp; investing</div>
     <h1>Trade <span>Signals</span></h1>
     <p class="sub" id="dataLine">Loading prices…</p>
   </header>
@@ -32,7 +32,7 @@
   <form class="card check-card" id="checkForm" role="search" autocomplete="off">
     <label class="label" for="checkInput">Check a stock</label>
     <div class="check-row">
-      <input id="checkInput" list="checkList" placeholder="Name or symbol, e.g. ITC" />
+      <input id="checkInput" list="checkList" placeholder="Any NSE stock: name or symbol" />
       <button class="btn" type="submit">Check</button>
     </div>
     <datalist id="checkList"></datalist>
@@ -49,6 +49,7 @@
   <div data-panel="swing" role="tabpanel">
     <section id="swingTarget"></section>
     <section id="buy"></section>
+    <section id="market"></section>
     <section id="mytrades"></section>
     <section id="mood"></section>
     <section id="plan"></section>
@@ -75,9 +76,21 @@
 
   <div data-panel="live" role="tabpanel" hidden>
     <section id="live"></section>
+    <section id="liveScan"></section>
   </div>
 
   <footer class="foot" id="foot"></footer>
+
+  <dialog id="chartDialog" aria-label="Live chart">
+    <div class="dialog-inner">
+      <button id="chartClose" class="btn small ghost dialog-close" type="button">Close</button>
+      <div id="chartHead"></div>
+      <div class="chips" id="chartTf" role="group" aria-label="Candle size"></div>
+      <div id="chartBox" class="lw-chart"></div>
+      <div id="chartLegend" class="legend"></div>
+      <div id="chartInfo"></div>
+    </div>
+  </dialog>
 
   <dialog id="checkDialog" aria-label="Stock details">
     <div class="dialog-inner">
@@ -100,10 +113,14 @@
   </form>
 </template>
 
+<script src="vendor/lightweight-charts.standalone.production.js"></script>
 <script src="daylogic.js"></script>
+<script src="livelogic.js"></script>
 <script src="day.js"></script>
 <script src="invest.js"></script>
 <script src="check.js"></script>
+<script src="chart.js"></script>
+<script src="scan.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

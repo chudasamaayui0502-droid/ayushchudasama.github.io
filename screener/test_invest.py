@@ -31,7 +31,7 @@ def all_eligible(p):
 def test_monthly_swaps_keep_n_equal_slots():
     p, market, _ = world()
     A = I.arrays(p, market, all_eligible(p))
-    v = (3, 126, 0, 3, False, False)
+    v = (3, 126, 0, 3, False, False, 100)
     run = I.simulate(A, v, 1_000_000, 200, len(p.dates) - 1)
     month_starts = {d for d, _, _ in run["log"]}
     assert all(A.month_end[d - 1] for d in month_starts)  # trades only right after a month-end
@@ -45,8 +45,8 @@ def test_monthly_swaps_keep_n_equal_slots():
 def test_buffer_keeps_a_stock_that_slipped_a_little():
     p, market, _ = world()
     A = I.arrays(p, market, all_eligible(p))
-    tight = I.simulate(A, (3, 126, 0, 3, False, False), 1_000_000, 200, len(p.dates) - 1)
-    loose = I.simulate(A, (3, 126, 0, 6, False, False), 1_000_000, 200, len(p.dates) - 1)
+    tight = I.simulate(A, (3, 126, 0, 3, False, False, 100), 1_000_000, 200, len(p.dates) - 1)
+    loose = I.simulate(A, (3, 126, 0, 6, False, False, 100), 1_000_000, 200, len(p.dates) - 1)
     assert loose["trades"] < tight["trades"]
 
 
@@ -54,7 +54,7 @@ def test_market_filter_sells_everything_in_a_falling_market():
     p, market, _ = world()
     A = I.arrays(p, market, all_eligible(p))
     A.market_up = np.zeros(len(p.dates), dtype=bool)
-    run = I.simulate(A, (3, 126, 0, 3, True, False), 100_000, 200, len(p.dates) - 1)
+    run = I.simulate(A, (3, 126, 0, 3, True, False, 100), 100_000, 200, len(p.dates) - 1)
     assert run["hold"] == {} and run["trades"] == 0 and run["final"] == 100_000
 
 
@@ -63,7 +63,7 @@ def test_only_stocks_on_the_list_are_bought():
     el = all_eligible(p)
     el.loc[:, ["S11", "S10"]] = False  # the two strongest drifters are never on the list
     A = I.arrays(p, market, el)
-    run = I.simulate(A, (3, 126, 0, 3, False, False), 1_000_000, 200, len(p.dates) - 1)
+    run = I.simulate(A, (3, 126, 0, 3, False, False, 100), 1_000_000, 200, len(p.dates) - 1)
     bought = {p.symbols[k] for _, _, b in run["log"] for k in b}
     assert bought and not bought & {"S11", "S10"}
 
@@ -99,7 +99,7 @@ def test_walk_forward_chains_the_years(monkeypatch):
 def test_current_list_follows_the_rules():
     p, market, _ = world()
     A = I.arrays(p, market, all_eligible(p))
-    v = (4, 126, 0, 4, False, False)
+    v = (4, 126, 0, 4, False, False, 100)
     lst = I.current_list(A, v, {s: s for s in p.symbols})
     decide = p.dates.get_loc(pd.Timestamp(lst["as_of"]))
     assert {x["s"] for x in lst["hold"]} == {p.symbols[k] for k in I.ranking(A, v, decide)[:4]}
@@ -140,6 +140,7 @@ def test_run_end_to_end(monkeypatch):
     b = res["momentum"][0]
     assert b["plan_year"] == p.dates[-1].year and b["walk"]["years"]
     assert len(b["list"]["hold"]) == b["plan"][0] or b["list"]["cash"]
+    assert len(res["bold"]) == len(res["momentum"]) and res["momentum"][0]["plan"][-1] == 100
     assert res["sip"]["months"][0][0] >= "2015-01-01"
 
 
@@ -167,3 +168,18 @@ def test_page_sip_calculator_matches_the_engine(tmp_path):
         assert inv == want["invested"] and units == want["units"]
         assert val == pytest.approx(want["value"], abs=1e-6)
         assert x == pytest.approx(want["xirr"], abs=1e-6)
+
+
+def test_list_size_is_a_setting_picked_like_the_others():
+    p, market, bench = world(n_days=1500, start="2015-01-01")
+    small = all_eligible(p)
+    small.loc[:, p.symbols[6:]] = False  # the "100" list: only the six weakest drifters
+    lists = {100: small, 300: all_eligible(p), 500: all_eligible(p)}
+    A = I.arrays(p, market, lists)
+    run_small = I.simulate(A, (3, 126, 0, 3, False, False, 100), 100_000, 300, len(p.dates) - 1)
+    bought = {p.symbols[k] for _, _, b in run_small["log"] for k in b}
+    assert bought <= set(p.symbols[:6])
+    run_all = I.simulate(A, (3, 126, 0, 3, False, False, 300), 100_000, 300, len(p.dates) - 1)
+    assert run_all["final"] > run_small["final"]  # the strong drifters are only on the bigger list
+    (steady, passed), variant, a, b = I.pick(A, 100_000, 2019, "2015-01-01")
+    assert variant[-1] in (300, 500)

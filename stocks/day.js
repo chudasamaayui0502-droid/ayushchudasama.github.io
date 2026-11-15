@@ -451,7 +451,7 @@
         <li><b>${n} setups</b> (gaps at the open, breaks of yesterday’s high or low, opening-range breakouts, a rebound), buying and
           short-selling, each on its own and with 2 market filters (the Nifty 50 above its opening price at that moment, or above its 20-day
           average), × ${g.stops.length} stop-losses (${g.stops.map(x => pct1(x) + '%').join(', ')}) × ${g.targets.length} targets
-          (${g.targets.map(x => x ? pct1(x) + '%' : 'none').join(', ')}), on ${DT.n_stocks} Nifty 100 stocks over ${DT.sessions} trading days.</li>
+          (${g.targets.map(x => x ? pct1(x) + '%' : 'none').join(', ')}), on the ${DT.n_stocks} most-traded NSE stocks over ${DT.sessions} trading days.</li>
         <li><b>Real orders:</b> trades at the open are entered at ${g.entry_time} AM, once the official opening price is known. Breakouts fill at the
           level (or the next price, if it jumps past). No new trades after ${g.last_entry}; everything is sold at ${g.exit_time} PM. Every market order
           gets ${pctTxt(g.slippage, 2)} worse than the chart price.</li>
@@ -564,7 +564,7 @@
     disable() { G.store.set(KEY.alerts, false); },
   };
 
-  const live = { started: false, timer: null, busy: false, at: null, error: null, ok: 0, failed: 0, events: [],
+  const live = { started: false, timer: null, busy: false, at: null, error: null, ok: 0, failed: 0, events: [], priceHits: [],
     index: {}, prevSession: null, session: {}, opens: {}, day: null };
 
   const histUrl = (kind, sym, res, from, to, count) =>
@@ -685,6 +685,8 @@
       for (const t of G.store.get(G.KEYS.trades, [])) if (!t.sold && G.TD.stocks[t.sym]) others.add(t.sym);
       for (const t of dayTrades()) if (!t.sold && t.date === n.day) others.add(t.sym);
       for (const x of G.todaysSignals(G.currentCapital()).ok.slice(0, 6)) others.add(x.sym);
+      const pa = window.LiveChart?.priceAlerts;
+      for (const sym of pa ? pa.symbols() : []) others.add(sym);
       for (const sym of others) want.add(sym);
       // the plan's candidates need only today's bars; my trades and the swing list also show the last session
       const since = ctx.ok ? Math.floor(Date.parse(`${n.day}T09:00:00+05:30`) / 1000) : null;
@@ -693,6 +695,18 @@
         const b = await fetchBars(sym, 'stock', planSyms.has(sym) && !others.has(sym) ? since : null);
         live.session[sym] = { ...(live.session[sym] || {}), ...b };
       });
+      // price alerts: each rings once, on today's prices, while alerts are on
+      if (pa && alerts.on()) {
+        for (const sym of pa.symbols()) {
+          const x = live.session[sym];
+          if (!x || x.day !== n.day) continue;
+          const last = x.s.c[L.lastBar(x.s)];
+          for (const a of pa.take(sym, last)) {
+            live.priceHits.push({ key: `${n.day}|price|${a.id}`, title: `${sym} ${a.dir === 'above' ? 'rose to' : 'fell to'} ${inr(a.price, 2)}`,
+              body: `Your price alert: now ${inr(last, 2)}.` });
+          }
+        }
+      }
       if (live.ok) live.at = n.time;
       live.tried = n.time;
       live.error = live.failed && !live.ok ? 'The live price feed didn’t answer.' : live.failed ? `${live.failed} price requests failed; showing what came back.` : null;
@@ -867,7 +881,7 @@
       }
       const note = target && last >= target ? '<b class="up">at or above the target now</b>' : last <= stop ? '<b class="down">at or below the stop-loss now</b>'
         : `${target ? `${G.spct(target / last - 1, 1)} to the target, ` : ''}${G.spct(stop / last - 1, 1)} to the stop-loss`;
-      rows.push(`<tr><td><b>${G.esc(t.sym)}</b><br><small>swing · ${t.qty} × ${inr(t.price, 2)}</small></td>
+      rows.push(`<tr data-chart="${G.esc(t.sym)}" data-tf="D" role="button" tabindex="0"><td><b>${G.esc(t.sym)}</b><br><small>swing · ${t.qty} × ${inr(t.price, 2)}</small></td>
         <td class="r num">${inr(last, 2)}<br><small>${x.day !== n.day ? G.fmtDay(x.day) : ''}</small></td>
         <td class="r num ${G.cls(pnl)}">${signed(pnl, 2)}</td><td><small>${note}</small></td></tr>`);
     }
@@ -889,7 +903,7 @@
         : r.state === 'target' ? `The target was reached at ${r.exitTime}: <b>${t.side > 0 ? 'sell' : 'buy back'} now</b> and cancel your stop-loss order.`
           : `It’s 3:10 PM: <b>${t.side > 0 ? 'sell' : 'buy back'} now</b> and cancel your stop-loss order.`;
       cards.push(`<div class="live-trade ${r.state}" data-ltrade="${G.esc(t.id)}">
-        <div class="trade-top"><div><b>${G.esc(t.sym)}</b> <small>day trade · ${t.side > 0 ? 'bought' : 'short-sold'} ${t.qty} × ${inr(t.price, 2)} at ${G.esc(t.time)}</small></div>
+        <div class="trade-top"><div><button type="button" class="linklike" data-chart="${G.esc(t.sym)}" data-tf="5"><b>${G.esc(t.sym)}</b></button> <small>day trade · ${t.side > 0 ? 'bought' : 'short-sold'} ${t.qty} × ${inr(t.price, 2)} at ${G.esc(t.time)}</small></div>
           <span class="badge ${bc}">${bt}</span></div>
         ${dayChart(x.s, [{ v: t.price, color: 'var(--muted)' }, { v: r.sp, color: 'var(--down)' }, { v: r.tp, color: 'var(--up)' }])}
         <p>${say}</p>
@@ -908,13 +922,31 @@
     </div>`;
   }
 
+  // the user's price alerts (set on a stock's live chart) and how far each is
+  function priceAlertsLive(n) {
+    const pa = window.LiveChart?.priceAlerts;
+    const list = pa ? pa.list() : [];
+    if (!list.length) return '';
+    const rows = list.map(a => {
+      const x = live.session[a.sym];
+      const last = x && x.day ? x.s.c[L.lastBar(x.s)] : null;
+      return `<tr data-chart="${G.esc(a.sym)}" data-tf="5" role="button" tabindex="0"><td><b>${G.esc(a.sym)}</b></td>
+        <td>${a.dir === 'above' ? '▲ above' : '▼ below'} <span class="num">${inr(a.price, 2)}</span></td>
+        <td class="r num">${last ? inr(last, 2) : '–'}<br><small>${last ? G.spct(a.price / last - 1, 1) + ' away' : ''}</small></td></tr>`;
+    }).join('');
+    return `<div class="card"><span class="label">My price alerts</span>
+      ${alerts.on() ? '' : '<p class="error">Alerts are off: turn them on above, or these won’t ring.</p>'}
+      <div class="table-wrap"><table><thead><tr><th>Stock</th><th>Rings when</th><th class="r">Now</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <p class="muted"><small>Tap a row to open the chart, where you can add or remove alerts. Checked every minute.</small></p></div>`;
+  }
+
   function swingLive(n) {
     const list = G.todaysSignals(G.currentCapital()).ok.slice(0, 6);
     const rows = list.map(x => {
       const s = live.session[x.sym];
       if (!s || s.day !== n.day) return '';
       const open = s.s.o[0], last = s.s.c[L.lastBar(s.s)];
-      return `<tr><td><b>${G.esc(x.sym)}</b></td><td class="r num">${inr(x.st.close, 2)}</td>
+      return `<tr data-chart="${G.esc(x.sym)}" data-tf="5" role="button" tabindex="0"><td><b>${G.esc(x.sym)}</b></td><td class="r num">${inr(x.st.close, 2)}</td>
         <td class="r num">${open ? inr(open, 2) : '–'}<br><small class="${G.cls(open / x.st.close - 1)}">${open ? G.spct(open / x.st.close - 1, 1) : ''}</small></td>
         <td class="r num">${inr(last, 2)}</td></tr>`;
     }).filter(Boolean);
@@ -930,8 +962,10 @@
     const n = nowIST();
     const ctx = liveContext(n);
     live.events = [];
-    $('#live').innerHTML = marketCard(n) + planToday(ctx) + myTradesLive(n) + swingLive(n);
+    $('#live').innerHTML = marketCard(n) + planToday(ctx) + myTradesLive(n) + priceAlertsLive(n) + swingLive(n);
+    live.events.push(...live.priceHits);
     if (live.at) alerts.check(live.events);
+    live.priceHits = [];
   }
 
   function startLive() {
@@ -1030,5 +1064,6 @@
   }
 
   // leaving the Live tab stops the updates, unless alerts are on
-  window.DayUI = { init, render, startLive, watchRow, entryText, stopLive: () => { if (!alerts.on()) { clearTimeout(live.timer); live.timer = null; } } };
+  window.DayUI = { init, render, startLive, watchRow, entryText, stopLive: () => { if (!alerts.on()) { clearTimeout(live.timer); live.timer = null; } },
+    notify: evs => alerts.check(evs), alertsOn: () => alerts.on() };
 })();

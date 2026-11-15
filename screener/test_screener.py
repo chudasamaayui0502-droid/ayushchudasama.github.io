@@ -317,18 +317,77 @@ def test_backup_run_with_no_new_prices_is_a_no_op(tmp_path):
     assert not S.same_prices(saved, newer)
 
 
+def mc_frames(frames):
+    """screener frames -> the chart feed's o/h/l/c/v frames."""
+    return {k: df.rename(columns={"Open": "o", "High": "h", "Low": "l", "Close": "c", "Volume": "v"}) for k, df in frames.items()}
+
+
 def test_price_source_outage_has_its_own_exit_code(monkeypatch, tmp_path):
-    universe = pd.DataFrame({"Symbol": [f"S{k}" for k in range(10)], "Name": "x", "Industry": ""})
+    import market as MK
+    listed = pd.DataFrame({"Symbol": [f"S{k}" for k in range(10)], "Name": "x"})
     monkeypatch.setattr(S, "OUT_DIR", tmp_path)
-    monkeypatch.setattr(S, "load_universe", lambda: universe)
-    monkeypatch.setattr(S, "fill_recent_gaps", lambda frames: [])
-    monkeypatch.setattr(S, "download_prices", lambda symbols, use_cache=False: {})
+    monkeypatch.setattr(MK, "load_all", lambda: listed)
+    monkeypatch.setattr(S, "load_test_universe", lambda: pd.DataFrame({"Symbol": [], "Name": [], "Industry": []}))
+    monkeypatch.setattr(MK, "download_all", lambda symbols, days, log=print: {})
     assert S.main(["--mode", "daily"]) == S.DATA_UNAVAILABLE
-    frames = make_frames(n_days=300, n_stocks=10)
-    monkeypatch.setattr(S, "download_prices", lambda symbols, use_cache=False: dict(frames))
+    frames = mc_frames(make_frames(n_days=300, n_stocks=10))
+    monkeypatch.setattr(MK, "download_all", lambda symbols, days, log=print: dict(frames))
+    monkeypatch.setattr(S, "download_prices", lambda symbols, use_cache=False: {})
     monkeypatch.setattr(S, "download_market", lambda use_cache=False: {})
     assert S.main(["--mode", "daily"]) == S.DATA_UNAVAILABLE
     assert list(tmp_path.iterdir()) == []  # nothing written
+
+
+def test_update_writes_the_buy_list_scan_and_record(monkeypatch, tmp_path):
+    """The whole evening update with made-up prices: the buy list is today's
+    most traded stocks, the scan covers every stock, and the record starts."""
+    import daytrade as DT
+    import invest as INV
+    import market as MK
+    n = 130
+    frames = make_frames(n_days=420, n_stocks=n, seed=4)
+    for k, df in enumerate(frames.values()):
+        df["Volume"] *= (k + 1)  # higher numbers trade more
+    dates = next(iter(frames.values())).index
+    listed = pd.DataFrame({"Symbol": list(frames), "Name": [f"Company {k}" for k in range(n)]})
+    calls = {}
+    monkeypatch.setattr(S, "OUT_DIR", tmp_path)
+    monkeypatch.setattr(S, "TEST_SIZE", 20)
+    monkeypatch.setattr(MK, "load_all", lambda: listed)
+    monkeypatch.setattr(MK, "MIN_TURNOVER", 1e6)
+    monkeypatch.setattr(S, "load_test_universe", lambda: pd.DataFrame({"Symbol": ["S129"], "Name": ["x"], "Industry": ["Banks"]}))
+    monkeypatch.setattr(MK, "download_all", lambda symbols, days, log=print: calls.setdefault("days", []).append(days) or mc_frames(frames))
+    bench = pd.DataFrame({"Open": np.linspace(100, 150, len(dates)), "Close": np.linspace(100, 150, len(dates))}, index=dates)
+    monkeypatch.setattr(S, "download_prices", lambda symbols, use_cache=False: {S.BENCHMARK: bench})
+    idx = pd.DataFrame({"Close": np.linspace(100, 120, len(dates))}, index=dates)
+    monkeypatch.setattr(S, "download_market", lambda use_cache=False: {k: idx for k in S.MARKET_TICKERS})
+    monkeypatch.setattr(S, "fetch_fundamentals", lambda syms: {})
+    monkeypatch.setattr(DT, "fetch_bars", lambda *a, **k: None)
+    monkeypatch.setattr(DT, "fetch_corporate_actions", lambda a, b: [])
+    monkeypatch.setattr(DT, "download_intraday", lambda syms, **k: (None, None))
+    monkeypatch.setattr(MK, "download_intraday", lambda syms, **k: None)
+    monkeypatch.setattr(S, "run_backtest", lambda p, sigs, bench, **k: calls.setdefault("bt", (p.symbols, len(sigs))) and
+                        {"buckets": [{"capital": 1000, "slots": 1, "chosen": None}], "pattern_rules": {}})
+    monkeypatch.setattr(INV, "run", lambda p, market, bench, el, names, log=print: calls.setdefault("inv", p.symbols) and {"momentum": []})
+    assert S.main(["--mode", "full"]) == 0
+    today = json.loads((tmp_path / "today.json").read_text())
+    scan = json.loads((tmp_path / "scan.json").read_text())
+    listed_now = set(today["test_list"]["symbols"])
+    assert len(listed_now) == 20 and listed_now <= set(today["stocks"]) and "S0" not in today["stocks"]
+    assert today["stocks"]["S129"]["industry"] == "Banks" and today["stocks"]["S128"]["name"] == "Company 128"
+    assert set(scan["test_list"]) == listed_now
+    signalled = {r["s"] for rows in today["signals"].values() for r in rows}
+    assert signalled <= listed_now  # buy signals only for today's list, prices for recent members too
+    assert scan["counts"]["daily"] == n and scan["counts"]["total"] == 2 * n
+    turn = MK.turnover(S.build_panel(frames))
+    assert len(scan["live"]["rows"]) == n and [r[0] for r in scan["live"]["rows"][:3]] == list(turn.sort_values(ascending=False).index[:3])
+    assert scan["vol_curve"] == MK.DEFAULT_CURVE and len(scan["names"]) == n
+    assert set(scan["hits"]) == {v.id for v, _ in S.pattern_signals(S.build_panel(frames))}
+    assert (tmp_path / "track.json").exists()
+    # the backtest saw every stock that was ever on the list; investing its own wider list
+    assert listed_now <= set(calls["bt"][0]) and len(calls["bt"][0]) < n
+    assert len(calls["inv"]) >= len(calls["bt"][0])
+    assert calls["days"] and calls["days"][0] > 3000  # full mode: the long history
 
 
 # ---- portfolio rules -----------------------------------------------------------
@@ -560,3 +619,60 @@ def test_invest_list_is_due_after_each_month_end(tmp_path):
     # so the list is made on the next month's first day, from 27 Nov's prices
     assert not S.invest_due(path, days("2026-10-30", "2026-11-27"))
     assert S.invest_due(path, days("2026-10-30", "2026-11-27", "2026-12-01"))
+
+
+# ---- the November 2026 patterns ----------------------------------------------
+
+def test_weekly_patterns_fire_only_when_the_week_is_done():
+    p = S.build_panel(make_frames(n_days=700, n_stocks=8, seed=3), now=dt.datetime(2030, 1, 1, tzinfo=S.IST))
+    wed = int(np.nonzero(p.dates.weekday == 2)[0][-1])
+    p = S.slice_panel(p, wed + 1)  # the newest day is a Wednesday
+    sigs = dict((v.id, sig) for v, sig in S.pattern_signals(p))
+    ends = S.week_ends(p.dates)
+    assert not ends[-1]
+    for vid in ("w_breakout", "w_rsi50"):
+        fired = sigs[vid].to_numpy().any(axis=1)
+        assert not fired[~ends].any()
+    # with a Friday as the newest day, that week is finished
+    full = S.build_panel(make_frames(n_days=700, n_stocks=2, seed=3), now=dt.datetime(2030, 1, 1, tzinfo=S.IST)).dates
+    fri = int(np.nonzero(full.weekday == 4)[0][-1])
+    assert S.week_ends(full[:fri + 1])[-1] and not S.week_ends(full[:fri])[-1]
+
+
+def test_weekly_bars_use_only_their_own_week():
+    p = S.build_panel(make_frames(n_days=60, n_stocks=2, seed=5), now=dt.datetime(2030, 1, 1, tzinfo=S.IST))
+    wb = S.weekly_bars(p)
+    wk = p.dates.to_period("W-FRI")
+    assert len(wb["C"]) == len(set(wk))
+    for day in wb["C"].index[:5]:
+        i = p.dates.get_loc(day)
+        days = wk == wk[i]
+        assert i == np.nonzero(days)[0][-1]  # dated by the week's last day
+        assert wb["H"].loc[day].iloc[0] == p.H.iloc[days, 0].max() and wb["C"].loc[day].iloc[0] == p.C.iloc[i, 0]
+        assert wb["O"].loc[day].iloc[0] == p.O.iloc[np.nonzero(days)[0][0], 0]
+
+
+def test_supertrend_flips_on_a_trend_change():
+    up = np.r_[np.linspace(100, 160, 80), np.linspace(160, 90, 80)]
+    idx = pd.bdate_range("2020-01-01", periods=len(up))
+    C = pd.DataFrame({"A": up}, index=idx)
+    trend = S.supertrend_up(C * 1.005, C * 0.995, C)
+    assert trend["A"].iloc[60] and not trend["A"].iloc[-1]
+    assert trend["A"].iloc[85:].sum() < 15  # turns down soon after the top
+
+
+def test_adx_is_high_in_a_steady_trend():
+    c = np.linspace(100, 200, 120)
+    idx = pd.bdate_range("2020-01-01", periods=120)
+    C = pd.DataFrame({"A": c}, index=idx)
+    pdi, mdi, a = S.adx(C * 1.01, C * 0.99, C)
+    assert pdi["A"].iloc[-1] > mdi["A"].iloc[-1] and a["A"].iloc[-1] > 25
+
+
+def test_strength_ranks_only_among_the_test_list():
+    p = S.build_panel(make_frames(n_days=400, n_stocks=12, seed=8), now=dt.datetime(2030, 1, 1, tzinfo=S.IST))
+    allowed = pd.DataFrame(False, index=p.dates, columns=p.symbols)
+    allowed[["S1", "S2", "S3"]] = True
+    sigs = dict((v.id, sig) for v, sig in S.pattern_signals(p, rank_among=allowed))
+    picked = set(p.symbols[k] for k in np.nonzero(sigs["strength_top10"].to_numpy().any(axis=0))[0])
+    assert picked and picked <= {"S1", "S2", "S3"}

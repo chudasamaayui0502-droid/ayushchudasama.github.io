@@ -4,10 +4,11 @@
 * SIP: a fixed amount every month into the Nifty 50 ETF (NIFTYBEES). The page
   replays it on real prices for any amount and start year.
 * Strongest stocks (momentum): hold the N stocks that rose the most over the
-  last months, among the 100 most traded at the time, and swap them once a
-  month. Its settings are picked each January from what was known then, and
-  that whole process is replayed year by year since 2019 (walk-forward), the
-  same honest test as the swing plans get.
+  last months, among the 100, 300 or 500 most traded NSE stocks at the time,
+  and swap them once a month. Its settings, the list size included, are
+  picked each January from what was known then, and that whole process is
+  replayed year by year since 2019 (walk-forward), the same honest test as
+  the swing plans get.
 
 screener.py runs this in the weekly re-test and at each month-end.
 """
@@ -23,14 +24,23 @@ import pandas as pd
 
 import screener as S
 
-# (N stocks, look-back days, days skipped at the end, keep while ranked below, market filter, trend filter)
-GRID = [(n, look, skip, buf, filt, trend)
+# (N stocks, look-back days, days skipped at the end, keep while ranked below, market filter, trend filter,
+#  picked from the `size` most traded NSE stocks)
+SIZES = (100, 300, 500)
+GRID = [(n, look, skip, buf, filt, trend, size)
+        for size in SIZES
         for n in (5, 10)
         for look, skip in ((126, 0), (252, 21), (126, 21))
         for buf in (n, 2 * n)
         for filt in (False, True)
         for trend in (False, True)]
+# two ways to follow it: only the biggest stocks, or also mid-sized ones (wilder)
+STYLES = {"steady": (100,), "bold": SIZES}
 CAPITALS = [10000, 25000, 50000, 100000]
+
+
+def grid_for(sizes) -> list:
+    return [v for v in GRID if v[-1] in sizes]
 FIRST_YEAR = 2019        # walk-forward from this January
 CHECK_YEARS = 2          # the latest years before each January are the "checking" part
 LIST_CAPITAL = 10_000_000  # big enough that every stock fits, for the list of names
@@ -43,13 +53,16 @@ class Arrays:
     O: np.ndarray
     Cf: np.ndarray
     month_end: np.ndarray
-    eligible: np.ndarray     # [day, stock] on the list (from the day after each month-end)
+    lists: dict              # size -> [day, stock] on that list (from the day after each month-end)
     trend_ok: np.ndarray     # close above the 200-day average
     market_up: np.ndarray    # Nifty 50 above its 200-day average
     scores: dict             # (look, skip) -> [day, stock] return over the look-back
 
 
-def arrays(p: S.Panel, market: dict, eligible: pd.DataFrame) -> Arrays:
+def arrays(p: S.Panel, market: dict, eligible: dict) -> Arrays:
+    """eligible: {size: [day, stock] DataFrame} (a single DataFrame counts for every size)."""
+    if isinstance(eligible, pd.DataFrame):
+        eligible = {size: eligible for size in SIZES}
     Cf = p.C.ffill().to_numpy()
     scores = {}
     for _, look, skip, *_ in GRID:
@@ -66,17 +79,17 @@ def arrays(p: S.Panel, market: dict, eligible: pd.DataFrame) -> Arrays:
     if "nifty" in market:
         n = market["nifty"]["Close"].reindex(p.dates, method="ffill", limit=5)
         up = (n > n.rolling(200, min_periods=200).mean()).to_numpy()
-    el = eligible.reindex(index=p.dates, columns=p.symbols).fillna(False).to_numpy(bool)
+    lists = {size: el.reindex(index=p.dates, columns=p.symbols).fillna(False).to_numpy(bool) for size, el in eligible.items()}
     # a month's last trading day (a holiday on the calendar's last weekday doesn't skip the month)
     me = np.r_[p.dates.month[1:] != p.dates.month[:-1], True]
-    return Arrays(p.dates, list(p.symbols), p.O.to_numpy(), Cf, me, el, trend_ok, up, scores)
+    return Arrays(p.dates, list(p.symbols), p.O.to_numpy(), Cf, me, lists, trend_ok, up, scores)
 
 
 def ranking(A: Arrays, variant, t: int) -> list:
     """Stocks on the list at month-end t, strongest first."""
-    n, look, skip, buf, filt, trend = variant
+    n, look, skip, buf, filt, trend, size = variant
     sc = A.scores[(look, skip)][t].copy()
-    ok = A.eligible[min(t + 1, len(A.dates) - 1)] & np.isfinite(sc)
+    ok = A.lists[size][min(t + 1, len(A.dates) - 1)] & np.isfinite(sc)
     if trend:
         ok &= A.trend_ok[t]
     sc[~ok] = -np.inf
@@ -90,7 +103,7 @@ def simulate(A: Arrays, variant, capital: float, start: int, end: int) -> dict:
     strongest to fill N equal slots, whole shares, Groww delivery charges. With
     the market filter, everything is sold while the Nifty is below its 200-day
     average. Sold at the close of `end`."""
-    n, look, skip, buf, filt, trend = variant
+    n, look, skip, buf, filt, trend, size = variant
     cash, hold = float(capital), {}
     marks, charges, trades, log = [], 0.0, 0, []
     decisions = [t for t in range(max(start - 1, 0), end) if A.month_end[t] and t + 1 >= start]
@@ -140,12 +153,12 @@ def row(dates: pd.DatetimeIndex, day: str, side="left") -> int:
     return int(dates.searchsorted(pd.Timestamp(day), side=side))
 
 
-def pick(A: Arrays, capital: float, year: int, first_day: str) -> tuple:
+def pick(A: Arrays, capital: float, year: int, first_day: str, grid=None) -> tuple:
     """The settings for `year`: best weaker part of training (from first_day)
     and checking (the CHECK_YEARS before), using prices up to Dec 31 only."""
     begin, v, s = row(A.dates, first_day), row(A.dates, f"{year - CHECK_YEARS}-01-01"), row(A.dates, f"{year}-01-01")
     best = None
-    for variant in GRID:
+    for variant in (grid or GRID):
         a = simulate(A, variant, capital, begin, v - 1)["cagr"]
         b = simulate(A, variant, capital, v, s - 1)["cagr"]
         key = (min(a, b), a > 0 and b > 0)
@@ -171,7 +184,7 @@ def etf_hold(bench: pd.DataFrame | None, dates, capital: float, start: int, ends
     return marks
 
 
-def walk_forward(A: Arrays, bench, capital: float, first_day: str, log=print) -> dict | None:
+def walk_forward(A: Arrays, bench, capital: float, first_day: str, log=print, grid=None) -> dict | None:
     """Each January: pick the settings from what was known, follow them for the
     year (starting with what last year ended with, sold at year-end)."""
     years, value, ends = [], float(capital), []
@@ -179,7 +192,7 @@ def walk_forward(A: Arrays, bench, capital: float, first_day: str, log=print) ->
         s, e = row(A.dates, f"{y}-01-01"), row(A.dates, f"{y}-12-31", "right") - 1
         if s >= len(A.dates) or e <= s:
             break
-        (steady, passed), variant, a, b = pick(A, capital, y, first_day)
+        (steady, passed), variant, a, b = pick(A, capital, y, first_day, grid)
         run = simulate(A, variant, value, s, e)
         years.append({"year": y, "plan": list(variant), "passed": bool(passed), "start_value": value, "end_value": run["final"],
                       "max_dd": run["max_dd"], "trades": run["trades"], "charges": run["charges"]})
@@ -216,7 +229,7 @@ def current_list(A: Arrays, variant, names: dict) -> dict:
     before = sorted(simulate(A, variant, LIST_CAPITAL, start + 1, decide)["hold"]) if decide > start + 1 else []
     order = ranking(A, variant, decide)
     rank = {k: r for r, k in enumerate(order)}
-    n, look, skip, buf, filt, trend = variant
+    n, look, skip, buf, filt, trend, size = variant
     cash_only = bool(filt and not A.market_up[decide])
     keep = [] if cash_only else [k for k in before if rank.get(k, 10 ** 9) < buf]
     want = [] if cash_only else keep + [k for k in order[:n] if k not in keep][:max(0, n - len(keep))]
@@ -280,23 +293,28 @@ def xirr(flows) -> float:
     return (lo + hi) / 2
 
 
-def run(p: S.Panel, market: dict, bench, eligible: pd.DataFrame, names: dict, log=print) -> dict:
+def run(p: S.Panel, market: dict, bench, eligible, names: dict, log=print) -> dict:
+    """eligible: {size: [day, stock]} for each list size in SIZES (or one DataFrame for all)."""
     t0 = time.time()
     A = arrays(p, market, eligible)
     first_day = S.PERIODS[0][1]
     this_year = A.dates[-1].year
-    buckets = []
-    for cap in CAPITALS:
-        walk = walk_forward(A, bench, cap, first_day, log)
-        (steady, passed), variant, a, b = pick(A, cap, this_year, first_day)
-        buckets.append({"capital": cap, "plan": list(variant), "plan_year": this_year, "passed": bool(passed),
-                        "pick": {"train": a, "check": b}, "walk": walk, "list": current_list(A, variant, names)})
-    log(f"Invest: {len(GRID)} settings x {len(CAPITALS)} amounts in {time.time() - t0:.0f}s")
-    return {
+    out = {
         "generated_at": dt.datetime.now(S.IST).isoformat(timespec="minutes"),
         "data_end": str(A.dates[-1].date()),
-        "grid": {"settings": len(GRID), "first_year": FIRST_YEAR, "check_years": CHECK_YEARS, "capitals": CAPITALS},
-        "universe": {"size": int(A.eligible[-1].sum()), "from": len(A.symbols)},
+        "grid": {"settings": len(grid_for(STYLES["steady"])), "first_year": FIRST_YEAR, "check_years": CHECK_YEARS,
+                 "capitals": CAPITALS, "sizes": list(SIZES), "styles": {k: list(v) for k, v in STYLES.items()},
+                 "bold_settings": len(grid_for(STYLES["bold"]))},
+        "universe": {"sizes": list(SIZES), "from": len(A.symbols)},
         "sip": sip_series(bench, A.dates),
-        "momentum": buckets,
     }
+    for style, sizes in STYLES.items():
+        grid, buckets = grid_for(sizes), []
+        for cap in CAPITALS:
+            walk = walk_forward(A, bench, cap, first_day, log, grid)
+            (steady, passed), variant, a, b = pick(A, cap, this_year, first_day, grid)
+            buckets.append({"capital": cap, "plan": list(variant), "plan_year": this_year, "passed": bool(passed),
+                            "pick": {"train": a, "check": b}, "walk": walk, "list": current_list(A, variant, names)})
+        out["momentum" if style == "steady" else style] = buckets
+    log(f"Invest: {len(GRID)} settings x {len(CAPITALS)} amounts in {time.time() - t0:.0f}s")
+    return out
