@@ -56,13 +56,15 @@
 
   let G, INV;
   const $ = sel => document.querySelector(sel);
-  const KEY = { monthly: 'invest.monthly', from: 'invest.from' };
+  const KEY = { monthly: 'invest.monthly', from: 'invest.from', style: 'invest.style' };
+  const styleOf = () => (G.store.get(KEY.style, 'steady') === 'bold' && INV.bold ? 'bold' : 'steady');
+  const bucketsOf = style => (style === 'bold' ? INV.bold : INV.momentum);
   const yearsOf = w => w ? `${w.start.slice(0, 4)}–${w.end.slice(0, 4)}` : '';
 
   function settingsText(v) {
-    const [n, look, skip, buf, filt, trend] = v;
+    const [n, look, skip, buf, filt, trend, size = 100] = v;
     const months = Math.round(look / 21), skipTxt = skip ? ', not counting the latest month' : '';
-    return `Hold the <b>${n} stocks</b> that rose the most over the last ${months} months${skipTxt}, among the 100 most-traded NSE stocks
+    return `Hold the <b>${n} stocks</b> that rose the most over the last ${months} months${skipTxt}, among the <b>${size} most-traded</b> NSE stocks
       ${trend ? 'that are above their own 200-day average' : ''}. Keep a stock while it stays in the top ${buf}.
       ${filt ? 'When the Nifty 50 is below its 200-day average, sell everything and wait in cash.' : ''}`;
   }
@@ -77,7 +79,11 @@
     const from = w0 ? w0.start.slice(0, 7) : '2019-01';
     if (momB?.walk) {
       const w = momB.walk;
-      rows.push(['Strongest stocks (Invest tab)', `${G.inr(momB.capital)} → <b>${G.inr(w.final)}</b>`, w.cagr, 'Swaps stocks once a month']);
+      rows.push(['Strongest stocks, steadier (Invest tab)', `${G.inr(momB.capital)} → <b>${G.inr(w.final)}</b>`, w.cagr,
+        `The 100 biggest; worst year ${G.spct(w.worst_year, 0)}`]);
+      const boldB = (INV.bold || []).find(b => b.capital === momB.capital);
+      if (boldB?.walk) rows.push(['Strongest stocks, bolder (Invest tab)', `${G.inr(boldB.capital)} → <b>${G.inr(boldB.walk.final)}</b>`, boldB.walk.cagr,
+        `Mid-sized stocks too; worst year ${G.spct(boldB.walk.worst_year, 0)}`]);
       if (w.etf) rows.push(['Nifty 50 ETF, just hold', `${G.inr(momB.capital)} → <b>${G.inr(w.etf.final)}</b>`, w.etf.cagr, 'One buy, no work']);
     }
     if (swingB) {
@@ -148,7 +154,7 @@
   }
 
   function renderMomentum(cap) {
-    const all = INV.momentum;
+    const style = styleOf(), all = bucketsOf(style);
     let b = all[0];
     for (const x of all) if (cap >= x.capital) b = x;
     const w = b.walk, lst = b.list;
@@ -186,6 +192,12 @@
       <h2>Own the stocks that are rising most</h2>
       <p>Stocks that rose the most over the past months have tended to keep rising for a while (“momentum”). This portfolio holds the strongest
         ones and swaps them once a month.</p>
+      ${INV.bold ? `<div class="chips" role="group" aria-label="Style">
+        <button type="button" class="chip" data-istyle="steady" aria-pressed="${style === 'steady'}">Steadier · the 100 biggest</button>
+        <button type="button" class="chip" data-istyle="bold" aria-pressed="${style === 'bold'}">Bolder · mid-sized too</button></div>
+        <p class="muted"><small>${style === 'bold'
+          ? 'Bolder: every January it also chooses whether to pick from the 100, 300 or 500 most-traded stocks, from what was known then. Bigger gains in good years, much bigger falls in bad ones.'
+          : 'Steadier: picks only from the 100 most-traded NSE stocks (large companies).'}</small></p>` : ''}
       ${small ? `<div class="verdict bad"><p>With ${G.inr(cap)}, each stock would get only a few hundred rupees, and charges (about ₹37 per ₹1,000 bought
         and sold) would eat the gains. The results below are for ${G.inr(b.capital)}. Use the SIP until you have more.</p></div>` : ''}
       ${w ? `<div class="verdict ${beat ? 'good' : 'bad'}"><span class="badge ${beat ? 'good' : 'bad'}">${beat ? 'Beat the Nifty ETF year by year' : 'Did not beat the Nifty ETF'}</span>
@@ -193,7 +205,9 @@
         <b>${G.inr(w.final)}</b> (${G.spct(w.cagr, 1)} a year)${w.etf ? `; the Nifty 50 ETF made <b>${G.inr(w.etf.final)}</b> (${G.spct(w.etf.cagr, 1)} a year)` : ''}.
         Worst year: <b class="down">${G.spct(w.worst_year, 0)}</b>. ${beat ? 'Past results don’t promise future ones; momentum has long bad spells.' : ''}</p></div>
         <details><summary>Year by year</summary><div class="table-wrap"><table>
-          <thead><tr><th>Year</th><th class="r">Strongest stocks</th><th class="r">Nifty ETF</th></tr></thead><tbody>${years}</tbody></table></div></details>` : ''}
+          <thead><tr><th>Year</th><th class="r">Strongest stocks</th><th class="r">Nifty ETF</th></tr></thead><tbody>${years}</tbody></table></div></details>
+        ${style === 'bold' && w.worst_year < -0.3 ? `<p class="verdict bad">In its worst year this lost <b>${G.pct(-w.worst_year, 0)}</b> of the money. Only choose it if you could
+          watch that happen without selling, and with money you won’t need for years.</p>` : ''}` : ''}
       <h3>This year’s settings (picked in January ${b.plan_year})</h3>
       <p>${settingsText(b.plan)}</p>
       <h3>The list for this month · from ${G.fmtDay(lst.as_of)}’s prices</h3>
@@ -215,13 +229,16 @@
     $('#investMethod').innerHTML = `<div class="card">
       <span class="label">How investing was tested</span>
       <ul class="plain">
-        <li><b>No hindsight:</b> the strongest-stocks list is chosen at each month-end from the ${INV.universe.size} most-traded stocks at that time
-          (out of today’s Nifty 500), not from today’s winners.</li>
+        <li><b>No hindsight:</b> the strongest-stocks list is chosen at each month-end from the most-traded NSE stocks at that time
+          (out of ${INV.universe.from.toLocaleString('en-IN')} stocks that were ever among them), not from today’s winners.</li>
         <li><b>Settings picked like the tool does:</b> ${INV.grid.settings} combinations of how many stocks, how far back to look, when to swap, and
-          two market filters. Every January the steadiest one on the years before is chosen and followed for the year (walk-forward since ${INV.grid.first_year}).</li>
+          two market filters${INV.grid.bold_settings ? ` (the bolder style: ${INV.grid.bold_settings}, also choosing between the 100, 300 and 500 most-traded)` : ''}.
+          Every January the steadiest one on the years before is chosen and followed for the year (walk-forward since ${INV.grid.first_year}).</li>
         <li><b>Real money rules:</b> whole shares, Groww delivery charges on every buy and sell, trades at the next morning’s open.</li>
         <li><b>The SIP</b> uses the Nifty 50 ETF’s real opening prices on each month’s first trading day.</li>
-        <li>Updated every Saturday, and the list at every month-end. Prices: Yahoo Finance and NSE.</li>
+        <li>Updated every Saturday, and the list at every month-end. Prices: Moneycontrol’s chart feed (NSE prices) and, for the ETF, Yahoo Finance.</li>
+        <li><b>A known flaw:</b> companies that collapsed and left the market (Jet Airways, DHFL, Reliance Capital, the Future group) aren’t in the
+          price data, so the test looks a little better than reality, more so for the bolder style.</li>
       </ul>
     </div>`;
   }
@@ -243,7 +260,9 @@
     renderMethod();
     document.body.addEventListener('click', e => {
       const from = e.target.closest('[data-sipfrom]');
-      if (from) { G.store.set(KEY.from, from.dataset.sipfrom); renderSip(); }
+      if (from) { G.store.set(KEY.from, from.dataset.sipfrom); renderSip(); return; }
+      const st = e.target.closest('[data-istyle]');
+      if (st) { G.store.set(KEY.style, st.dataset.istyle); renderMomentum(G.currentCapital()); }
     });
     let timer;
     document.body.addEventListener('input', e => {

@@ -8,9 +8,12 @@ name: Update stock signals
 # morning; the schedule below is a free fallback. Every daily run first
 # checks whether the newest prices (and the next session's day-trading
 # watch list) are already published and, if they are, stops within seconds.
-# The Saturday run re-tests every swing strategy (on the Nifty 500's most traded
-# stocks of each time), every day-trading setup (on a year of 5-minute prices)
-# and the investing portfolio; the portfolio's list is also made at each month-end.
+# Every update reads the daily and weekly chart of every NSE stock (about 2,350,
+# from Moneycontrol's chart feed) and the 5-minute charts of the 500 most traded,
+# for the whole-market scan and the live scanner's list.
+# The Saturday run re-tests every swing strategy (on the most traded NSE stocks
+# of each time), every day-trading setup (on a year of 5-minute prices) and the
+# investing portfolio; the portfolio's list is also made at each month-end.
 on:
   schedule:
     - cron: "17 13 * * 1-5"  # 6:47 PM IST
@@ -38,7 +41,7 @@ permissions:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 50
     # Daily runs go one at a time (a newer waiting run replaces an older
     # waiting one). The weekly re-test has its own queue, so a daily run can
     # never cancel it.

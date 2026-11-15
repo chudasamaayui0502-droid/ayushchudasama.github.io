@@ -1,6 +1,7 @@
 'use strict';
 
-// "Check a stock": everything the page knows about one Nifty 100 stock, in one place.
+// "Check a stock": everything the page knows about one stock, in one place. Stocks
+// outside the tested list open straight in the live chart (chart.js).
 (() => {
   let G;
   const $ = sel => document.querySelector(sel);
@@ -116,6 +117,7 @@
         <div class="r"><b class="num">${G.inr(st.close, 2)}</b> <small class="${G.cls(st.chg)}">${st.chg == null ? '' : G.spct(st.chg, 1)}</small><br>
         <small class="muted">close of ${G.fmtDay(G.TD.data_date)}</small></div></div>
       <p id="checkLive" class="num"><small class="muted">Loading the latest price…</small></p>
+      <p><button type="button" class="btn small" data-chart="${G.esc(sym)}">Open live chart</button></p>
       ${candles(st.bars, G.TD.dates)}
       <h4>Swing</h4>${swingPart(sym, cap)}
       <h4>Day trading</h4>${dayPart(sym)}
@@ -135,20 +137,27 @@
 
   function init(helpers) {
     G = helpers;
-    const syms = Object.keys(G.TD.stocks).sort();
-    $('#checkList').innerHTML = syms.map(s => `<option value="${G.esc(s)}">${G.esc(G.TD.stocks[s].name)}</option>`).join('');
+    const names = { ...(G.SC?.names || {}) };
+    for (const [s, x] of Object.entries(G.TD.stocks)) names[s] = x.name;
+    const syms = Object.keys(names).sort();
+    $('#checkList').innerHTML = syms.map(s => `<option value="${G.esc(s)}">${G.esc(names[s])}</option>`).join('');
     const input = $('#checkInput');
     const find = v => {
       v = v.trim().toUpperCase();
       if (!v) return null;
-      if (G.TD.stocks[v]) return v;
-      const byName = syms.filter(s => G.TD.stocks[s].name.toUpperCase().includes(v) || s.startsWith(v));
-      return byName.length === 1 ? byName[0] : null;
+      if (names[v]) return v;
+      const byName = syms.filter(s => names[s].toUpperCase().includes(v) || s.startsWith(v));
+      if (byName.length === 1) return byName[0];
+      // several matches: prefer a tested stock if exactly one of them is
+      const tested = byName.filter(s => G.TD.stocks[s]);
+      return tested.length === 1 ? tested[0] : null;
     };
     const go = () => {
       const sym = find(input.value);
-      $('#checkHint').textContent = sym || !input.value.trim() ? '' : 'Not found: pick a Nifty 100 stock from the list.';
-      if (sym) { open(sym); input.value = ''; }
+      $('#checkHint').textContent = sym || !input.value.trim() ? '' : 'Not found, or several match: pick a stock from the list.';
+      if (!sym) return;
+      if (G.TD.stocks[sym]) open(sym); else window.LiveChart?.open(sym, 'D');
+      input.value = '';
     };
     input.addEventListener('change', go);
     $('#checkForm').addEventListener('submit', e => { e.preventDefault(); go(); });

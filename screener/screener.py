@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Swing-trade screener for NSE (India) stocks.
 
-Downloads daily prices for the Nifty 100, looks for chart patterns, backtests
-every pattern x target x stop-loss x holding-time combination with Groww
-delivery charges, and writes JSON for the stocks/ page. Day trading is in
-daytrade.py; this script runs its test too and adds its watch list.
+Downloads the daily prices of every NSE stock (market.py), looks for chart
+patterns on the daily and weekly charts, backtests every pattern x target x
+stop-loss x holding-time combination with Groww delivery charges on the 100
+most traded stocks of each month, and writes JSON for the stocks/ page: the
+buy list (today's 100 most traded), the whole-market scan, investing
+(invest.py), day trading (daytrade.py) and the tool's own record (track.py).
 
     python screener/screener.py --mode full    # backtests + today's signals
     python screener/screener.py --mode daily   # today's signals and watch list
@@ -36,7 +38,8 @@ NIFTY100_URL = "https://archives.nseindia.com/content/indices/ind_nifty100list.c
 # the stocks that grew big, which makes any strategy tested on it look better.
 FALLBACK_500 = HERE / "nifty500_fallback.csv"
 NIFTY500_URL = "https://archives.nseindia.com/content/indices/ind_nifty500list.csv"
-TEST_SIZE = 100       # stocks the backtest may trade at any time
+TEST_SIZE = 100       # stocks the backtest (and the buy list) may trade at any time: the most traded of all NSE
+RECENT_LIST_DAYS = 126  # today.json keeps prices for stocks on the list in the last 6 months
 TURNOVER_DAYS = 126   # traded value is judged over the last 6 months
 
 IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
@@ -403,7 +406,9 @@ def cross_up(a: pd.DataFrame, b) -> pd.DataFrame:
     return (a > b) & (a.shift(1) <= b_prev)
 
 
-def pattern_signals(p: Panel) -> list[tuple[Variant, pd.DataFrame]]:
+def pattern_signals(p: Panel, rank_among: pd.DataFrame | None = None) -> list[tuple[Variant, pd.DataFrame]]:
+    """rank_among: [day, stock] the stocks the monthly-strength patterns rank against each
+    other (the test list of the time); all stocks if None."""
     C, O, H, L, V = p.C, p.O, p.H, p.L, p.V
     sma = {n: C.rolling(n, min_periods=n).mean() for n in (10, 20, 30, 50, 100, 200)}
     up200, up50 = C > sma[200], C > sma[50]
@@ -478,9 +483,89 @@ def pattern_signals(p: Panel) -> list[tuple[Variant, pd.DataFrame]]:
             f"big buyers may be stepping in.",
             (V > m * vol_avg) & (C >= 1.03 * C.shift(1)) & up50)
 
+    # ---- added in November 2026: more patterns, tested the same way ----
+    ema20 = C.ewm(span=20, adjust=False, min_periods=20).mean()
+    sma150 = C.rolling(150, min_periods=150).mean()
+    high252, low252 = H.rolling(252, min_periods=252).max(), L.rolling(252, min_periods=252).min()
+    add("high52", "52-week high", "New 52-week high + volume",
+        "The price closes at its highest level of the past year (252 trading days), on volume 1.5x normal or more. "
+        "Stocks at yearly highs often keep going, because sellers who bought higher are gone.",
+        cross_up(C, H.shift(1).rolling(252, min_periods=252).max()) & (V > 1.5 * vol_avg))
+
+    mid20, sd20 = sma[20], C.rolling(20, min_periods=20).std()
+    upper_bb, lower_bb = mid20 + 2 * sd20, mid20 - 2 * sd20
+    width = (upper_bb - lower_bb) / mid20
+    squeezed = width.rolling(5, min_periods=5).min() <= width.rolling(120, min_periods=120).min()
+    add("squeeze", "Squeeze breakout", "Squeeze breakout",
+        "The Bollinger Bands (20 days, 2 standard deviations) were the narrowest in 6 months within the last week "
+        "(a very quiet stock), and today the price closes above the upper band, above its 50-day average.",
+        cross_up(C, upper_bb) & squeezed.shift(1) & up50)
+    add("bb_bounce", "Bollinger bounce", "Back above lower band in uptrend",
+        "The price closed below the lower Bollinger Band (an unusually big drop) and today closes back above it, "
+        "while above its 200-day average.",
+        cross_up(C, lower_bb) & up200)
+
+    rng7 = rng.rolling(7, min_periods=7).min()
+    nr7 = rng <= rng7
+    add("nr7_break", "Range breakout", "Quiet day, then close above",
+        "Yesterday's high-to-low range was the narrowest of the last 7 days, and today the price closes above "
+        "yesterday's high, above its 50-day average.",
+        nr7.shift(1) & (C > H.shift(1)) & up50)
+    inside = (H < H.shift(1)) & (L > L.shift(1))
+    add("inside_break", "Range breakout", "Inside day, then close above",
+        "Yesterday's whole range fit inside the day before (an inside day), and today the price closes above "
+        "that bigger day's high, above its 50-day average.",
+        inside.shift(1) & (C > H.shift(2)) & up50)
+
+    strong_trend = (C > sma[50]) & (sma[50] > sma[200]) & (sma[50] > sma[50].shift(20))
+    add("ema_pullback", "Trend pullback", "Pullback to 20-day EMA",
+        "In a strong uptrend (price above a rising 50-day average, which is above the 200-day), the price dips to "
+        "its 20-day exponential average and closes back above it on a green candle.",
+        strong_trend & (L <= ema20) & (C > ema20) & (C > O))
+    template = ((C > sma[50]) & (sma[50] > sma150) & (sma150 > sma[200]) & (sma[200] > sma[200].shift(21))
+                & (C >= 1.3 * low252) & (C >= 0.75 * high252))
+    add("trend_template", "Trend template", "Leader breakout (trend template)",
+        "A market leader's chart: price above its 50-, 150- and 200-day averages in that order, the 200-day "
+        "rising, at least 30% above its yearly low and within 25% of its yearly high. Buy when it closes above "
+        "its 20-day high on volume 1.5x normal or more.",
+        template & cross_up(C, H.shift(1).rolling(20, min_periods=20).max()) & (V > 1.5 * vol_avg))
+
+    st_up = supertrend_up(H, L, C)
+    add("supertrend", "Supertrend", "Supertrend turns up",
+        "The Supertrend indicator (10 days, 3x the average daily range) flips from down to up, while above "
+        "the 200-day average.",
+        st_up & ~st_up.shift(1, fill_value=True) & up200)
+    pdi, mdi, adx14 = adx(H, L, C)
+    add("adx_cross", "ADX trend", "Strong trend turns up (ADX)",
+        "The ADX shows a strong trend (above 25) and the +DI line crosses above the -DI line: buyers take over.",
+        cross_up(pdi, mdi) & (adx14 > 25))
+    add("gap_hold", "Gap and hold", "Gap up 3% that holds",
+        "The stock opens 3% or more above yesterday's close, closes above its open (the gap held), on volume 2x "
+        "normal or more, above its 50-day average. Often news-driven buying that continues.",
+        (O >= 1.03 * C.shift(1)) & (C > O) & (V > 2 * vol_avg) & up50)
+
+    wb = weekly_bars(p)
+    wend = week_ends(p.dates)  # only finished weeks can signal
+    wend_df = pd.DataFrame(np.repeat(wend[:, None], len(p.symbols), 1), index=C.index, columns=C.columns)
+    W = {k: v.dropna(how="all") for k, v in wb.items()}
+    w_sma30, w_sma40 = W["C"].rolling(30, min_periods=30).mean(), W["C"].rolling(40, min_periods=40).mean()
+    w_hi20 = W["H"].shift(1).rolling(20, min_periods=20).max()
+    w_volavg = W["V"].shift(1).rolling(10, min_periods=10).mean()
+    weekly = lambda sig: sig.reindex(C.index).fillna(False).astype(bool) & wend_df
+    add("w_breakout", "Weekly chart", "Weekly breakout",
+        "On the weekly chart, the week closes above the highest price of the last 20 weeks, on above-normal weekly "
+        "volume, above the 40-week average. Checked each Friday.",
+        weekly(cross_up(W["C"], w_hi20) & (W["V"] > w_volavg) & (W["C"] > w_sma40)))
+    add("w_rsi50", "Weekly chart", "Weekly RSI turns up",
+        "On the weekly chart, the 14-week RSI climbs back above 50 while the price is above its 30-week average. "
+        "Checked each Friday.",
+        weekly(cross_up(rsi(W["C"], 14), 50) & (W["C"] > w_sma30)))
+
     # The strongest stocks of the last 6 months tend to keep leading (skipping
     # the latest month, which often reverses). Picked once a month.
     strength = (C.shift(21) / C.shift(126) - 1).where(up200)
+    if rank_among is not None:
+        strength = strength.where(rank_among.reindex(index=C.index, columns=C.columns).fillna(False).astype(bool))
     rank = strength.rank(axis=1, ascending=False)
     month_end = pd.DataFrame(np.repeat(month_ends(p.dates)[:, None], len(p.symbols), 1),
                              index=C.index, columns=C.columns)
@@ -490,6 +575,72 @@ def pattern_signals(p: Panel) -> list[tuple[Variant, pd.DataFrame]]:
             f"month), among those above their 200-day average.",
             (rank <= k) & month_end)
     return out
+
+
+def wilder(x: pd.DataFrame, n: int) -> pd.DataFrame:
+    return x.ewm(alpha=1 / n, adjust=False, min_periods=n).mean()
+
+
+def true_range(H: pd.DataFrame, L: pd.DataFrame, C: pd.DataFrame) -> pd.DataFrame:
+    pc = C.shift(1)
+    return pd.concat([H - L, (H - pc).abs(), (L - pc).abs()]).groupby(level=0).max().reindex(C.index)
+
+
+def adx(H: pd.DataFrame, L: pd.DataFrame, C: pd.DataFrame, n: int = 14):
+    """(+DI, -DI, ADX), Wilder's way."""
+    up, down = H.diff(), -L.diff()
+    plus = up.where((up > down) & (up > 0), 0.0).where(H.notna())
+    minus = down.where((down > up) & (down > 0), 0.0).where(L.notna())
+    atr = wilder(true_range(H, L, C), n)
+    pdi, mdi = 100 * wilder(plus, n) / atr, 100 * wilder(minus, n) / atr
+    dx = 100 * (pdi - mdi).abs() / (pdi + mdi)
+    return pdi, mdi, wilder(dx, n)
+
+
+def supertrend_up(H: pd.DataFrame, L: pd.DataFrame, C: pd.DataFrame, n: int = 10, mult: float = 3.0) -> pd.DataFrame:
+    """True on days the Supertrend (ATR n, x mult) says uptrend. Bands only
+    move in the trend's favour, as in the usual definition."""
+    atr = wilder(true_range(H, L, C), n).to_numpy()
+    mid = ((H + L) / 2).to_numpy()
+    c = C.to_numpy()
+    upper, lower = mid + mult * atr, mid - mult * atr
+    T, N = c.shape
+    fu, fl = np.full(N, np.nan), np.full(N, np.nan)
+    trend = np.zeros((T, N), dtype=bool)
+    state = np.ones(N, dtype=bool)
+    prev_c = np.full(N, np.nan)
+    for t in range(T):
+        u, lo, ct = upper[t], lower[t], c[t]
+        ok = np.isfinite(u) & np.isfinite(ct)
+        fu = np.where(ok, np.where(np.isfinite(fu) & (u > fu) & ~(prev_c > fu), fu, u), fu)
+        fl = np.where(ok, np.where(np.isfinite(fl) & (lo < fl) & ~(prev_c < fl), fl, lo), fl)
+        state = np.where(ok, np.where(state, ~(ct < fl), ct > fu), state)
+        trend[t] = state & ok
+        prev_c = np.where(np.isfinite(ct), ct, prev_c)
+    return pd.DataFrame(trend, index=C.index, columns=C.columns)
+
+
+def week_ends(dates: pd.DatetimeIndex) -> np.ndarray:
+    """A week's last trading row: the next row is in another week, or (for
+    the newest row) it is a Friday. Mid-week, the week isn't finished yet."""
+    wk = dates.to_period("W-FRI")
+    end = np.r_[np.asarray(wk[1:] != wk[:-1]), False]
+    if len(dates):
+        end[-1] = dates[-1].weekday() == 4
+    return end
+
+
+def weekly_bars(p: Panel):
+    """Weekly O, H, L, C, V, one row per week, dated by the week's last trading
+    row in the data (for the newest week, possibly unfinished). Each weekly bar
+    uses only that week's days."""
+    wk = p.dates.to_period("W-FRI")
+    key = pd.Series(np.arange(len(wk)), index=p.dates).groupby(np.asarray(wk)).transform("max").to_numpy()
+    last_row = key == np.arange(len(wk))
+    g = lambda df: df.groupby(np.asarray(wk))
+    fields = {"O": g(p.O).transform("first"), "H": g(p.H).transform("max"), "L": g(p.L).transform("min"),
+              "C": g(p.C).transform("last"), "V": g(p.V).transform("sum")}
+    return {k: v[last_row] for k, v in fields.items()}
 
 
 def eligibility(p: Panel, size: int = TEST_SIZE) -> pd.DataFrame:
@@ -1289,111 +1440,127 @@ def invest_due(path: Path, dates: pd.DatetimeIndex) -> bool:
     return as_of < str(latest.date())
 
 
-TODAY_SCHEMA = 2
+TODAY_SCHEMA = 3
 
 # Exit code for "the price source didn't answer properly this time". The
 # workflow treats it as a warning: the next scheduled run tries again.
 DATA_UNAVAILABLE = 75
 
 
+def sub_panel(p: Panel, cols: list) -> Panel:
+    """The same days for some of the stocks."""
+    return Panel(p.dates, list(cols), *(df[cols] for df in (p.O, p.H, p.L, p.C, p.V)), p.fixes)
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--mode", choices=("full", "daily"), default="daily")
-    ap.add_argument("--cache", action="store_true", help="reuse today's downloaded prices (for development)")
+    ap.add_argument("--cache", action="store_true", help="reuse today's downloaded market data (for development)")
     args = ap.parse_args(argv)
 
-    universe = load_universe()
-    frames = download_prices(list(universe.Symbol) + [BENCHMARK], use_cache=args.cache)
-    fill_recent_gaps(frames)
-    bench = frames.pop(BENCHMARK, None)
-    if len(frames) < 0.8 * len(universe):
-        print(f"Only {len(frames)} of {len(universe)} stocks downloaded; keeping the previous data.", file=sys.stderr)
+    import daytrade as DT
+    import invest as INV
+    import market as MK
+    import track as TR
+
+    bt_path, inv_path, dt_path = OUT_DIR / "backtest.json", OUT_DIR / "invest.json", OUT_DIR / "daytrade.json"
+    today_path, scan_path, track_path = OUT_DIR / "today.json", OUT_DIR / "scan.json", OUT_DIR / "track.json"
+    full = args.mode == "full" or not bt_path.exists()
+
+    # every NSE stock's daily chart, from Moneycontrol (official NSE daily prices)
+    listed = MK.load_all()
+    names = dict(zip(listed.Symbol, listed.Name))
+    try:
+        industry = dict(zip(*(load_test_universe()[c] for c in ("Symbol", "Industry"))))
+    except Exception as exc:
+        print(f"No industry names ({exc})", file=sys.stderr)
+        industry = {}
+
+    def download(long: bool):
+        raw = MK.download_all(list(listed.Symbol), days=(dt.date.today() - dt.date(2013, 6, 1)).days if long else MK.SCAN_DAYS)
+        return raw, (build_panel(MK.to_screener(raw, HISTORY_START)) if len(raw) >= 0.8 * len(listed) else None)
+
+    raw, big = download(full)
+    if big is None:
+        print(f"Only {len(raw)} of {len(listed)} stocks downloaded; keeping the previous data.", file=sys.stderr)
         return DATA_UNAVAILABLE
-    panel = build_panel(frames)
+    invest_now = full or invest_due(inv_path, big.dates)
+    if invest_now and not full:  # the month-end investing list needs the long history too
+        raw, big = download(True)
+        if big is None:
+            print("The long price history didn't download; keeping the previous data.", file=sys.stderr)
+            return DATA_UNAVAILABLE
+    bench = download_prices([BENCHMARK], use_cache=args.cache).get(BENCHMARK)
     market = download_market(use_cache=args.cache)
     if set(market) != set(MARKET_TICKERS):
         print(f"Missing market data ({', '.join(set(MARKET_TICKERS) - set(market))}); keeping the previous data.",
               file=sys.stderr)
         return DATA_UNAVAILABLE
-    filters = market_filters(panel, market)
-    signals = with_market_filters(pattern_signals(panel), filters)
-    print(f"{len(panel.symbols)} stocks, {panel.dates[0].date()} to {panel.dates[-1].date()}, "
-          f"{len(signals)} pattern versions")
 
-    wide_cache = {}
+    # the test list: the TEST_SIZE most traded stocks of each month; today's is the buy list's
+    el = eligibility(big, TEST_SIZE)
+    test_now = [s for s in big.symbols if el[s].iloc[-1]]
+    base = pattern_signals(big, rank_among=el)
+    filters = market_filters(big, market)
+    print(f"{len(big.symbols)} stocks, {big.dates[0].date()} to {big.dates[-1].date()}, {len(base)} patterns; "
+          f"test list today: {len(test_now)} stocks")
 
-    def wide_panel():
-        """The Nifty 500 (today's list) for the backtests, downloaded once: (panel, ok)."""
-        if "p" not in wide_cache:
-            test_list = load_test_universe()
-            extra = [x for x in test_list.Symbol if x not in frames]
-            more = download_prices(extra, use_cache=args.cache)
-            ok = len(more) >= 0.8 * len(extra)
-            if not ok:
-                print(f"Only {len(more)} of {len(extra)} more Nifty 500 stocks downloaded.", file=sys.stderr)
-            fill_recent_gaps(more)
-            wide_cache["p"] = (build_panel({**frames, **more}), ok)
-            wide_cache["names"] = {**dict(zip(test_list.Symbol, test_list.Name)), **dict(zip(universe.Symbol, universe.Name))}
-        return wide_cache["p"]
-
-    bt_path = OUT_DIR / "backtest.json"
-    if args.mode == "full" or not bt_path.exists():
+    if full:
         previous = previous_by_target = None
         if bt_path.exists():
             old_bt = json.loads(bt_path.read_text())
             previous = {b["capital"]: b["chosen"] for b in old_bt.get("buckets", [])}
             previous_by_target = {t: {b["capital"]: b["chosen"] for b in x.get("buckets", [])}
                                   for t, x in (old_bt.get("by_target") or {}).items()}
-        # the backtest trades the Nifty 500's most traded stocks of each time
-        wide, ok = wide_panel()
-        if ok or not bt_path.exists():  # with too few stocks, keep the last test (or, with none yet, say so on the page)
-            wide_signals = with_market_filters(pattern_signals(wide), market_filters(wide, market))
-            print(f"Backtest list: {len(wide.symbols)} stocks" + (f", the {TEST_SIZE} most traded at each month-end" if ok else ""))
-            write_json(bt_path, run_backtest(wide, wide_signals, bench, previous=previous, previous_by_target=previous_by_target,
-                                             eligible=eligibility(wide) if ok else None))
-        else:
-            print("Strategies not re-tested: too few Nifty 500 stocks downloaded; keeping the last test.", file=sys.stderr)
+        cols = [s for s in big.symbols if el[s].any()]
+        sigs = with_market_filters([(v, sig[cols]) for v, sig in base], filters)
+        print(f"Backtest: {len(sigs)} pattern versions on the {TEST_SIZE} most traded of each month ({len(cols)} stocks over time)")
+        write_json(bt_path, run_backtest(sub_panel(big, cols), sigs, bench, previous=previous,
+                                         previous_by_target=previous_by_target, eligible=el[cols]))
 
-    # Long-term investing: re-tested weekly, and its monthly list made at each month-end
-    import invest as INV
+    # long-term investing: re-tested weekly, its list made at each month-end
+    if invest_now:
+        lists = {size: eligibility(big, size) for size in INV.SIZES}
+        cols = [s for s in big.symbols if lists[max(INV.SIZES)][s].any()]
+        write_json(inv_path, INV.run(sub_panel(big, cols), market, bench, {k: v[cols] for k, v in lists.items()}, names))
 
-    inv_path = OUT_DIR / "invest.json"
-    if args.mode == "full" or invest_due(inv_path, panel.dates):
-        wide, ok = wide_panel()
-        if ok:
-            write_json(inv_path, INV.run(wide, market, bench, eligibility(wide), wide_cache["names"]))
-        else:
-            print("Investing not updated: too few Nifty 500 stocks downloaded.", file=sys.stderr)
-
-    # Day trading: re-tested with the strategies, on a year of 5-minute prices
-    import daytrade as DT
-
-    dt_path = OUT_DIR / "daytrade.json"
-    daily = nifty_daily = None
-    if args.mode == "full" or not dt_path.exists():
-        ip, nifty_ip = DT.download_intraday(list(universe.Symbol))
-        daily, nifty_daily = DT.download_daily(list(universe.Symbol))
-        if ip is None or daily is None:
-            print("Day trading not re-tested: the 5-minute price feed didn't answer; keeping the last test.",
-                  file=sys.stderr)
+    # day trading: the same list as the swing buy list
+    day_syms = test_now
+    daily = DT.to_daily(raw, day_syms)
+    nifty_bars = DT.fetch_bars(DT.INDEX_SYMBOLS["nifty"], 4000 if full else DT.DAILY_DAYS, kind="index", res="D")
+    nifty_daily = DT.to_daily({"NIFTY": nifty_bars}, ["NIFTY"]) if nifty_bars is not None else None
+    if full or not dt_path.exists():
+        ip, nifty_ip = DT.download_intraday(day_syms)
+        if ip is None:
+            print("Day trading not re-tested: the 5-minute price feed didn't answer; keeping the last test.", file=sys.stderr)
         else:
             ip, daily_aligned = DT.align(ip, daily)
             previous = None
             if dt_path.exists():
                 previous = {f"{b['capital']}|{b['margin']}" + ("" if b.get("target", "best") == "best" else f"|{b['target']}"):
                             b["chosen"] for b in json.loads(dt_path.read_text()).get("buckets", [])}
-            write_json(dt_path, DT.run_backtest(ip, daily_aligned, nifty_ip, nifty_daily, panel, market,
+            write_json(dt_path, DT.run_backtest(ip, daily_aligned, nifty_ip, nifty_daily, sub_panel(big, day_syms), market,
                                                 previous=previous))
 
-    today_path = OUT_DIR / "today.json"
-    today = today_payload(panel, signals, universe, market_mood(market, filters, panel.dates[-1]))
+    # prices for every stock on the list in the last 6 months (so trades in a stock that has
+    # since dropped off can still be followed); buy signals only for today's list
+    recent = el.iloc[-RECENT_LIST_DAYS:].any()
+    keep = [s for s in big.symbols if recent[s] or s in set(test_now)]
+    universe = pd.DataFrame({"Symbol": keep, "Name": [names.get(x, x) for x in keep],
+                             "Industry": [industry.get(x, "") for x in keep]})
+    day_universe = universe[universe.Symbol.isin(test_now)]
+    panel = sub_panel(big, keep)
+    on_list = np.isin(keep, test_now)
+    signals = with_market_filters([(v, sig[keep] & on_list) for v, sig in base], filters)
+    today = today_payload(panel, signals, universe, market_mood(market, filters, big.dates[-1]))
     today["schema"] = TODAY_SCHEMA
+    today["test_list"] = {"size": TEST_SIZE, "from": len(big.symbols), "symbols": test_now}
     old = json.loads(today_path.read_text()) if today_path.exists() else None
     same = args.mode == "daily" and old is not None and same_prices(old, today)
-    if same and watch_ok(old):
+    if same and watch_ok(old) and scan_path.exists():
         print(f"No new prices since the last update ({today['data_date']}); nothing to write.")
         return 0
-    today["day_watch"] = day_watch(universe, daily, nifty_daily)
+    today["day_watch"] = day_watch(day_universe, daily if len(daily.dates) else None, nifty_daily)
     if same and not watch_ok(today):
         print(f"No new prices since the last update ({today['data_date']}), and the day-trading watch list "
               f"still can't be made; nothing to write.", file=sys.stderr)
@@ -1402,12 +1569,16 @@ def main(argv=None) -> int:
     today["fundamentals"] = fetch_fundamentals(signalled)
     write_json(today_path, today)
 
-    # the tool's own record: today's buy list saved, and everything saved so far followed
-    import track as TR
+    # the whole-market scan and the live scanner's list
+    liq = MK.liquid(big)
+    live_syms = MK.turnover(big)[liq].sort_values(ascending=False).index[:MK.LIVE_SIZE].tolist()
+    ip_scan = MK.download_intraday(live_syms)
+    curve = MK.volume_curve(ip_scan) or MK.DEFAULT_CURVE
+    write_json(scan_path, MK.payload(big, base, names, test_now, curve, len(ip_scan.symbols) if ip_scan is not None else 0))
 
+    # the tool's own record: today's buy list saved, and everything saved so far followed
     if bt_path.exists():
-        track_path = OUT_DIR / "track.json"
-        write_json(track_path, TR.update(track_path, today, json.loads(bt_path.read_text()), panel, bench))
+        write_json(track_path, TR.update(track_path, today, json.loads(bt_path.read_text()), big, bench))
     return 0
 
 

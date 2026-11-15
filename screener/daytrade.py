@@ -126,7 +126,7 @@ def day_slots(exposure: float) -> int:
 # --------------------------------------------------------------------------
 
 def fetch_bars(symbol: str, days: int, kind: str = "stock", res: str = "5",
-               now: float | None = None) -> pd.DataFrame | None:
+               now: float | None = None, timeout: float = 60) -> pd.DataFrame | None:
     """Bars from the chart feed: 5-minute ("5", IST times) or daily ("D",
     dated by session), or None."""
     now = now or time.time()
@@ -135,7 +135,7 @@ def fetch_bars(symbol: str, days: int, kind: str = "stock", res: str = "5",
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
     for attempt in range(3):
         try:
-            data = json.load(urllib.request.urlopen(req, timeout=60))
+            data = json.load(urllib.request.urlopen(req, timeout=timeout))
             break
         except Exception as exc:
             if attempt == 2:
@@ -930,13 +930,17 @@ def watch_list(daily: Daily, nifty_daily: Daily | None, actions: list | None = N
     return out
 
 
+def fetch_many(symbols, days: int, res: str = "5", threads: int = 8, timeout: float = 60) -> dict:
+    """fetch_bars for many stocks, a few at a time: {symbol: bars}."""
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(threads) as ex:
+        res_ = list(ex.map(lambda s: (s, fetch_bars(s, days, res=res, timeout=timeout)), symbols))
+    return {s: df for s, df in res_ if df is not None and len(df)}
+
+
 def download_daily(symbols, days: int = DAILY_DAYS, now: dt.datetime | None = None):
     """(stocks, nifty) official daily bars, or (None, None) when too few came back."""
-    frames = {}
-    for sym in symbols:
-        df = fetch_bars(sym, days, res="D")
-        if df is not None and len(df):
-            frames[sym] = df
+    frames = fetch_many(symbols, days, res="D")
     if len(frames) < 0.8 * len(symbols):
         print(f"Only {len(frames)} of {len(symbols)} stocks have daily bars from the chart feed.", file=sys.stderr)
         return None, None
@@ -948,11 +952,7 @@ def download_daily(symbols, days: int = DAILY_DAYS, now: dt.datetime | None = No
 def download_intraday(symbols, days: int = INTRADAY_DAYS, now: dt.datetime | None = None, log=print):
     """(stocks, nifty) 5-minute sessions, or (None, None) when too few came back."""
     t0 = time.time()
-    frames = {}
-    for sym in symbols:
-        df = fetch_bars(sym, days)
-        if df is not None and len(df):
-            frames[sym] = df
+    frames = fetch_many(symbols, days)
     missing = [s for s in symbols if s not in frames]
     if missing:
         print(f"No 5-minute prices for: {', '.join(missing)}", file=sys.stderr)
