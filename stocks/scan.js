@@ -196,6 +196,7 @@
   function start() {
     if (!st.started) {
       st.started = true;
+      render();
       document.addEventListener('visibilitychange', () => {
         if (!document.hidden && G.currentTab() === 'live' && phase() === 'open') readAll().then(schedule);
         else schedule();
