@@ -591,7 +591,11 @@
   }
   const nowSec = () => Math.floor(Date.now() / 1000);
   // the latest session in a 5-minute answer
-  const latestDay = feed => feed && feed.t && feed.t.length ? L.istDate(feed.t[feed.t.length - 1]) : null;
+  // (without the made-up bar the feed adds on days with no session: see LiveLogic.bars)
+  const latestDay = feed => {
+    const b = window.LiveLogic ? window.LiveLogic.bars(feed, true) : [];
+    return b.length ? L.istDate(b[b.length - 1].t) : null;
+  };
   const dailyRows = feed => (feed && feed.t ? feed.t.map((t, i) => ({ d: L.istDate(t), o: feed.o[i], h: feed.h[i], l: feed.l[i], c: feed.c[i] })) : []);
 
   async function fetchBars(sym, kind = 'stock', since = null) {

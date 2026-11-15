@@ -156,9 +156,11 @@ def payload(p: S.Panel, base_signals, names: dict, test_list: list, curve: list 
             by_stock.setdefault(s, []).append(v.id)
     C, H, L, V = p.C, p.H, p.L, p.V
     h52, l52 = H.iloc[-252:].max(), L.iloc[-252:].min()
+    h52p, l52p = H.iloc[-253:-1].max(), L.iloc[-253:-1].min()  # the year before the latest day
     adv = V.iloc[-20:].mean()
     rnd = lambda x: None if not np.isfinite(x) else round(float(x), 2)
-    live = [[s, rnd(C[s].iloc[-1]), rnd(H[s].iloc[-1]), rnd(L[s].iloc[-1]), rnd(h52[s]), rnd(l52[s]), int(adv[s])]
+    live = [[s, rnd(C[s].iloc[-1]), rnd(H[s].iloc[-1]), rnd(L[s].iloc[-1]), rnd(h52[s]), rnd(l52[s]), int(adv[s]),
+             rnd(h52p[s]), rnd(l52p[s])]
             for s in order[:LIVE_SIZE] if np.isfinite(adv[s])]
     traded_today = int(C.iloc[-1].notna().sum())
     return {
@@ -171,6 +173,6 @@ def payload(p: S.Panel, base_signals, names: dict, test_list: list, curve: list 
         "test_list": sorted(test_list),
         "patterns": patterns, "hits": hits, "hits_by_stock": by_stock,
         "names": {s: names.get(s, s) for s in p.symbols},
-        "live": {"fields": ["sym", "pc", "ph", "pl", "h52", "l52", "adv"], "rows": live},
+        "live": {"fields": ["sym", "pc", "ph", "pl", "h52", "l52", "adv", "h52p", "l52p"], "rows": live},
         "vol_curve": curve,
     }

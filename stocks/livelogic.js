@@ -29,8 +29,14 @@
       out.push({ t, o, h: Math.max(h, o, c), l: Math.min(l, o, c), c, v: Math.max(0, +(feed.v ? feed.v[i] : 0) || 0) });
     }
     out.sort((a, b) => a.t - b.t);
-    return out.filter((b, i) => i === out.length - 1 || out[i + 1].t !== b.t);
+    const list = out.filter((b, i) => i === out.length - 1 || out[i + 1].t !== b.t);
+    if (!intraday) return list;
+    // On days with no session (weekends, holidays) the 5-minute feed adds one made-up bar at the
+    // current time: zero volume, the last price. A real session starts at 9:15 AM; drop such a day.
+    return byDay(list).filter(([d, bs]) => !(bs.length === 1 && bs[0].v === 0
+      && (istMinute(bs[0].t) > OPEN + 10 || weekend(d)))).flatMap(([, bs]) => bs);
   }
+  const weekend = day => [0, 6].includes(new Date(`${day}T00:00:00Z`).getUTCDay());
 
   // Newer bars replace older ones with the same time (the forming bar changes).
   function merge(old, fresh) {

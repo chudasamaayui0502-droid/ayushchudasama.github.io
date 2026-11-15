@@ -50,6 +50,8 @@
     const f = fields(), get = k => row[f.indexOf(k)];
     const info = { pc: get('pc'), ph: get('ph'), pl: get('pl'), h52: get('h52'), l52: get('l52'), adv: get('adv') };
     const prev = days.length > 1 ? days[days.length - 2] : null;
+    // after the evening update the file already includes the session shown: use the year before it
+    if (days.length && SC.data_date === days[days.length - 1][0] && get('h52p') != null) { info.h52 = get('h52p'); info.l52 = get('l52p'); }
     if (prev && SC.data_date !== prev[0]) {
       const b = prev[1];
       info.pc = b[b.length - 1].c; info.ph = Math.max(...b.map(x => x.h)); info.pl = Math.min(...b.map(x => x.l));
@@ -130,12 +132,11 @@
 
   function table(list) {
     if (!list.length) return '<p class="muted">Nothing here right now.</p>';
-    return `<div class="table-wrap"><table class="scan-table"><thead><tr><th>Stock</th><th class="r">Price</th><th class="r">Change</th><th class="r">Volume vs normal</th></tr></thead><tbody>
+    return `<div class="table-wrap"><table class="scan-table"><thead><tr><th>Stock</th><th class="r">Price</th><th class="r">Change<br>volume</th></tr></thead><tbody>
       ${list.slice(0, SHOW).map(({ sym, r }) => `<tr data-chart="${G.esc(sym)}" data-tf="5" tabindex="0" role="button" aria-label="Live chart of ${G.esc(sym)}">
         <td><b>${G.esc(sym)}</b><br><small class="scan-name">${G.esc(nameOf(sym))}</small><div class="scan-tags">${tagHtml(r.tags.filter(t => t !== 'abovevwap' && t !== 'belowvwap'))}</div></td>
         <td class="r num">${G.inr(r.last, 2)}<br><small class="muted">${r.at}</small></td>
-        <td class="r num ${G.cls(r.chg)}">${G.spct(r.chg, 2)}</td>
-        <td class="r num">${r.rvol == null ? '–' : `${r.rvol.toFixed(1)}x`}</td></tr>`).join('')}
+        <td class="r num"><span class="${G.cls(r.chg)}">${G.spct(r.chg, 2)}</span><br><small class="scan-vol">${r.rvol == null ? '' : `${r.rvol.toFixed(1)}x vol`}</small></td></tr>`).join('')}
       </tbody></table></div>`;
   }
 
@@ -162,8 +163,8 @@
       <div class="chips" role="group" aria-label="What to show">${Object.entries(VIEWS).map(([k, [label]]) =>
         `<button type="button" class="chip${k === view ? ' on' : ''}" data-sview="${k}" aria-pressed="${k === view}">${label} <small>${counts[k]}</small></button>`).join('')}</div>
       ${latest.length ? table(VIEWS[view][1](latest)) : st.busy ? '' : '<p class="muted">No prices yet.</p>'}
-      <p class="muted"><small>Tap a stock for its live chart. “Volume vs normal”: shares traded so far today against a normal day by this time
-        (2x = twice as busy). VWAP: the average price paid today.</small></p>
+      <p class="muted"><small>Tap a stock for its live chart. “2.0x vol”: twice the shares a normal day has traded by this time.
+        VWAP: the average price paid today.</small></p>
       <details class="scan-settings"${settingsOpen ? ' open' : ''}><summary>Scanner settings</summary>
         <p class="label">Stocks to read</p>
         <div class="chips">${SIZES.map(n => `<button type="button" class="chip${n === size() ? ' on' : ''}" data-ssize="${n}" aria-pressed="${n === size()}">${n}</button>`).join('')}</div>

@@ -96,8 +96,9 @@
       const to = Math.floor(Date.now() / 1000);
       const r = await fetch(`${FEED}?symbol=${encodeURIComponent(sym)}&resolution=5&from=${to - 5 * 86400}&to=${to}&countback=80&currencyCode=INR`, { cache: 'no-store' });
       const j = await r.json();
-      if (j.s !== 'ok' || !j.t?.length) throw new Error('no prices');
-      const last = j.c[j.c.length - 1], t = j.t[j.t.length - 1];
+      const bars = j.s === 'ok' ? window.LiveLogic.bars(j, true) : [];
+      if (!bars.length) throw new Error('no prices');
+      const last = bars[bars.length - 1].c, t = bars[bars.length - 1].t;
       const when = new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(t * 1000));
       const pc = G.TD.day_watch?.levels?.[sym]?.pc ?? G.TD.stocks[sym]?.close;
       if ($('#checkLive')) $('#checkLive').innerHTML = `Latest price <b class="num">${G.inr(last, 2)}</b> <small class="${G.cls(last - pc)}">${pc ? G.spct(last / pc - 1, 2) : ''}</small>
